@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-primary: oklch(0.65 0.25 270);
+  --color-brand-secondary: oklch(0.55 0.2 300);
+  --color-brand-accent: oklch(0.7 0.3 330);
+
+  --color-surface-900: oklch(0.12 0.02 240);
+  --color-surface-800: oklch(0.16 0.03 240);
+  --color-surface-700: oklch(0.2 0.04 240);
+  --shadow-3xl: 0 35px 60px -15px rgba(0, 0, 0, 0.5);
+}
+
+@layer base {
+  body {
+    @apply bg-surface-900 text-slate-100 antialiased;
+  }
+}
+
+@layer components {
+
+  /* Define classes without @apply to other custom classes to bypass Turbopack bug */
+  .glass-effect {
+    background-color: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .btn-primary {
+    @apply bg-brand-primary hover:bg-brand-primary/90 text-white font-bold px-6 py-3 rounded-2xl transition-all active:scale-95 shadow-lg shadow-brand-primary/20 flex items-center justify-center gap-2;
+  }
+
+  .btn-secondary {
+    /* Copy styles directly instead of @apply glass-effect */
+    background-color: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    @apply hover:bg-white/10 text-white font-semibold px-6 py-3 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2;
+  }
+
+  .input-field {
+    @apply bg-surface-800 border border-white/5 focus:border-brand-primary/50 focus:ring-4 focus:ring-brand-primary/10 outline-none px-4 py-3 rounded-xl transition-all placeholder:text-slate-500;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-white/10 rounded-full hover:bg-white/20;
+}
+
+/* Animations */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-primary via-indigo-400 to-brand-accent;
+}
