@@ -6,5 +6,10 @@ const SOCKET_URL = process.env.NEXT_PUBLIC_WS_URL ||
 
 export const socket: Socket = io(SOCKET_URL, {
   autoConnect: false,
-  transports: ['websocket'],
+  reconnection: true,
+  reconnectionAttempts: Infinity,
+  reconnectionDelay: 1000,
+  reconnectionDelayMax: 5000,
+  randomizationFactor: 0.5,
+  transports: ['websocket']
 });

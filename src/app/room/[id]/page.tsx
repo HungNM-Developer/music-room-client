@@ -8,14 +8,14 @@ import {
   Plus, Users, LayoutList, Share2, LogOut, Disc, Music, 
   Send, SkipForward, Play, Pause, Search, User as UserIcon,
   Crown, ExternalLink, Trash2, Layers, ChevronRight, Activity,
-  ChevronUp, ChevronDown, UserPlus
+  ChevronUp, ChevronDown, UserPlus, ShieldPlus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function RoomPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { room, user, addTrack, syncPlayback, onTrackEnd, joinRoom, error, removeTrack, reorderTrack, transferAdmin, leaveRoom, clearError } = useRoom();
+  const { room, user, addTrack, syncPlayback, onTrackEnd, joinRoom, error, removeTrack, reorderTrack, transferAdmin, leaveRoom, clearError, shareAdmin } = useRoom();
   const [urlInput, setUrlInput] = useState('');
   const [nameInput, setNameInput] = useState('');
   const [activeTab, setActiveTab] = useState<'queue' | 'users'>('queue');
@@ -368,13 +368,24 @@ export default function RoomPage() {
                                         <div className="flex items-center gap-2">
                                             {u.userId === user.userId && <span className="text-[9px] font-black text-brand-primary tracking-widest">YOU</span>}
                                             {isAdmin && u.userId !== user.userId && (
-                                                <button 
-                                                    onClick={() => transferAdmin(room.roomId, u.userId)}
-                                                    className="p-1.5 bg-brand-primary/10 text-brand-primary rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-brand-primary hover:text-white"
-                                                    title="Promote to Admin"
-                                                >
-                                                    <UserPlus className="w-3 h-3" />
-                                                </button>
+                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                                    {u.role !== 'admin' && (
+                                                        <button 
+                                                            onClick={() => shareAdmin(room.roomId, u.userId)}
+                                                            className="p-1.5 bg-emerald-500/10 text-emerald-500 rounded-lg hover:bg-emerald-500 hover:text-white transition-all"
+                                                            title="Share Admin Rights"
+                                                        >
+                                                            <ShieldPlus className="w-3 h-3" />
+                                                        </button>
+                                                    )}
+                                                    <button 
+                                                        onClick={() => transferAdmin(room.roomId, u.userId)}
+                                                        className="p-1.5 bg-brand-primary/10 text-brand-primary rounded-lg hover:bg-brand-primary hover:text-white transition-all"
+                                                        title="Transfer Room Ownership"
+                                                    >
+                                                        <UserPlus className="w-3 h-3" />
+                                                    </button>
+                                                </div>
                                             )}
                                         </div>
                                     </div>

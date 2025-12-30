@@ -16,6 +16,7 @@ interface RoomContextType {
   removeTrack: (roomId: string, trackId: string) => void;
   reorderTrack: (roomId: string, fromIndex: number, toIndex: number) => void;
   transferAdmin: (roomId: string, newAdminId: string) => void;
+  shareAdmin: (roomId: string, targetUserId: string) => void;
   leaveRoom: (roomId: string) => void;
   clearError: () => void;
 }
@@ -127,9 +128,18 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setError(null);
   }, []);
 
+  const shareAdmin = useCallback((roomId: string, targetUserId: string) => {
+    if (user?.role !== 'admin') return;
+    socket.emit('room:share-admin', {
+      roomId,
+      requesterId: user.userId,
+      targetUserId,
+    });
+  }, [user]);
+
   return (
     <RoomContext.Provider value={{
-      room, user, error, createRoom, joinRoom, addTrack, syncPlayback, onTrackEnd, removeTrack, reorderTrack, transferAdmin, leaveRoom, clearError
+      room, user, error, createRoom, joinRoom, addTrack, syncPlayback, onTrackEnd, removeTrack, reorderTrack, transferAdmin, shareAdmin, leaveRoom, clearError
     }}>
       {children}
     </RoomContext.Provider>
