@@ -9,10 +9,9 @@ interface YoutubePlayerProps {
   currentTime: number;
   isAdmin: boolean;
   onSync: (isPlaying: boolean, time: number) => void;
-  onEnd: () => void;
 }
 
-export const YoutubePlayer = ({ videoId, isPlaying, currentTime, isAdmin, onSync, onEnd }: YoutubePlayerProps) => {
+export const YoutubePlayer = ({ videoId, isPlaying, currentTime, isAdmin, onSync }: YoutubePlayerProps) => {
   const playerRef = useRef<any>(null);
 
   const [isPlayerReady, setIsPlayerReady] = useState(false);
@@ -22,9 +21,7 @@ export const YoutubePlayer = ({ videoId, isPlaying, currentTime, isAdmin, onSync
       const player = playerRef.current;
       
       try {
-        const player = playerRef.current;
-        // Check if player methods are available before calling
-        if (typeof player?.playVideo !== 'function') return;
+        if (typeof player.playVideo !== 'function') return;
 
         // Sync playing state
         if (isPlaying) {
@@ -34,15 +31,17 @@ export const YoutubePlayer = ({ videoId, isPlaying, currentTime, isAdmin, onSync
         }
 
         // Sync time if drift is > 2 seconds
-        // Ensure getCurrentTime is available
         if (typeof player.getCurrentTime === 'function') {
           const playerTime = player.getCurrentTime();
-          if (typeof playerTime === 'number' && Math.abs(playerTime - currentTime) > 2) {
+          // Adding a small buffer for background tabs
+          if (typeof playerTime === 'number' && Math.abs(playerTime - currentTime) > 2.5) {
             player.seekTo(currentTime, true);
+            // After seeking, ensure we keep playing if supposed to
+            if (isPlaying) player.playVideo();
           }
         }
       } catch (e) {
-        console.warn('YouTube Player sync warning (expected during transition):', e);
+        console.warn('YouTube Player sync warning:', e);
       }
     }
   }, [isPlaying, currentTime, videoId, isPlayerReady]);
@@ -50,8 +49,13 @@ export const YoutubePlayer = ({ videoId, isPlaying, currentTime, isAdmin, onSync
   const onReady: YouTubeProps['onReady'] = (event) => {
     playerRef.current = event.target;
     setIsPlayerReady(true);
+    
+    // Immediate sync on load
     if (isPlaying) {
         event.target.playVideo();
+    }
+    if (currentTime > 1) {
+        event.target.seekTo(currentTime, true);
     }
   };
 
@@ -69,6 +73,7 @@ export const YoutubePlayer = ({ videoId, isPlaying, currentTime, isAdmin, onSync
   return (
     <div className="relative aspect-video w-full rounded-3xl overflow-hidden glass-card shadow-2xl bg-black">
       <YouTube
+        key={videoId} // Force re-mount on track change for better background reliability
         videoId={videoId}
         opts={{
           height: '100%',
@@ -79,11 +84,11 @@ export const YoutubePlayer = ({ videoId, isPlaying, currentTime, isAdmin, onSync
             disablekb: isAdmin ? 0 : 1,
             modestbranding: 1,
             rel: 0,
+            origin: typeof window !== 'undefined' ? window.location.origin : '',
           },
         }}
         onReady={onReady}
         onStateChange={onStateChange}
-        onEnd={onEnd}
         className="absolute top-0 left-0 w-full h-full"
       />
       {!isAdmin && (

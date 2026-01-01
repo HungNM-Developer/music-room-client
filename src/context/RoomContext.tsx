@@ -10,13 +10,14 @@ interface RoomContextType {
   error: string | null;
   createRoom: (name: string) => void;
   joinRoom: (roomId: string, name: string) => void;
-  addTrack: (roomId: string, youtubeUrl: string) => void;
+  addTrack: (roomId: string, youtubeUrl: string, metadata: { title: string; thumbnail: string; duration: number }) => void;
   syncPlayback: (roomId: string, isPlaying: boolean, currentTime: number) => void;
   onTrackEnd: (roomId: string) => void;
   removeTrack: (roomId: string, trackId: string) => void;
   reorderTrack: (roomId: string, fromIndex: number, toIndex: number) => void;
-  transferAdmin: (roomId: string, newAdminId: string) => void;
-  shareAdmin: (roomId: string, targetUserId: string) => void;
+  setControlPermission: (roomId: string, targetUserId: string, canControl: boolean) => void;
+  setPlayerPermission: (roomId: string, targetUserId: string) => void;
+  heartTrack: (roomId: string, trackId: string) => void;
   leaveRoom: (roomId: string) => void;
   clearError: () => void;
 }
@@ -73,24 +74,26 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     socket.emit('room:join', { roomId, name });
   }, []);
 
-  const addTrack = useCallback((roomId: string, youtubeUrl: string) => {
+  const addTrack = useCallback((roomId: string, youtubeUrl: string, metadata: { title: string; thumbnail: string; duration: number }) => {
     if (!user) return;
     socket.emit('queue:add', {
       roomId,
       youtubeUrl,
       userId: user.userId,
+      ...metadata
     });
   }, [user]);
 
   const syncPlayback = useCallback((roomId: string, isPlaying: boolean, currentTime: number) => {
-    if (user?.role !== 'admin') return;
+    if (!user?.canPlay) return;
     socket.emit('playback:sync', { roomId, userId: user.userId, isPlaying, currentTime });
   }, [user]);
 
   const onTrackEnd = useCallback((roomId: string) => {
-    if (user?.role !== 'admin') return;
+    if (!user?.canPlay) return;
     socket.emit('track:end', { roomId });
   }, [user]);
+
 
   const removeTrack = useCallback((roomId: string, trackId: string) => {
     if (!user) return;
@@ -102,21 +105,12 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user]);
 
   const reorderTrack = useCallback((roomId: string, fromIndex: number, toIndex: number) => {
-    if (user?.role !== 'admin') return;
+    if (!user?.canControl) return;
     socket.emit('queue:reorder', {
       roomId,
       userId: user.userId,
       fromIndex,
       toIndex,
-    });
-  }, [user]);
-
-  const transferAdmin = useCallback((roomId: string, newAdminId: string) => {
-    if (user?.role !== 'admin') return;
-    socket.emit('room:transfer-admin', {
-      roomId,
-      currentAdminId: user.userId,
-      newAdminId,
     });
   }, [user]);
 
@@ -128,18 +122,37 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setError(null);
   }, []);
 
-  const shareAdmin = useCallback((roomId: string, targetUserId: string) => {
+  const setControlPermission = useCallback((roomId: string, targetUserId: string, canControl: boolean) => {
     if (user?.role !== 'admin') return;
-    socket.emit('room:share-admin', {
+    socket.emit('permission:set-control', {
+      roomId,
+      requesterId: user.userId,
+      targetUserId,
+      canControl,
+    });
+  }, [user]);
+
+  const setPlayerPermission = useCallback((roomId: string, targetUserId: string) => {
+    if (user?.role !== 'admin') return;
+    socket.emit('permission:set-player', {
       roomId,
       requesterId: user.userId,
       targetUserId,
     });
   }, [user]);
 
+  const heartTrack = useCallback((roomId: string, trackId: string) => {
+    if (!user) return;
+    socket.emit('queue:heart', {
+      roomId,
+      trackId,
+      userId: user.userId,
+    });
+  }, [user]);
+
   return (
     <RoomContext.Provider value={{
-      room, user, error, createRoom, joinRoom, addTrack, syncPlayback, onTrackEnd, removeTrack, reorderTrack, transferAdmin, shareAdmin, leaveRoom, clearError
+      room, user, error, createRoom, joinRoom, addTrack, syncPlayback, onTrackEnd, removeTrack, reorderTrack, setControlPermission, setPlayerPermission, heartTrack, leaveRoom, clearError
     }}>
       {children}
     </RoomContext.Provider>

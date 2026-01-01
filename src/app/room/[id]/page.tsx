@@ -4,21 +4,38 @@ import { useParams, useRouter } from 'next/navigation';
 import { useRoom } from '@/hooks/useRoom';
 import { YoutubePlayer } from '@/components/YoutubePlayer';
 import { useState, useRef, useEffect } from 'react';
+import YouTube from 'react-youtube';
 import { 
   Plus, Users, LayoutList, Share2, LogOut, Disc, Music, 
   Send, SkipForward, Play, Pause, Search, User as UserIcon,
   Crown, ExternalLink, Trash2, Layers, ChevronRight, Activity,
-  ChevronUp, ChevronDown, UserPlus, ShieldPlus
+  ChevronUp, ChevronDown, Gamepad2, Headphones, Heart, AlertTriangle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function RoomPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { room, user, addTrack, syncPlayback, onTrackEnd, joinRoom, error, removeTrack, reorderTrack, transferAdmin, leaveRoom, clearError, shareAdmin } = useRoom();
+  const { 
+    room, user, addTrack, syncPlayback, onTrackEnd, joinRoom, error, 
+    removeTrack, reorderTrack, leaveRoom, clearError, 
+    setControlPermission, setPlayerPermission, heartTrack
+  } = useRoom();
   const [urlInput, setUrlInput] = useState('');
   const [nameInput, setNameInput] = useState('');
   const [activeTab, setActiveTab] = useState<'queue' | 'users'>('queue');
+  const [probedMetadata, setProbedMetadata] = useState<{title: string, duration: number, thumbnail: string} | null>(null);
+  const [isProbing, setIsProbing] = useState(false);
+
+  // Handle auto-clearing errors for toasts
+  useEffect(() => {
+    if (error && user) {
+      const timer = setTimeout(() => {
+        clearError();
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, user, clearError]);
 
   // Handle redirection to home after leaving the room
   useEffect(() => {
@@ -81,6 +98,10 @@ export default function RoomPage() {
 
   const isAdmin = room.adminId === user.userId;
   
+  // Robust permission checks: Default to true for Admin if properties are missing
+  const canPlay = user.canPlay ?? (user.role === 'admin');
+  const canControl = user.canControl ?? (user.role === 'admin');
+  
   // More robust YouTube video ID extraction
   const getYouTubeId = (url?: string) => {
     if (!url) return null;
@@ -95,11 +116,52 @@ export default function RoomPage() {
     // Suggestion: Toast could be added here
   };
 
-  const handleAddMusic = (e: React.FormEvent) => {
+  const fetchYoutubeMetadata = async (url: string) => {
+    try {
+      const videoId = getYouTubeId(url);
+      if (!videoId) return null;
+      
+      // Use noembed.com for basic metadata since it's free and no-CORS
+      const response = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`);
+      const data = await response.json();
+      
+      return {
+        title: data.title || 'Unknown Title',
+        thumbnail: data.thumbnail_url || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+        duration: 0 // Will fallback to 0 if we can't get it, or handle via specific YT API if available
+      };
+    } catch (e) {
+      console.error("Metadata fetch error", e);
+      return null;
+    }
+  };
+
+  const handleAddMusic = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!urlInput.trim()) return;
-    addTrack(room.roomId, urlInput);
+    
+    // Use probed metadata if available, otherwise try one last fetch
+    const finalMetadata = probedMetadata || (await fetchYoutubeMetadata(urlInput));
+    
+    addTrack(room.roomId, urlInput, finalMetadata || {
+      title: 'New Track',
+      thumbnail: `https://img.youtube.com/vi/${getYouTubeId(urlInput)}/hqdefault.jpg`,
+      duration: 0
+    });
+    
     setUrlInput('');
+    setProbedMetadata(null);
+  };
+
+  const handleUrlChange = (val: string) => {
+    setUrlInput(val);
+    setProbedMetadata(null);
+    const videoId = getYouTubeId(val);
+    if (videoId) {
+      setIsProbing(true);
+    } else {
+      setIsProbing(false);
+    }
   };
 
   return (
@@ -130,16 +192,39 @@ export default function RoomPage() {
             <input 
               type="text" 
               value={urlInput}
-              onChange={(e) => setUrlInput(e.target.value)}
-              placeholder="Inject YouTube link to the stream..."
-              className="w-full input-field rounded-full pl-12 h-11 bg-surface-900/80 border-white/5 focus:ring-brand-primary/20"
+              onChange={(e) => handleUrlChange(e.target.value)}
+              placeholder="Paste YouTube Link to add music..."
+              className="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary/50 focus:bg-white/10 transition-all placeholder:text-slate-600"
             />
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-            <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-brand-primary/10 hover:bg-brand-primary/20 rounded-full transition-colors text-brand-primary">
-              <Plus className="w-4 h-4" />
+            <button 
+              type="submit"
+              disabled={!urlInput.trim() || (getYouTubeId(urlInput) !== null && !probedMetadata)}
+              className="absolute right-2 top-1.5 bottom-1.5 px-6 bg-brand-primary text-white rounded-xl font-bold text-[10px] tracking-widest uppercase hover:scale-105 active:scale-95 transition-all shadow-lg shadow-brand-primary/25 disabled:opacity-50 disabled:grayscale disabled:scale-100"
+            >
+              {isProbing && !probedMetadata ? 'Fetching...' : 'Add Music'}
             </button>
           </div>
         </form>
+
+        <div className="hidden">
+          {getYouTubeId(urlInput) && (
+            <YouTube
+              videoId={getYouTubeId(urlInput)!}
+              onReady={(e) => {
+                const duration = e.target.getDuration();
+                const data = e.target.getVideoData();
+                setProbedMetadata({
+                  title: data.title || 'Unknown Video',
+                  duration: duration || 0,
+                  thumbnail: `https://img.youtube.com/vi/${getYouTubeId(urlInput)}/hqdefault.jpg`
+                });
+                setIsProbing(false);
+              }}
+              onError={() => setIsProbing(false)}
+            />
+          )}
+        </div>
 
         <div className="flex items-center gap-3">
           <button onClick={handleCopyLink} className="p-2.5 btn-secondary !rounded-xl" title="Share Access">
@@ -159,40 +244,39 @@ export default function RoomPage() {
             animate={{ opacity: 1, y: 0 }}
             className="relative rounded-[3rem] overflow-hidden glass-effect bg-black border-white/5 shadow-3xl"
           >
-             {isAdmin ? (
-               currentVideoId ? (
-                <YoutubePlayer
-                  videoId={currentVideoId}
-                  isPlaying={room.playbackState.isPlaying}
-                  currentTime={room.playbackState.currentTime}
-                  isAdmin={isAdmin}
-                  onSync={(isPlaying, time) => syncPlayback(room.roomId, isPlaying, time)}
-                  onEnd={() => onTrackEnd(room.roomId)}
-                />
-              ) : (
-                <div className="aspect-video flex flex-col items-center justify-center py-32 text-slate-600">
-                  <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-8">
-                     <Layers className="w-10 h-10 opacity-20" />
-                  </div>
-                  <h3 className="text-xl font-black mb-2 uppercase tracking-widest text-slate-500">The Stage is Dark</h3>
-                  <p className="text-sm opacity-50">Add a track to start the session</p>
-                </div>
-              )
-             ) : (
-                <div className="aspect-video flex flex-col items-center justify-center py-32 text-slate-600 bg-gradient-to-b from-surface-800 to-surface-900">
-                   <div className="relative mb-8">
-                      <div className="absolute inset-0 bg-brand-primary/10 blur-3xl rounded-full" />
-                      <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center border border-white/5 relative z-10">
-                        <Activity className="w-10 h-10 text-brand-primary animate-pulse" />
-                      </div>
+             {canPlay ? (
+                currentVideoId ? (
+                 <YoutubePlayer
+                   videoId={currentVideoId}
+                   isPlaying={room.playbackState.isPlaying}
+                   currentTime={room.playbackState.currentTime}
+                   isAdmin={true} 
+                   onSync={(isPlaying, time) => syncPlayback(room.roomId, isPlaying, time)}
+                 />
+               ) : (
+                 <div className="aspect-video flex flex-col items-center justify-center py-32 text-slate-600">
+                   <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-8">
+                      <Layers className="w-10 h-10 opacity-20" />
                    </div>
-                   <h3 className="text-xl font-black mb-2 uppercase tracking-widest text-white">Listener Mode</h3>
-                   <p className="text-sm text-slate-500 max-w-sm text-center px-8 leading-relaxed">
-                      Only the <span className="text-brand-primary font-bold">Admin</span> can hear the stream. 
-                      You can contribute by adding tracks to the queue!
-                   </p>
-                </div>
-             )}
+                   <h3 className="text-xl font-black mb-2 uppercase tracking-widest text-slate-500">The Stage is Dark</h3>
+                   <p className="text-sm opacity-50">Add a track to start the session</p>
+                 </div>
+               )
+              ) : (
+                 <div className="aspect-video flex flex-col items-center justify-center py-32 text-slate-600 bg-gradient-to-b from-surface-800 to-surface-900">
+                    <div className="relative mb-8">
+                       <div className="absolute inset-0 bg-brand-primary/10 blur-3xl rounded-full" />
+                       <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center border border-white/5 relative z-10">
+                         <Activity className="w-10 h-10 text-brand-primary animate-pulse" />
+                       </div>
+                    </div>
+                    <h3 className="text-xl font-black mb-2 uppercase tracking-widest text-white">Listener Mode</h3>
+                    <p className="text-sm text-slate-500 max-w-sm text-center px-8 leading-relaxed">
+                       {room.users.find(u => u.canPlay)?.name || 'Someone'} is currently broadcasting.
+                       You can contribute by adding tracks to the queue!
+                    </p>
+                 </div>
+              )}
           </motion.div>
 
           <motion.div 
@@ -211,13 +295,19 @@ export default function RoomPage() {
                     <span className="text-[11px] text-slate-600 flex items-center gap-1.5 font-bold uppercase tracking-widest">
                         <UserIcon className="w-3 h-3" /> Requester: <span className="text-slate-300">{room.users.find(u => u.userId === room.currentTrack?.addedBy)?.name || 'Listener'}</span>
                     </span>
+                    {room.currentTrack?.hearts && room.currentTrack.hearts.length > 0 && (
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 shadow-[0_0_10px_rgba(239,68,68,0.1)]">
+                            <Heart className="w-3 h-3 fill-current" />
+                            <span className="text-[10px] font-black">{room.currentTrack.hearts.length}</span>
+                        </div>
+                    )}
                 </div>
                 <h2 className="text-4xl font-black tracking-tighter leading-tight text-white max-w-2xl">
                     {room.currentTrack?.title || 'Awaiting Broadcast...'}
                 </h2>
               </div>
 
-              {isAdmin && (
+              {canPlay && (
                 <div className="flex items-center gap-4">
                     <button 
                         onClick={() => syncPlayback(room.roomId, !room.playbackState.isPlaying, room.playbackState.currentTime)}
@@ -226,6 +316,7 @@ export default function RoomPage() {
                     >
                         {room.playbackState.isPlaying ? <Pause className="w-7 h-7 fill-current" /> : <Play className="w-7 h-7 fill-current translate-x-0.5" />}
                     </button>
+                    {/* Manual Skip Button - only for Players */}
                     <button 
                         onClick={() => onTrackEnd(room.roomId)}
                         disabled={room.queue.length === 0}
@@ -298,13 +389,27 @@ export default function RoomPage() {
                                     </div>
                                     <div className="flex-1 min-w-0 flex flex-col justify-center">
                                         <h4 className="font-bold text-sm truncate pr-4 text-slate-200">{track.title}</h4>
-                                        <p className="text-[10px] font-black text-slate-500 mt-2 uppercase tracking-widest flex items-center gap-2">
-                                            <span className="w-1 h-1 rounded-full bg-slate-600" />
-                                            {room.users.find(u => u.userId === track.addedBy)?.name || 'Guest'}
-                                        </p>
+                                        <div className="flex items-center gap-4 mt-2">
+                                            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                                                <span className="w-1 h-1 rounded-full bg-slate-600" />
+                                                {room.users.find(u => u.userId === track.addedBy)?.name || 'Guest'}
+                                            </p>
+                                            
+                                            <button 
+                                                onClick={() => heartTrack(room.roomId, track.trackId)}
+                                                className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-all ${
+                                                    track.hearts?.includes(user!.userId) 
+                                                    ? 'bg-red-500/20 border-red-500/50 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.15)]' 
+                                                    : 'bg-surface-900/50 border-white/5 text-slate-500 hover:text-red-400 hover:border-red-400/30'
+                                                }`}
+                                            >
+                                                <Heart className={`w-3 h-3 ${track.hearts?.includes(user!.userId) ? 'fill-current' : ''}`} />
+                                                <span className="text-[10px] font-black">{track.hearts?.length || 0}</span>
+                                            </button>
+                                        </div>
                                     </div>
                                     <div className="flex flex-col gap-1 self-center">
-                                        {isAdmin && (
+                                        {canControl && (
                                             <>
                                                 <button 
                                                     onClick={() => reorderTrack(room.roomId, idx, idx - 1)}
@@ -361,35 +466,44 @@ export default function RoomPage() {
                                 </div>
                                 <div className="flex-1">
                                     <div className="font-bold text-sm flex items-center justify-between">
-                                        <span className="flex items-center gap-2">
-                                            {u.name}
-                                            {u.role === 'admin' && <Crown className="w-3 h-3 text-yellow-500" />}
-                                        </span>
+                                        <div className="flex flex-col gap-1">
+                                            <span className="flex items-center gap-2">
+                                                {u.name}
+                                                {u.role === 'admin' && <Crown className="w-3 h-3 text-yellow-500" />}
+                                                {u.canPlay && <Headphones className="w-3 h-3 text-emerald-500" />}
+                                                {u.canControl && <Gamepad2 className="w-3 h-3 text-amber-500" />}
+                                            </span>
+                                            <div className="flex items-center gap-1.5 px-0.5">
+                                                {u.canPlay ? 
+                                                    <span className="text-[7px] font-black text-emerald-500 bg-emerald-500/10 px-1 rounded-sm tracking-tighter uppercase">PLAYER</span> : 
+                                                    <span className="text-[7px] font-black text-slate-600 bg-white/5 px-1 rounded-sm tracking-tighter uppercase">LISTENER</span>
+                                                }
+                                                {u.canControl && <span className="text-[7px] font-black text-amber-500 bg-amber-500/10 px-1 rounded-sm tracking-tighter uppercase">CONTROLLER</span>}
+                                            </div>
+                                        </div>
                                         <div className="flex items-center gap-2">
                                             {u.userId === user.userId && <span className="text-[9px] font-black text-brand-primary tracking-widest">YOU</span>}
-                                            {isAdmin && u.userId !== user.userId && (
-                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                                                    {u.role !== 'admin' && (
-                                                        <button 
-                                                            onClick={() => shareAdmin(room.roomId, u.userId)}
-                                                            className="p-1.5 bg-emerald-500/10 text-emerald-500 rounded-lg hover:bg-emerald-500 hover:text-white transition-all"
-                                                            title="Share Admin Rights"
-                                                        >
-                                                            <ShieldPlus className="w-3 h-3" />
-                                                        </button>
-                                                    )}
+                                            {isAdmin && (
+                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all bg-surface-900/80 p-1 rounded-xl border border-white/10 backdrop-blur-sm">
                                                     <button 
-                                                        onClick={() => transferAdmin(room.roomId, u.userId)}
-                                                        className="p-1.5 bg-brand-primary/10 text-brand-primary rounded-lg hover:bg-brand-primary hover:text-white transition-all"
-                                                        title="Transfer Room Ownership"
+                                                        onClick={() => setPlayerPermission(room.roomId, u.userId)}
+                                                        className={`p-1.5 rounded-lg transition-all ${u.canPlay ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-surface-700 text-slate-400 hover:text-white'}`}
+                                                        title={u.canPlay ? "Current Player" : "Take/Grant Player Rights"}
                                                     >
-                                                        <UserPlus className="w-3 h-3" />
+                                                        <Headphones className="w-3 h-3" />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => setControlPermission(room.roomId, u.userId, !u.canControl)}
+                                                        className={`p-1.5 rounded-lg transition-all ${u.canControl ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30' : 'bg-surface-700 text-slate-400 hover:text-white'}`}
+                                                        title={u.canControl ? "Remove Control Rights" : "Grant Control Rights"}
+                                                    >
+                                                        <Gamepad2 className="w-3 h-3" />
                                                     </button>
                                                 </div>
                                             )}
                                         </div>
                                     </div>
-                                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mt-1">{u.role}</p>
+                                    <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mt-0.5">{u.role}</p>
                                 </div>
                             </motion.div>
                         ))
@@ -429,6 +543,26 @@ export default function RoomPage() {
           </div>
         </div>
       </main>
+
+      {/* Global Error Toast */}
+      <AnimatePresence>
+        {error && user && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-4 bg-red-500 text-white px-8 py-4 rounded-2xl shadow-2xl shadow-red-500/30 font-bold border border-white/20"
+          >
+            <div className="bg-white/20 p-2 rounded-xl">
+               <AlertTriangle className="w-5 h-5" />
+            </div>
+            <span className="text-sm">{error}</span>
+            <button onClick={() => clearError()} className="ml-4 hover:opacity-50 transition-opacity">
+               <Plus className="w-5 h-5 rotate-45" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

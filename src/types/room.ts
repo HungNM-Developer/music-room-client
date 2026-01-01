@@ -5,6 +5,8 @@ export interface User {
   name: string;
   role: Role;
   color: string;
+  canPlay: boolean;
+  canControl: boolean;
 }
 
 export interface Track {
@@ -14,6 +16,8 @@ export interface Track {
   thumbnail: string;
   duration: number;
   addedBy: string;
+  hearts: string[];
+  addedAt: number;
 }
 
 export interface PlaybackState {
