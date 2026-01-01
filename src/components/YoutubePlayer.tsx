@@ -7,19 +7,36 @@ interface YoutubePlayerProps {
   videoId: string;
   isPlaying: boolean;
   currentTime: number;
-  isAdmin: boolean;
-  onSync: (isPlaying: boolean, time: number) => void;
+  volume: number; // 0 to 100
+  isMuted: boolean;
+  onReady: (player: any) => void;
+  onEnd?: () => void;
 }
 
-export const YoutubePlayer = ({ videoId, isPlaying, currentTime, isAdmin, onSync }: YoutubePlayerProps) => {
+export const YoutubePlayer = ({ videoId, isPlaying, currentTime, volume, isMuted, onReady, onEnd }: YoutubePlayerProps) => {
   const playerRef = useRef<any>(null);
-
   const [isPlayerReady, setIsPlayerReady] = useState(false);
+  const lastVideoId = useRef(videoId);
 
+  // Handle Video Change (Imperative - MUCH better for background tabs/preventing autoplay blocks)
+  useEffect(() => {
+    if (playerRef.current && isPlayerReady && lastVideoId.current !== videoId) {
+      lastVideoId.current = videoId;
+      try {
+        playerRef.current.loadVideoById({
+          videoId: videoId,
+          startSeconds: 0,
+        });
+      } catch (e) {
+        console.warn('Background load fallback:', e);
+      }
+    }
+  }, [videoId, isPlayerReady]);
+
+  // Handle Play/Pause and Seek
   useEffect(() => {
     if (playerRef.current && isPlayerReady) {
       const player = playerRef.current;
-      
       try {
         if (typeof player.playVideo !== 'function') return;
 
@@ -30,70 +47,78 @@ export const YoutubePlayer = ({ videoId, isPlaying, currentTime, isAdmin, onSync
           player.pauseVideo();
         }
 
-        // Sync time if drift is > 2 seconds
+        // Sync time if drift is > 2.5 seconds
         if (typeof player.getCurrentTime === 'function') {
           const playerTime = player.getCurrentTime();
-          // Adding a small buffer for background tabs
           if (typeof playerTime === 'number' && Math.abs(playerTime - currentTime) > 2.5) {
             player.seekTo(currentTime, true);
-            // After seeking, ensure we keep playing if supposed to
             if (isPlaying) player.playVideo();
           }
         }
       } catch (e) {
-        console.warn('YouTube Player sync warning:', e);
+        console.warn('YouTube Player playback sync warning:', e);
       }
     }
-  }, [isPlaying, currentTime, videoId, isPlayerReady]);
+  }, [isPlaying, currentTime, isPlayerReady]); // Removed videoId to prevent reload during sync
 
-  const onReady: YouTubeProps['onReady'] = (event) => {
+  // Handle Volume and Mute (Independent of playback)
+  useEffect(() => {
+    if (playerRef.current && isPlayerReady) {
+      const player = playerRef.current;
+      try {
+        if (typeof player.setVolume === 'function') {
+          player.setVolume(volume);
+        }
+        if (typeof player.mute === 'function') {
+          if (isMuted) player.mute(); else player.unMute();
+        }
+      } catch (e) {
+        console.warn('YouTube Player volume sync warning:', e);
+      }
+    }
+  }, [volume, isMuted, isPlayerReady]);
+
+  const handleReady: YouTubeProps['onReady'] = (event) => {
     playerRef.current = event.target;
     setIsPlayerReady(true);
+    onReady(event.target);
     
     // Immediate sync on load
-    if (isPlaying) {
-        event.target.playVideo();
-    }
-    if (currentTime > 1) {
-        event.target.seekTo(currentTime, true);
-    }
+    if (isPlaying) event.target.playVideo();
+    if (currentTime > 0) event.target.seekTo(currentTime, true);
+    event.target.setVolume(volume);
+    if (isMuted) event.target.mute();
   };
 
-  const onStateChange: YouTubeProps['onStateChange'] = (event) => {
-    if (!isAdmin) return;
-    
-    // 1: Playing, 2: Paused
-    const state = event.data;
-    const time = event.target.getCurrentTime();
-    
-    if (state === 1) onSync(true, time);
-    if (state === 2) onSync(false, time);
+  const handleStateChange: YouTubeProps['onStateChange'] = (event) => {
+    // 0 is ENDED state in YT API
+    if (event.data === 0 && onEnd) {
+      onEnd();
+    }
   };
 
   return (
-    <div className="relative aspect-video w-full rounded-3xl overflow-hidden glass-card shadow-2xl bg-black">
+    <div className="relative aspect-video w-full rounded-3xl overflow-hidden glass-card shadow-2xl bg-black pointer-events-none">
       <YouTube
-        key={videoId} // Force re-mount on track change for better background reliability
         videoId={videoId}
         opts={{
           height: '100%',
           width: '100%',
           playerVars: {
             autoplay: 1,
-            controls: isAdmin ? 1 : 0,
-            disablekb: isAdmin ? 0 : 1,
+            controls: 0,
+            disablekb: 1,
             modestbranding: 1,
             rel: 0,
             origin: typeof window !== 'undefined' ? window.location.origin : '',
           },
         }}
-        onReady={onReady}
-        onStateChange={onStateChange}
+        onReady={handleReady}
+        onStateChange={handleStateChange}
         className="absolute top-0 left-0 w-full h-full"
       />
-      {!isAdmin && (
-        <div className="absolute inset-0 z-10 bg-transparent cursor-not-allowed" /> 
-      )}
+      {/* Invisible overlay for extra safety */}
+      <div className="absolute inset-0 z-10 bg-transparent" /> 
     </div>
   );
 };

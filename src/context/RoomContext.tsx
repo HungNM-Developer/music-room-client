@@ -52,6 +52,11 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
     });
 
+    socket.on('room:closed', () => {
+      setRoom(null);
+      setUser(null);
+    });
+
     socket.on('error', (err) => {
       setError(err.message);
     });

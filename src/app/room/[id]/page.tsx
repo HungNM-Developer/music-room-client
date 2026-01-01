@@ -9,7 +9,8 @@ import {
   Plus, Users, LayoutList, Share2, LogOut, Disc, Music, 
   Send, SkipForward, Play, Pause, Search, User as UserIcon,
   Crown, ExternalLink, Trash2, Layers, ChevronRight, Activity,
-  ChevronUp, ChevronDown, Gamepad2, Headphones, Heart, AlertTriangle
+  ChevronUp, ChevronDown, Gamepad2, Headphones, Heart, AlertTriangle,
+  Volume2, VolumeX, Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -26,6 +27,12 @@ export default function RoomPage() {
   const [activeTab, setActiveTab] = useState<'queue' | 'users'>('queue');
   const [probedMetadata, setProbedMetadata] = useState<{title: string, duration: number, thumbnail: string} | null>(null);
   const [isProbing, setIsProbing] = useState(false);
+  const [volume, setVolume] = useState(100);
+  const [isMuted, setIsMuted] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [displayTime, setDisplayTime] = useState(0);
+  const [copied, setCopied] = useState(false);
+  const playerRef = useRef<any>(null);
 
   // Handle auto-clearing errors for toasts
   useEffect(() => {
@@ -37,12 +44,32 @@ export default function RoomPage() {
     }
   }, [error, user, clearError]);
 
-  // Handle redirection to home after leaving the room
+  // Smooth local timer for progress bar using requestAnimationFrame
   useEffect(() => {
-    if (!room && !user) {
-      router.push('/');
+    if (!room?.playbackState.isPlaying) {
+      if (room?.playbackState) {
+        setDisplayTime(room.playbackState.currentTime);
+      }
+      return;
     }
-  }, [room, user, router]);
+
+    let animationFrameId: number;
+    const updateTime = () => {
+      if (room.playbackState.lastUpdated) {
+         // Calculate exact progress based on server timestamp + local elapsed
+         const now = Date.now();
+         // Adding 200ms buffer to compensate for average network latency
+         const elapsed = (now - room.playbackState.lastUpdated) / 1000; 
+         setDisplayTime(room.playbackState.currentTime + elapsed);
+      }
+      animationFrameId = requestAnimationFrame(updateTime);
+    };
+
+    updateTime();
+
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [room?.playbackState]);
+
 
   if (!user) {
     return (
@@ -113,7 +140,13 @@ export default function RoomPage() {
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
-    // Suggestion: Toast could be added here
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleExitRoom = () => {
+    leaveRoom(room!.roomId);
+    router.push('/');
   };
 
   const fetchYoutubeMetadata = async (url: string) => {
@@ -227,10 +260,36 @@ export default function RoomPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button onClick={handleCopyLink} className="p-2.5 btn-secondary !rounded-xl" title="Share Access">
-            <Share2 className="w-5 h-5" />
+          <button 
+            onClick={handleCopyLink} 
+            className={`p-2.5 transition-all !rounded-xl relative ${copied ? 'bg-green-500/20 text-green-400 border-green-500/20' : 'btn-secondary'}`} 
+            title="Share Access"
+          >
+            <AnimatePresence mode="wait">
+              {copied ? (
+                <motion.div
+                  key="check"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  className="flex items-center gap-2"
+                >
+                  <Check className="w-5 h-5" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest absolute -bottom-8 left-1/2 -translate-x-1/2 bg-green-500 text-white px-2 py-1 rounded-md">Copied!</span>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="share"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                >
+                  <Share2 className="w-5 h-5" />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </button>
-          <button onClick={() => leaveRoom(room.roomId)} className="p-2.5 glass-effect rounded-xl text-red-500 border-red-400/10 hover:bg-red-500/10 transition-colors" title="Leave Room">
+          <button onClick={handleExitRoom} className="p-2.5 glass-effect rounded-xl text-red-500 border-red-400/10 hover:bg-red-500/10 transition-colors" title="Leave Room">
             <LogOut className="w-5 h-5" />
           </button>
         </div>
@@ -246,14 +305,19 @@ export default function RoomPage() {
           >
              {canPlay ? (
                 currentVideoId ? (
-                 <YoutubePlayer
-                   videoId={currentVideoId}
-                   isPlaying={room.playbackState.isPlaying}
-                   currentTime={room.playbackState.currentTime}
-                   isAdmin={true} 
-                   onSync={(isPlaying, time) => syncPlayback(room.roomId, isPlaying, time)}
-                 />
-               ) : (
+                  <YoutubePlayer
+                    videoId={currentVideoId}
+                    isPlaying={room.playbackState.isPlaying}
+                    currentTime={room.playbackState.currentTime}
+                    volume={volume}
+                    isMuted={isMuted}
+                    onReady={(player) => {
+                      playerRef.current = player;
+                      setDuration(player.getDuration());
+                    }}
+                    onEnd={() => onTrackEnd(room.roomId)}
+                  />
+                ) : (
                  <div className="aspect-video flex flex-col items-center justify-center py-32 text-slate-600">
                    <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-8">
                       <Layers className="w-10 h-10 opacity-20" />
@@ -305,10 +369,53 @@ export default function RoomPage() {
                 <h2 className="text-4xl font-black tracking-tighter leading-tight text-white max-w-2xl">
                     {room.currentTrack?.title || 'Awaiting Broadcast...'}
                 </h2>
+                
+                {room.currentTrack && (
+                  <div className="space-y-4 pt-4">
+                    {/* Progress Bar */}
+                     <div className="space-y-2">
+                       <input 
+                         type="range" 
+                         min="0" 
+                         max={duration || room.currentTrack.duration || 100} 
+                         value={displayTime}
+                         disabled={!canPlay}
+                         onChange={(e) => {
+                           const val = parseFloat(e.target.value);
+                           setDisplayTime(val); // Immediate local update
+                           syncPlayback(room.roomId, room.playbackState.isPlaying, val);
+                         }}
+                         className={`w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-brand-primary ${!canPlay ? 'opacity-50 cursor-not-allowed' : ''}`}
+                       />
+                       <div className="flex justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                          <span>{new Date(displayTime * 1000).toISOString().substr(14, 5)}</span>
+                          <span>{new Date((duration || room.currentTrack.duration || 0) * 1000).toISOString().substr(14, 5)}</span>
+                       </div>
+                    </div>
+
+                    {/* Volume Controls (Local to each user) */}
+                    <div className="flex items-center gap-4">
+                       <button 
+                         onClick={() => setIsMuted(!isMuted)}
+                         className="p-2 glass-effect rounded-xl hover:bg-white/10 transition-all"
+                       >
+                         {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4 text-slate-400" />}
+                       </button>
+                       <input 
+                         type="range" 
+                         min="0" 
+                         max="100" 
+                         value={volume}
+                         onChange={(e) => setVolume(parseInt(e.target.value))}
+                         className="w-24 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-slate-400"
+                       />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {canPlay && (
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 self-start md:self-center">
                     <button 
                         onClick={() => syncPlayback(room.roomId, !room.playbackState.isPlaying, room.playbackState.currentTime)}
                         disabled={!room.currentTrack}
