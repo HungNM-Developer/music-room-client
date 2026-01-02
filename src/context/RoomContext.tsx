@@ -20,6 +20,7 @@ interface RoomContextType {
   heartTrack: (roomId: string, trackId: string) => void;
   leaveRoom: (roomId: string) => void;
   clearError: () => void;
+  pendingTracks: Track[];
 }
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
@@ -28,6 +29,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [room, setRoom] = useState<Room | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pendingTracks, setPendingTracks] = useState<Track[]>([]);
 
   useEffect(() => {
     socket.connect();
@@ -35,14 +37,27 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     socket.on('room:joined', ({ room, user }) => {
       setRoom(room);
       setUser(user);
+      localStorage.setItem('ms_user_name', user.name);
+      localStorage.setItem('ms_last_room', room.roomId);
     });
 
     socket.on('room:update', (updatedRoom: Room) => {
       setRoom(updatedRoom);
+      
+      // Clear pending tracks once server update arrives
+      setPendingTracks([]);
+
       // Sync local user role/data if it changed in the room
       setUser(prevUser => {
         if (!prevUser) return null;
         const updatedSelf = updatedRoom.users.find(u => u.userId === prevUser.userId);
+        
+        // Save to session cache for persistence
+        if (updatedSelf) {
+            localStorage.setItem('ms_user_name', updatedSelf.name);
+            localStorage.setItem('ms_last_room', updatedRoom.roomId);
+        }
+        
         return updatedSelf || prevUser;
       });
     });
@@ -80,7 +95,29 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const addTrack = useCallback((roomId: string, youtubeUrl: string, metadata: { title: string; thumbnail: string; duration: number }) => {
-    if (!user) return;
+    if (!user || !room) return;
+
+    // Check if user already has 4 tracks in the queue
+    const userTracksInQueue = room.queue.filter(t => t.addedBy === user.userId).length;
+    if (userTracksInQueue >= 4) {
+      setError("Bạn đã đạt giới hạn 4 bài trong hàng đợi!");
+      return;
+    }
+
+    // Optimistic UI: Add to pending tracks
+    const tempTrack: Track = {
+      trackId: `temp-${Date.now()}`,
+      youtubeUrl,
+      title: metadata.title,
+      thumbnail: metadata.thumbnail,
+      duration: metadata.duration,
+      addedBy: user.userId,
+      hearts: [],
+      addedAt: Date.now(),
+      status: 'pending'
+    };
+    setPendingTracks(prev => [...prev, tempTrack]);
+
     socket.emit('queue:add', {
       roomId,
       youtubeUrl,
@@ -120,6 +157,9 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user]);
 
   const leaveRoom = useCallback((roomId: string) => {
+    setRoom(null);
+    setUser(null);
+    localStorage.removeItem('ms_last_room'); // Only clear room, keep name for convenience
     socket.emit('room:leave', { roomId });
   }, []);
 
@@ -157,7 +197,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <RoomContext.Provider value={{
-      room, user, error, createRoom, joinRoom, addTrack, syncPlayback, onTrackEnd, removeTrack, reorderTrack, setControlPermission, setPlayerPermission, heartTrack, leaveRoom, clearError
+      room, user, error, createRoom, joinRoom, addTrack, syncPlayback, onTrackEnd, removeTrack, reorderTrack, setControlPermission, setPlayerPermission, heartTrack, leaveRoom, clearError, pendingTracks
     }}>
       {children}
     </RoomContext.Provider>

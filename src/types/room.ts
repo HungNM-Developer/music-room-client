@@ -18,6 +18,7 @@ export interface Track {
   addedBy: string;
   hearts: string[];
   addedAt: number;
+  status?: 'pending' | 'active';
 }
 
 export interface PlaybackState {
