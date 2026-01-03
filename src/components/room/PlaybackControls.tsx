@@ -18,6 +18,7 @@ interface PlaybackControlsProps {
   syncPlayback: (roomId: string, isPlaying: boolean, currentTime: number) => void;
   onTrackEnd: (roomId: string) => void;
   heartTrack: (roomId: string, trackId: string) => void;
+  voteSkip: (roomId: string) => void;
 }
 
 export const PlaybackControls = ({
@@ -33,7 +34,8 @@ export const PlaybackControls = ({
   setIsMuted,
   syncPlayback,
   onTrackEnd,
-  heartTrack
+  heartTrack,
+  voteSkip
 }: PlaybackControlsProps) => {
   return (
     <motion.div 
@@ -79,6 +81,20 @@ export const PlaybackControls = ({
                   >
                       <Heart className={`w-3 h-3 ${room.currentTrack.hearts.includes(user!.userId) ? 'fill-current' : ''}`} />
                       <span className="text-[10px] font-black">{room.currentTrack.hearts.length}</span>
+                  </button>
+              )}
+              {room.currentTrack && (
+                  <button 
+                      onClick={() => voteSkip(room.roomId)}
+                      className={`flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all ${
+                          room.skipVotes?.includes(user!.userId) 
+                          ? 'bg-amber-500/20 border-amber-500/50 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.2)]' 
+                          : 'bg-white/5 border-white/10 text-slate-500 hover:text-amber-400 hover:border-amber-400/30'
+                      }`}
+                      title={`Skip Vote: ${room.skipVotes?.length || 0}/${Math.floor(room.users.length / 2) + 1}`}
+                  >
+                      <SkipForward className="w-3 h-3" />
+                      <span className="text-[10px] font-black">{room.skipVotes?.length || 0}/{Math.floor(room.users.length / 2) + 1}</span>
                   </button>
               )}
           </div>

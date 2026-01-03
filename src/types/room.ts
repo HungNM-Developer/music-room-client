@@ -34,6 +34,7 @@ export interface Room {
   queue: Track[];
   currentTrack: Track | null;
   playbackState: PlaybackState;
+  skipVotes: string[];
 }
 
 export interface JoinRoomResponse {

@@ -18,6 +18,7 @@ interface RoomContextType {
   setControlPermission: (roomId: string, targetUserId: string, canControl: boolean) => void;
   setPlayerPermission: (roomId: string, targetUserId: string) => void;
   heartTrack: (roomId: string, trackId: string) => void;
+  voteSkip: (roomId: string) => void;
   leaveRoom: (roomId: string) => void;
   clearError: () => void;
   pendingTracks: Track[];
@@ -195,9 +196,17 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, [user]);
 
+  const voteSkip = useCallback((roomId: string) => {
+    if (!user) return;
+    socket.emit('queue:vote-skip', {
+      roomId,
+      userId: user.userId,
+    });
+  }, [user]);
+
   return (
     <RoomContext.Provider value={{
-      room, user, error, createRoom, joinRoom, addTrack, syncPlayback, onTrackEnd, removeTrack, reorderTrack, setControlPermission, setPlayerPermission, heartTrack, leaveRoom, clearError, pendingTracks
+      room, user, error, createRoom, joinRoom, addTrack, syncPlayback, onTrackEnd, removeTrack, reorderTrack, setControlPermission, setPlayerPermission, heartTrack, voteSkip, leaveRoom, clearError, pendingTracks
     }}>
       {children}
     </RoomContext.Provider>
