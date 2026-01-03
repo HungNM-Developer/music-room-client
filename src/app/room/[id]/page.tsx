@@ -29,7 +29,8 @@ export default function RoomPage() {
   const { 
     room, user, addTrack, syncPlayback, onTrackEnd, joinRoom, error, 
     removeTrack, reorderTrack, leaveRoom, clearError, 
-    setControlPermission, setPlayerPermission, heartTrack, voteSkip, pendingTracks
+    setControlPermission, setPlayerPermission, heartTrack, voteSkip, 
+    sendReaction, sendSoundEffect, pendingTracks
   } = useRoom();
   const [urlInput, setUrlInput] = useState('');
   const [nameInput, setNameInput] = useState('');
@@ -298,6 +299,8 @@ export default function RoomPage() {
             onTrackEnd={onTrackEnd}
             heartTrack={heartTrack}
             voteSkip={voteSkip}
+            sendReaction={sendReaction}
+            sendSoundEffect={sendSoundEffect}
           />
           
           {/* Mobile Overlay Search (Mobile Only) */}

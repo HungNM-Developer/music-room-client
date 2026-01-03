@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Pause, User as UserIcon, Heart, VolumeX, Volume2, Play, SkipForward } from 'lucide-react';
+import { Pause, User as UserIcon, Heart, VolumeX, Volume2, Play, SkipForward, Megaphone, PartyPopper, Ghost } from 'lucide-react';
 import { PlayingVisualizer } from './PlayingVisualizer';
 import { triggerHearts } from './HeartCanvas';
 import { Room, User } from '@/types/room';
@@ -19,6 +19,8 @@ interface PlaybackControlsProps {
   onTrackEnd: (roomId: string) => void;
   heartTrack: (roomId: string, trackId: string) => void;
   voteSkip: (roomId: string) => void;
+  sendReaction: (emoji: string) => void;
+  sendSoundEffect: (effect: string) => void;
 }
 
 export const PlaybackControls = ({
@@ -35,8 +37,16 @@ export const PlaybackControls = ({
   syncPlayback,
   onTrackEnd,
   heartTrack,
-  voteSkip
+  voteSkip,
+  sendReaction,
+  sendSoundEffect
 }: PlaybackControlsProps) => {
+  const emojis = ['🔥', '💀', '🤣', '👏', '❤️', '👍', '✨', '🎵'];
+  const soundEffects = [
+    { id: 'airhorn', icon: <Megaphone className="w-4 h-4" />, label: 'Airhorn', color: 'text-red-400' },
+    { id: 'applause', icon: <PartyPopper className="w-4 h-4" />, label: 'Clap', color: 'text-green-400' },
+    { id: 'laugh', icon: <Ghost className="w-1.5 h-1.5" />, label: 'Laugh', color: 'text-yellow-400' }, // Ghost for laugh vibe or just Smile
+  ];
   return (
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
@@ -163,6 +173,37 @@ export const PlaybackControls = ({
               </button>
           </div>
         )}
+      </div>
+
+      {/* Emoji Reactions Bar */}
+      <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-center gap-2 md:gap-4 overflow-x-auto no-scrollbar pb-2">
+        {emojis.map((emoji) => (
+          <motion.button
+            key={emoji}
+            whileHover={{ scale: 1.2, y: -5 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => sendReaction(emoji)}
+            className="text-xl md:text-2xl p-2 rounded-2xl hover:bg-white/5 transition-colors"
+          >
+            {emoji}
+          </motion.button>
+        ))}
+      </div>
+
+      {/* Prank Soundboard Area */}
+      <div className="mt-4 flex items-center justify-center gap-3">
+        {soundEffects.map((sfx) => (
+          <motion.button
+            key={sfx.id}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => sendSoundEffect(sfx.id)}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all ${sfx.color}`}
+          >
+            {sfx.id === 'laugh' ? <span className="text-lg">🤣</span> : sfx.icon}
+            <span className="text-[10px] font-black uppercase tracking-wider">{sfx.label}</span>
+          </motion.button>
+        ))}
       </div>
     </motion.div>
   );

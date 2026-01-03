@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { socket } from '../lib/socket';
 import { Room, User, Track } from '../types/room';
+import { triggerReaction } from '../components/room/HeartCanvas';
 
 interface RoomContextType {
   room: Room | null;
@@ -19,6 +20,8 @@ interface RoomContextType {
   setPlayerPermission: (roomId: string, targetUserId: string) => void;
   heartTrack: (roomId: string, trackId: string) => void;
   voteSkip: (roomId: string) => void;
+  sendReaction: (emoji: string) => void;
+  sendSoundEffect: (effect: string) => void;
   leaveRoom: (roomId: string) => void;
   clearError: () => void;
   pendingTracks: Track[];
@@ -77,10 +80,33 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setError(err.message);
     });
 
+    socket.on('room:reaction', ({ emoji }) => {
+      // Trigger a floating emoji at a random horizontal position near the bottom
+      const x = Math.random() * (window.innerWidth * 0.8) + (window.innerWidth * 0.1);
+      const y = window.innerHeight - 100;
+      triggerReaction(x, y, emoji);
+    });
+
+    socket.on('room:sound-effect', ({ effect }) => {
+      const soundUrls: Record<string, string> = {
+        airhorn: '/sounds/airhorn.wav',
+        applause: '/sounds/applause.wav',
+        laugh: '/sounds/laugh.wav',
+      };
+
+      if (soundUrls[effect]) {
+        const audio = new Audio(soundUrls[effect]);
+        audio.volume = 0.4; // Set a moderate volume
+        audio.play().catch(e => console.warn('Sound effect blocked by browser:', e));
+      }
+    });
+
     return () => {
       socket.off('room:joined');
       socket.off('room:update');
       socket.off('room:left');
+      socket.off('room:reaction');
+      socket.off('room:sound-effect');
       socket.off('error');
     };
   }, []);
@@ -204,9 +230,25 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, [user]);
 
+  const sendReaction = useCallback((emoji: string) => {
+    if (!user || !room) return;
+    socket.emit('room:reaction', {
+      roomId: room.roomId,
+      emoji,
+    });
+  }, [user, room]);
+
+  const sendSoundEffect = useCallback((effect: string) => {
+    if (!user || !room) return;
+    socket.emit('room:sound-effect', {
+      roomId: room.roomId,
+      effect,
+    });
+  }, [user, room]);
+
   return (
     <RoomContext.Provider value={{
-      room, user, error, createRoom, joinRoom, addTrack, syncPlayback, onTrackEnd, removeTrack, reorderTrack, setControlPermission, setPlayerPermission, heartTrack, voteSkip, leaveRoom, clearError, pendingTracks
+      room, user, error, createRoom, joinRoom, addTrack, syncPlayback, onTrackEnd, removeTrack, reorderTrack, setControlPermission, setPlayerPermission, heartTrack, voteSkip, sendReaction, sendSoundEffect, leaveRoom, clearError, pendingTracks
     }}>
       {children}
     </RoomContext.Provider>
