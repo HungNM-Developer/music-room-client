@@ -167,93 +167,6 @@ export const YoutubePlayer = ({
     }
   };
 
-  const togglePiP = async () => {
-    const container = document.getElementById('player-wrapper');
-    if (!container) return;
-
-    try {
-      // 1. Modern Document Picture-in-Picture (Chrome 116+)
-      if ('documentPictureInPicture' in window) {
-        const pip = (window as any).documentPictureInPicture;
-        
-        if (pip.window) {
-          pip.window.close();
-          return;
-        }
-
-        // Calculate size to match the current player aspect ratio
-        const pipWindow = await pip.requestWindow({
-          width: container.clientWidth,
-          height: container.clientHeight,
-        });
-
-        // CRITICAL: Ensure the PiP window knows it belongs to our domain to avoid YouTube Error 153
-        const base = document.createElement('base');
-        base.href = window.location.origin;
-        pipWindow.document.head.append(base);
-
-        // Copy styles from the main window to PiP window
-        [...document.styleSheets].forEach((styleSheet) => {
-          try {
-            const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
-            const style = document.createElement('style');
-            style.textContent = cssRules;
-            pipWindow.document.head.appendChild(style);
-          } catch (e) {
-            const link = document.createElement('link');
-            if (styleSheet.href) {
-              link.rel = 'stylesheet';
-              link.href = styleSheet.href;
-              pipWindow.document.head.appendChild(link);
-            }
-          }
-        });
-
-        // Move the player to PiP window
-        pipWindow.document.body.append(container);
-
-        // Try to trigger play immediately using the gesture from the PiP button click
-        setTimeout(() => {
-          if (playerRef.current?.playVideo && isPlaying) {
-            playerRef.current.playVideo();
-            audioRef.current?.play().catch(() => {});
-          }
-        }, 500);
-
-        // Handle the return home when PiP closes
-        pipWindow.addEventListener("pagehide", () => {
-          const destination = document.querySelector('.cinema-stage-inner') || document.body;
-          destination.append(container);
-          
-          // Force a state refresh when moving back
-          setTimeout(() => {
-            if (playerRef.current?.seekTo) {
-               const currentTime = playerRef.current.getCurrentTime();
-               playerRef.current.seekTo(currentTime, true);
-               if (isPlaying) playerRef.current.playVideo();
-            }
-          }, 100);
-        });
-        return;
-      }
-
-      // 2. Fallback: Standard Video PiP (Safari/Firefox)
-      const video = container.querySelector('video');
-      if (video && (video as any).requestPictureInPicture) {
-        if (document.pictureInPictureElement) {
-          await document.exitPictureInPicture();
-        } else {
-          await (video as any).requestPictureInPicture();
-        }
-      } else {
-        // Ultimate fallback for YouTube specifically
-        alert("Để bật PiP trên trình duyệt này, vui lòng nhấn chuột phải 2 lần liên tiếp vào video và chọn 'Ảnh trong ảnh'.");
-      }
-    } catch (e) {
-      console.warn('PiP transition failed:', e);
-    }
-  };
-
   const handleReady: YouTubeProps['onReady'] = (event) => {
     playerRef.current = event.target;
     setIsPlayerReady(true);
@@ -278,7 +191,7 @@ export const YoutubePlayer = ({
   };
 
   return (
-    <div id="player-wrapper" className="relative aspect-video w-full rounded-2xl md:rounded-[2.5rem] overflow-hidden glass-card shadow-2xl bg-black">
+    <div className="relative aspect-video w-full rounded-2xl md:rounded-[2.5rem] overflow-hidden glass-card shadow-2xl bg-black">
       <YouTube
         videoId={videoId}
         opts={{
@@ -291,7 +204,6 @@ export const YoutubePlayer = ({
             modestbranding: 1,
             rel: 0,
             playsinline: 1,
-            // Use host instead of full origin to be more flexible with PiP windows
             origin: typeof window !== 'undefined' ? window.location.origin : '',
           },
         }}
@@ -299,18 +211,6 @@ export const YoutubePlayer = ({
         onStateChange={handleStateChange}
         className="absolute top-0 left-0 w-full h-full"
       />
-
-      {/* PiP Button */}
-      <button 
-        onClick={togglePiP}
-        className="absolute top-6 right-6 z-20 p-2.5 bg-black/40 hover:bg-black/60 backdrop-blur-xl rounded-2xl text-white/50 hover:text-white transition-all border border-white/10 group shadow-2xl"
-        title="Picture in Picture"
-      >
-        <svg viewBox="0 0 24 24" className="w-5 h-5 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" strokeWidth="2.5">
-          <path d="M15 11h-5v5h5v-5z" fill="currentColor" fillOpacity="0.4" />
-          <path d="M21 15V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h8" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
       
       {/* Mobile/Autoplay Block Overlay */}
       {isBlocked && isPlaying && (
