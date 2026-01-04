@@ -212,16 +212,27 @@ export const YoutubePlayer = ({
         // Move the player to PiP window
         pipWindow.document.body.append(container);
 
+        // Try to trigger play immediately using the gesture from the PiP button click
+        setTimeout(() => {
+          if (playerRef.current?.playVideo && isPlaying) {
+            playerRef.current.playVideo();
+            audioRef.current?.play().catch(() => {});
+          }
+        }, 500);
+
         // Handle the return home when PiP closes
         pipWindow.addEventListener("pagehide", () => {
           const destination = document.querySelector('.cinema-stage-inner') || document.body;
           destination.append(container);
           
-          // Re-sync after moving back to ensure YouTube doesn't freeze
-          if (playerRef.current?.seekTo) {
-             const currentTime = playerRef.current.getCurrentTime();
-             playerRef.current.seekTo(currentTime, true);
-          }
+          // Force a state refresh when moving back
+          setTimeout(() => {
+            if (playerRef.current?.seekTo) {
+               const currentTime = playerRef.current.getCurrentTime();
+               playerRef.current.seekTo(currentTime, true);
+               if (isPlaying) playerRef.current.playVideo();
+            }
+          }, 100);
         });
         return;
       }
@@ -267,7 +278,7 @@ export const YoutubePlayer = ({
   };
 
   return (
-    <div id="player-wrapper" className="relative aspect-video w-full rounded-3xl overflow-hidden glass-card shadow-2xl bg-black">
+    <div id="player-wrapper" className="relative aspect-video w-full rounded-2xl md:rounded-[2.5rem] overflow-hidden glass-card shadow-2xl bg-black">
       <YouTube
         videoId={videoId}
         opts={{
@@ -281,7 +292,7 @@ export const YoutubePlayer = ({
             rel: 0,
             playsinline: 1,
             // Use host instead of full origin to be more flexible with PiP windows
-            origin: typeof window !== 'undefined' ? window.location.host : '',
+            origin: typeof window !== 'undefined' ? window.location.origin : '',
           },
         }}
         onReady={handleReady}
@@ -305,10 +316,10 @@ export const YoutubePlayer = ({
       {isBlocked && isPlaying && (
         <div 
           onClick={handleManualPlay}
-          className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm cursor-pointer group transition-all"
+          className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md cursor-pointer group transition-all"
         >
-          <div className="bg-white text-black px-8 py-4 rounded-2xl font-black text-sm tracking-widest uppercase flex items-center gap-3 shadow-2xl group-hover:scale-105 transition-transform animate-pulse">
-            <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center">
+          <div className="bg-white text-black px-10 py-5 rounded-3xl font-black text-sm tracking-widest uppercase flex items-center gap-4 shadow-[0_0_50px_rgba(255,255,255,0.2)] group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center shadow-lg">
               <span className="translate-x-0.5">▶</span>
             </div>
             Tap to Start Listening
