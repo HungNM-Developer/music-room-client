@@ -32,20 +32,22 @@ export const CinemaStage = ({
     >
       {canPlay ? (
           currentVideoId ? (
-            <YoutubePlayer
-              videoId={currentVideoId}
-              isPlaying={room.playbackState.isPlaying}
-              currentTime={room.playbackState.currentTime}
-              volume={volume}
-              isMuted={isMuted}
-              trackTitle={room.currentTrack?.title}
-              trackThumbnail={room.currentTrack?.thumbnail}
-              onReady={(player) => {
-                playerRef.current = player;
-                setDuration(player.getDuration());
-              }}
-              onEnd={() => onTrackEnd(room.roomId)}
-            />
+            <div className="cinema-stage-inner w-full">
+              <YoutubePlayer
+                videoId={currentVideoId}
+                isPlaying={room.playbackState.isPlaying}
+                currentTime={room.playbackState.currentTime}
+                volume={volume}
+                isMuted={isMuted}
+                trackTitle={room.currentTrack?.title}
+                trackThumbnail={room.currentTrack?.thumbnail}
+                onReady={(player) => {
+                  playerRef.current = player;
+                  setDuration(player.getDuration());
+                }}
+                onEnd={() => onTrackEnd(room.roomId)}
+              />
+            </div>
           ) : (
             <div className="aspect-video flex flex-col items-center justify-center py-12 md:py-32 text-slate-600">
               <div className="w-16 h-16 md:w-20 md:h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 md:mb-8">

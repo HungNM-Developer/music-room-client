@@ -167,6 +167,68 @@ export const YoutubePlayer = ({
     }
   };
 
+  const togglePiP = async () => {
+    const container = document.getElementById('player-wrapper');
+    if (!container) return;
+
+    try {
+      // 1. Modern Document Picture-in-Picture (Chrome 116+)
+      // Allows popping out the entire DIV including overlays
+      if ('documentPictureInPicture' in window) {
+        const pip = (window as any).documentPictureInPicture;
+        
+        if (pip.window) {
+          pip.window.close();
+          return;
+        }
+
+        const pipWindow = await pip.requestWindow({
+          width: container.clientWidth,
+          height: container.clientHeight,
+        });
+
+        // Copy styles so it looks the same
+        [...document.styleSheets].forEach((styleSheet) => {
+          try {
+            const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
+            const style = document.createElement('style');
+            style.textContent = cssRules;
+            pipWindow.document.head.appendChild(style);
+          } catch (e) {
+            const link = document.createElement('link');
+            if (styleSheet.href) {
+              link.rel = 'stylesheet';
+              link.href = styleSheet.href;
+              pipWindow.document.head.appendChild(link);
+            }
+          }
+        });
+
+        // Move container to PiP window
+        pipWindow.document.body.append(container);
+
+        // Move back when closed
+        pipWindow.addEventListener("pagehide", () => {
+          const stageArea = document.querySelector('.cinema-stage-inner') || document.body;
+          stageArea.append(container);
+        });
+        return;
+      }
+
+      // 2. Fallback: Standard Video PiP (Safari/Firefox)
+      const video = container.querySelector('video');
+      if (video && (video as any).requestPictureInPicture) {
+        if (document.pictureInPictureElement) {
+          await document.exitPictureInPicture();
+        } else {
+          await (video as any).requestPictureInPicture();
+        }
+      }
+    } catch (e) {
+      console.error('PiP error:', e);
+    }
+  };
+
   const handleReady: YouTubeProps['onReady'] = (event) => {
     playerRef.current = event.target;
     setIsPlayerReady(true);
@@ -191,7 +253,7 @@ export const YoutubePlayer = ({
   };
 
   return (
-    <div className="relative aspect-video w-full rounded-3xl overflow-hidden glass-card shadow-2xl bg-black">
+    <div id="player-wrapper" className="relative aspect-video w-full rounded-3xl overflow-hidden glass-card shadow-2xl bg-black">
       <YouTube
         videoId={videoId}
         opts={{
@@ -211,6 +273,18 @@ export const YoutubePlayer = ({
         onStateChange={handleStateChange}
         className="absolute top-0 left-0 w-full h-full"
       />
+
+      {/* PiP Button */}
+      <button 
+        onClick={togglePiP}
+        className="absolute top-4 right-4 z-20 p-2 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-xl text-white/50 hover:text-white transition-all border border-white/10 group shadow-xl"
+        title="Picture in Picture"
+      >
+        <svg viewBox="0 0 24 24" className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M19 11h-8v6h8v-6z" fill="currentColor" fillOpacity="0.3" />
+          <path d="M21 19V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2zM5 5h14v14H5V5z" />
+        </svg>
+      </button>
       
       {/* Mobile/Autoplay Block Overlay */}
       {isBlocked && isPlaying && (
