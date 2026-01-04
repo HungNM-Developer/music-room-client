@@ -38,6 +38,8 @@ export const CinemaStage = ({
               currentTime={room.playbackState.currentTime}
               volume={volume}
               isMuted={isMuted}
+              trackTitle={room.currentTrack?.title}
+              trackThumbnail={room.currentTrack?.thumbnail}
               onReady={(player) => {
                 playerRef.current = player;
                 setDuration(player.getDuration());

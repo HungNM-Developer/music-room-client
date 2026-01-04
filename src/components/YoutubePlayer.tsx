@@ -11,13 +11,74 @@ interface YoutubePlayerProps {
   isMuted: boolean;
   onReady: (player: any) => void;
   onEnd?: () => void;
+  trackTitle?: string;
+  trackThumbnail?: string;
 }
 
-export const YoutubePlayer = ({ videoId, isPlaying, currentTime, volume, isMuted, onReady, onEnd }: YoutubePlayerProps) => {
+export const YoutubePlayer = ({ 
+  videoId, isPlaying, currentTime, volume, isMuted, onReady, onEnd, trackTitle, trackThumbnail 
+}: YoutubePlayerProps) => {
   const playerRef = useRef<any>(null);
   const [isPlayerReady, setIsPlayerReady] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const lastVideoId = useRef(videoId);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // --- Background Playback & Media Session Support ---
+  useEffect(() => {
+    if ('mediaSession' in navigator && trackTitle) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: trackTitle,
+        artist: 'Music Room',
+        album: 'Shared Queue',
+        artwork: [
+          { src: trackThumbnail || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`, sizes: '512x512', type: 'image/jpeg' }
+        ]
+      });
+
+      navigator.mediaSession.setActionHandler('play', () => {
+        playerRef.current?.playVideo();
+      });
+      navigator.mediaSession.setActionHandler('pause', () => {
+        playerRef.current?.pauseVideo();
+      });
+      if (onEnd) {
+        navigator.mediaSession.setActionHandler('nexttrack', () => {
+           onEnd();
+        });
+      }
+    }
+  }, [trackTitle, trackThumbnail, videoId, onEnd]);
+
+  useEffect(() => {
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+    }
+  }, [isPlaying]);
+
+  // Keep-alive: Silent audio loop to prevent browser throttling background JS
+  useEffect(() => {
+    // Create an invisible audio element playing silence
+    const audio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFRm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==');
+    audio.loop = true;
+    audioRef.current = audio;
+
+    const tryPlaySilence = () => {
+      if (isPlaying) {
+        audio.play().catch(() => {
+          // May fail due to autoplay block, but once user interacts (Tap to Start), it works
+        });
+      } else {
+        audio.pause();
+      }
+    };
+
+    tryPlaySilence();
+    return () => {
+      audio.pause();
+      audioRef.current = null;
+    };
+  }, [isPlaying]);
 
   // Handle Video Change
   useEffect(() => {
@@ -44,13 +105,12 @@ export const YoutubePlayer = ({ videoId, isPlaying, currentTime, volume, isMuted
         if (typeof player.playVideo !== 'function') return;
 
         if (isPlaying) {
-          const playPromise = player.playVideo();
-          // Some versions of YT API return a promise that we can check
-          if (playPromise && typeof playPromise.catch === 'function') {
-            playPromise.catch(() => setIsBlocked(true));
-          }
+          player.playVideo();
+          // Also resume our silent keep-alive
+          audioRef.current?.play().catch(() => {});
         } else {
           player.pauseVideo();
+          audioRef.current?.pause();
         }
 
         if (typeof player.getCurrentTime === 'function') {
@@ -66,15 +126,13 @@ export const YoutubePlayer = ({ videoId, isPlaying, currentTime, volume, isMuted
     }
   }, [isPlaying, currentTime, isPlayerReady]);
 
-  // Periodically check if we are supposed to be playing but are stuck (detecting mobile autoplay block)
+  // Periodically check if we are supposed to be playing but are stuck
   useEffect(() => {
     if (!isPlaying || !isPlayerReady || !playerRef.current) return;
 
     const interval = setInterval(() => {
       const state = playerRef.current.getPlayerState?.();
-      // States: -1 (unstarted), 0 (ended), 1 (playing), 2 (paused), 3 (buffering), 5 (video cued)
       if (isPlaying && state !== 1 && state !== 3) {
-        // Stuck in non-playing state despite isPlaying being true
         setIsBlocked(true);
       } else if (state === 1) {
         setIsBlocked(false);
@@ -104,6 +162,7 @@ export const YoutubePlayer = ({ videoId, isPlaying, currentTime, volume, isMuted
   const handleManualPlay = () => {
     if (playerRef.current) {
       playerRef.current.playVideo();
+      audioRef.current?.play().catch(() => {});
       setIsBlocked(false);
     }
   };
@@ -114,8 +173,8 @@ export const YoutubePlayer = ({ videoId, isPlaying, currentTime, volume, isMuted
     onReady(event.target);
     
     if (isPlaying) {
-        const result = event.target.playVideo();
-        // Fallback for mobile: if first play fails, it usually remains in state 2 or 5
+        event.target.playVideo();
+        audioRef.current?.play().catch(() => {});
     }
     if (currentTime > 0) event.target.seekTo(currentTime, true);
     event.target.setVolume(volume);
