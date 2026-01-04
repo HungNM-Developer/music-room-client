@@ -168,8 +168,10 @@ export const YoutubePlayer = ({ videoId, isPlaying, currentTime, volume, isMuted
         </div>
       )}
 
-      {/* Invisible overlay for protection */}
-      {!isBlocked && <div className="absolute inset-0 z-10 bg-transparent pointer-events-none" />}
+      {/* Protection overlay: Blocks all direct interaction with the YouTube iframe */}
+      {!isBlocked && (
+        <div className="absolute inset-0 z-10 bg-transparent cursor-default" />
+      )}
     </div>
   );
 };
