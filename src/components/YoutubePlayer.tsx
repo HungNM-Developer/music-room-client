@@ -173,7 +173,6 @@ export const YoutubePlayer = ({
 
     try {
       // 1. Modern Document Picture-in-Picture (Chrome 116+)
-      // Allows popping out the entire DIV including overlays
       if ('documentPictureInPicture' in window) {
         const pip = (window as any).documentPictureInPicture;
         
@@ -182,12 +181,18 @@ export const YoutubePlayer = ({
           return;
         }
 
+        // Calculate size to match the current player aspect ratio
         const pipWindow = await pip.requestWindow({
           width: container.clientWidth,
           height: container.clientHeight,
         });
 
-        // Copy styles so it looks the same
+        // CRITICAL: Ensure the PiP window knows it belongs to our domain to avoid YouTube Error 153
+        const base = document.createElement('base');
+        base.href = window.location.origin;
+        pipWindow.document.head.append(base);
+
+        // Copy styles from the main window to PiP window
         [...document.styleSheets].forEach((styleSheet) => {
           try {
             const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join('');
@@ -204,13 +209,19 @@ export const YoutubePlayer = ({
           }
         });
 
-        // Move container to PiP window
+        // Move the player to PiP window
         pipWindow.document.body.append(container);
 
-        // Move back when closed
+        // Handle the return home when PiP closes
         pipWindow.addEventListener("pagehide", () => {
-          const stageArea = document.querySelector('.cinema-stage-inner') || document.body;
-          stageArea.append(container);
+          const destination = document.querySelector('.cinema-stage-inner') || document.body;
+          destination.append(container);
+          
+          // Re-sync after moving back to ensure YouTube doesn't freeze
+          if (playerRef.current?.seekTo) {
+             const currentTime = playerRef.current.getCurrentTime();
+             playerRef.current.seekTo(currentTime, true);
+          }
         });
         return;
       }
@@ -223,9 +234,12 @@ export const YoutubePlayer = ({
         } else {
           await (video as any).requestPictureInPicture();
         }
+      } else {
+        // Ultimate fallback for YouTube specifically
+        alert("Để bật PiP trên trình duyệt này, vui lòng nhấn chuột phải 2 lần liên tiếp vào video và chọn 'Ảnh trong ảnh'.");
       }
     } catch (e) {
-      console.error('PiP error:', e);
+      console.warn('PiP transition failed:', e);
     }
   };
 
@@ -265,8 +279,9 @@ export const YoutubePlayer = ({
             disablekb: 1,
             modestbranding: 1,
             rel: 0,
-            playsinline: 1, // CRITICAL for mobile background/inline playback
-            origin: typeof window !== 'undefined' ? window.location.origin : '',
+            playsinline: 1,
+            // Use host instead of full origin to be more flexible with PiP windows
+            origin: typeof window !== 'undefined' ? window.location.host : '',
           },
         }}
         onReady={handleReady}
@@ -277,12 +292,12 @@ export const YoutubePlayer = ({
       {/* PiP Button */}
       <button 
         onClick={togglePiP}
-        className="absolute top-4 right-4 z-20 p-2 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-xl text-white/50 hover:text-white transition-all border border-white/10 group shadow-xl"
+        className="absolute top-6 right-6 z-20 p-2.5 bg-black/40 hover:bg-black/60 backdrop-blur-xl rounded-2xl text-white/50 hover:text-white transition-all border border-white/10 group shadow-2xl"
         title="Picture in Picture"
       >
-        <svg viewBox="0 0 24 24" className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M19 11h-8v6h8v-6z" fill="currentColor" fillOpacity="0.3" />
-          <path d="M21 19V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2zM5 5h14v14H5V5z" />
+        <svg viewBox="0 0 24 24" className="w-5 h-5 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" strokeWidth="2.5">
+          <path d="M15 11h-5v5h5v-5z" fill="currentColor" fillOpacity="0.4" />
+          <path d="M21 15V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h8" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
       
