@@ -34,8 +34,21 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingTracks, setPendingTracks] = useState<Track[]>([]);
+  
+  // Bump this version to force all clients to clear cache on reload
+  const CLIENT_VERSION = '2025-01-05-v1.2'; 
 
   useEffect(() => {
+    // 1. Version Check & Cache Clearing
+    const storedVersion = localStorage.getItem('ms_client_version');
+    if (storedVersion !== CLIENT_VERSION) {
+       console.log(`[Version Check] New version detected (${CLIENT_VERSION}). Clearing stale cache...`);
+       localStorage.clear(); // Wipe everything to be safe
+       localStorage.setItem('ms_client_version', CLIENT_VERSION);
+       // Optional: Reload once to ensure clean state if critical
+    }
+
+    // 2. Socket Connection
     socket.connect();
 
     socket.on('room:joined', ({ room, user }) => {
