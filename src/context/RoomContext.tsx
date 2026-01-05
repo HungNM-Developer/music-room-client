@@ -160,8 +160,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const onTrackEnd = useCallback((roomId: string) => {
     if (!user?.canPlay) return;
-    socket.emit('track:end', { roomId });
-  }, [user]);
+    socket.emit('track:end', { roomId, trackId: room?.currentTrack?.trackId });
+  }, [user, room]);
 
 
   const removeTrack = useCallback((roomId: string, trackId: string) => {
