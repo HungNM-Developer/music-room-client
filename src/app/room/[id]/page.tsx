@@ -207,7 +207,7 @@ export default function RoomPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-slate-200 relative overflow-hidden selection:bg-brand-primary/30">
+    <div className="min-h-screen bg-[#050505] text-slate-200 relative selection:bg-brand-primary/30">
         <HeartCanvas />
         
         {/* --- Immersive Ambient Background (PERSISTENT) --- */}
@@ -252,7 +252,7 @@ export default function RoomPage() {
                         />
                       )}
                     </div>
-
+ 
                     {/* Dynamic Header */}
                     <RoomHeader 
                         room={room}
@@ -269,10 +269,10 @@ export default function RoomPage() {
                         isProbing={isProbing}
                     />
 
-      {/* Main Layout: Use min-h-dvh for mobile browsers to handle address bar resizing properly */}
-      <main className="max-w-[1700px] mx-auto p-3 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 h-auto lg:h-[calc(100vh-120px)] min-h-[calc(100dvh-120px)]">
+      {/* Main Layout: Dynamic height for fluid scrolling on all screens */}
+      <main className="max-w-[1700px] mx-auto p-3 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 h-auto">
         {/* Cinematic Stage Area */}
-        <div className="lg:col-span-8 space-y-6 overflow-y-auto no-scrollbar pb-10 relative z-10">
+        <div className="lg:col-span-8 space-y-6 pb-10 relative z-10">
                     <CinemaStage 
                         canPlay={canPlay}
                         currentVideoId={currentVideoId}
@@ -332,8 +332,8 @@ export default function RoomPage() {
         </div>
 
         {/* Studio Control Center (Sidebar) */}
-        <div className="lg:col-span-4 flex flex-col gap-8 h-full">
-          <div className="glass-effect rounded-[3rem] flex flex-col flex-1 overflow-hidden">
+        <div className="lg:col-span-4 flex flex-col gap-8 h-auto lg:h-[calc(100vh-140px)] lg:sticky lg:top-28">
+          <div className="glass-effect rounded-[3rem] flex flex-col flex-1 overflow-hidden shadow-2xl">
             {/* --- Advanced Tab Control --- */}
             <SidebarTabs 
                 activeTab={activeTab}
