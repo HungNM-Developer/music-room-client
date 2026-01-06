@@ -9,22 +9,22 @@ interface SidebarTabsProps {
 
 export const SidebarTabs = ({ activeTab, setActiveTab, queueLength, listenersCount }: SidebarTabsProps) => {
   return (
-    <div className="p-3 flex gap-2 border-b border-white/5 bg-white/2">
+    <div className="p-4 flex gap-2.5 border-b border-white/5 bg-white/[0.01]">
       <button 
           onClick={() => setActiveTab('queue')}
-          className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl transition-all font-black text-xs uppercase tracking-widest
-              ${activeTab === 'queue' ? 'bg-surface-700 text-white shadow-xl shadow-black/20' : 'text-slate-500 hover:text-slate-300'}`}
+          className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl transition-all font-black text-[11px] uppercase tracking-[0.2em]
+              ${activeTab === 'queue' ? 'bg-gradient-to-br from-brand-primary to-brand-accent text-white shadow-[0_10px_30px_-5px_rgba(99,102,241,0.5)]' : 'text-slate-500 hover:text-slate-300'}`}
       >
           <LayoutList className="w-4 h-4" /> Queue
-          {queueLength > 0 && <span className="bg-brand-primary text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-black">{queueLength}</span>}
+          {queueLength > 0 && <span className="bg-white/20 text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-black backdrop-blur-md">{queueLength}</span>}
       </button>
       <button 
           onClick={() => setActiveTab('users')}
-          className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl transition-all font-black text-xs uppercase tracking-widest
-              ${activeTab === 'users' ? 'bg-surface-700 text-white shadow-xl shadow-black/20' : 'text-slate-500 hover:text-slate-300'}`}
+          className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl transition-all font-black text-[11px] uppercase tracking-[0.2em]
+              ${activeTab === 'users' ? 'bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow-[0_10px_30px_-5px_rgba(99,102,241,0.5)]' : 'text-slate-500 hover:text-slate-300'}`}
       >
           <Users className="w-4 h-4" /> Listeners
-          <span className="bg-indigo-500 text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-black">{listenersCount}</span>
+          <span className="bg-white/20 text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-black backdrop-blur-md">{listenersCount}</span>
       </button>
     </div>
   );

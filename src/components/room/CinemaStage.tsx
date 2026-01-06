@@ -26,9 +26,9 @@ export const CinemaStage = ({
 }: CinemaStageProps) => {
   return (
     <motion.div 
-      initial={{ opacity: 0, scale: 0.98, y: 10 }}
+      initial={{ opacity: 0, scale: 0.98, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      className="relative rounded-[3.5rem] overflow-hidden bg-black/40 border border-white/10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] backdrop-blur-md"
+      className="relative rounded-[4rem] overflow-hidden bg-white/[0.02] border border-white/10 shadow-[0_48px_96px_-24px_rgba(0,0,0,0.8),0_0_40px_rgba(99,102,241,0.1)] backdrop-blur-3xl"
     >
       {canPlay ? (
           currentVideoId ? (

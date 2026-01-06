@@ -32,16 +32,16 @@ export const QueueList = ({
         {combinedQueue.length > 0 ? (
           combinedQueue.map((track, idx) => (
             <motion.div 
-              key={track.trackId}
               layout
+              key={track.trackId}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className={`group relative flex gap-4 p-3 rounded-[1.5rem] transition-all mb-3 border shadow-sm backdrop-blur-md
-                ${track.status === 'pending' ? 'opacity-60 border-dashed border-white/20' : 
+              className={`group relative flex gap-4 p-4 rounded-[2rem] transition-all mb-4 border shadow-xl backdrop-blur-2xl
+                ${track.status === 'pending' ? 'opacity-50 border-dashed border-white/10' : 
                   idx === 0 
-                    ? 'bg-brand-primary/10 border-brand-primary/30 shadow-[0_0_20px_rgba(99,102,241,0.1) ring-1 ring-brand-primary/20' 
-                    : 'bg-white/[0.03] hover:bg-white/[0.08] border-transparent hover:border-white/5'
+                    ? 'bg-gradient-to-br from-brand-primary/10 to-brand-accent/10 border-brand-primary/40 shadow-[0_0_40px_-10px_rgba(99,102,241,0.4)] ring-1 ring-brand-primary/20' 
+                    : 'bg-white/[0.03] hover:bg-white/[0.08] border-white/5 hover:border-white/10'
                 }`}
             >
               <div className="w-20 h-12 rounded-xl overflow-hidden bg-surface-800 flex-shrink-0 relative ring-1 ring-white/5 transition-all">

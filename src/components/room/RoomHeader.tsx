@@ -32,16 +32,16 @@ export const RoomHeader = ({
   isProbing
 }: RoomHeaderProps) => {
   return (
-    <header className="relative z-10 flex-col gap-4 h-auto py-4 md:flex-row md:h-20 border-b border-white/5 px-4 md:px-8 flex items-center justify-between sticky top-0 rounded-b-[2.5rem] mx-2 md:mx-4 my-2 shadow-2xl backdrop-blur-[30px] bg-black/30">
+    <header className="relative z-50 flex-col gap-4 h-auto py-5 md:flex-row md:h-24 border-b border-white/5 px-4 md:px-10 flex items-center justify-between sticky top-0 rounded-b-[2.5rem] mx-2 md:mx-6 my-2 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.5)] bg-white/[0.03] backdrop-blur-3xl">
       <div className="flex items-center gap-6">
         <div 
           className="flex items-center gap-3 cursor-pointer group" 
           onClick={() => router.push('/')}
         >
-          <div className="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center shadow-lg shadow-brand-primary/20 group-hover:scale-110 transition-transform">
+          <div className="w-11 h-11 bg-gradient-to-br from-brand-primary to-brand-accent rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.5)] group-hover:scale-110 transition-transform">
             <Music className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-xl font-black tracking-tighter hidden md:block text-white">Room<span className="text-brand-primary">Sync</span></h1>
+          <h1 className="text-2xl font-black tracking-tighter hidden md:block text-white">Room<span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-primary to-brand-accent">Sync</span></h1>
         </div>
         
         <div className="h-4 w-[1px] bg-white/10" />
