@@ -131,7 +131,10 @@ export const YoutubePlayer = ({
     if (!isPlaying || !isPlayerReady || !playerRef.current) return;
 
     const interval = setInterval(() => {
-      const state = playerRef.current.getPlayerState?.();
+      const player = playerRef.current;
+      if (!player || typeof player.getPlayerState !== 'function') return;
+
+      const state = player.getPlayerState();
       if (isPlaying && state !== 1 && state !== 3) {
         setIsBlocked(true);
       } else if (state === 1) {
