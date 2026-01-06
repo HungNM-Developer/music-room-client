@@ -36,7 +36,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [pendingTracks, setPendingTracks] = useState<Track[]>([]);
   
   // Bump this version to force all clients to clear cache on reload
-  const CLIENT_VERSION = '2025-01-06-v1.1'; 
+  const CLIENT_VERSION = '2025-01-06-v1.2'; 
 
   useEffect(() => {
     // 1. Version Check & Cache Clearing
