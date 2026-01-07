@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { Pause, User as UserIcon, Heart, VolumeX, Volume2, Play, SkipForward, Megaphone, PartyPopper, Ghost } from 'lucide-react';
+// import { Pause, User as UserIcon, Heart, VolumeX, Volume2, Play, SkipForward, Megaphone, PartyPopper, Ghost } from 'lucide-react';
+import { Pause, User as UserIcon, Heart, VolumeX, Volume2, Play, SkipForward } from 'lucide-react';
 import { PlayingVisualizer } from './PlayingVisualizer';
 import { triggerHearts } from './HeartCanvas';
 import { Room, User } from '@/types/room';
@@ -42,11 +43,11 @@ export const PlaybackControls = ({
   sendSoundEffect
 }: PlaybackControlsProps) => {
   const emojis = ['🔥', '💀', '🤣', '👏', '❤️', '👍', '✨', '🎵'];
-  const soundEffects = [
-    { id: 'airhorn', icon: <Megaphone className="w-4 h-4" />, label: 'Airhorn', color: 'text-red-400' },
-    { id: 'applause', icon: <PartyPopper className="w-4 h-4" />, label: 'Clap', color: 'text-green-400' },
-    { id: 'laugh', icon: <Ghost className="w-1.5 h-1.5" />, label: 'Laugh', color: 'text-yellow-400' }, // Ghost for laugh vibe or just Smile
-  ];
+  // const soundEffects = [
+  //   { id: 'airhorn', icon: <Megaphone className="w-4 h-4" />, label: 'Airhorn', color: 'text-red-400' },
+  //   { id: 'applause', icon: <PartyPopper className="w-4 h-4" />, label: 'Clap', color: 'text-green-400' },
+  //   { id: 'laugh', icon: <Ghost className="w-1.5 h-1.5" />, label: 'Laugh', color: 'text-yellow-400' }, // Ghost for laugh vibe or just Smile
+  // ];
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -192,7 +193,7 @@ export const PlaybackControls = ({
       </div>
 
       {/* Prank Soundboard Area */}
-      <div className="mt-4 flex items-center justify-center gap-3">
+      {/* <div className="mt-4 flex items-center justify-center gap-3">
         {soundEffects.map((sfx) => (
           <motion.button
             key={sfx.id}
@@ -205,7 +206,7 @@ export const PlaybackControls = ({
             <span className="text-[10px] font-black uppercase tracking-wider">{sfx.label}</span>
           </motion.button>
         ))}
-      </div>
+      </div> */}
     </motion.div>
   );
 };
