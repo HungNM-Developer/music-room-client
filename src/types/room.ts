@@ -19,6 +19,7 @@ export interface Track {
   hearts: string[];
   addedAt: number;
   status?: 'pending' | 'active';
+  message?: string;
 }
 
 export interface PlaybackState {
@@ -35,9 +36,28 @@ export interface Room {
   currentTrack: Track | null;
   playbackState: PlaybackState;
   skipVotes: string[];
+  activityLogs: ActivityLog[];
+}
+
+export interface ActivityLog {
+  id: string;
+  timestamp: number;
+  type: string;
+  userId: string;
+  userName: string;
+  message: string;
+  metadata?: Record<string, any>;
+}
+
+export interface ChatMessage {
+  id: string;
+  userId: string;
+  userName: string;
+  content: string;
+  timestamp: number;
 }
 
 export interface JoinRoomResponse {
-    room: Room;
-    user: User;
+  room: Room;
+  user: User;
 }
