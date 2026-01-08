@@ -1,8 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { socket } from '../lib/socket';
-import { Room, User, Track } from '../types/room';
+import { Room, User, Track, ActivityLog, ChatMessage } from '../types/room';
 import { triggerReaction } from '../components/room/HeartCanvas';
 
 interface RoomContextType {
@@ -11,7 +11,7 @@ interface RoomContextType {
   error: string | null;
   createRoom: (name: string) => void;
   joinRoom: (roomId: string, name: string) => void;
-  addTrack: (roomId: string, youtubeUrl: string, metadata: { title: string; thumbnail: string; duration: number }) => void;
+  addTrack: (roomId: string, youtubeUrl: string, metadata: { title: string; thumbnail: string; duration: number }, message?: string) => void;
   syncPlayback: (roomId: string, isPlaying: boolean, currentTime: number) => void;
   onTrackEnd: (roomId: string) => void;
   removeTrack: (roomId: string, trackId: string) => void;
@@ -25,6 +25,11 @@ interface RoomContextType {
   leaveRoom: (roomId: string) => void;
   clearError: () => void;
   pendingTracks: Track[];
+  activityLogs: ActivityLog[];
+  chatMessages: ChatMessage[];
+  sendChat: (content: string) => void;
+  isTTSEnabled: boolean;
+  toggleTTS: () => void;
 }
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
@@ -34,18 +39,31 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pendingTracks, setPendingTracks] = useState<Track[]>([]);
-  
+  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   // Bump this version to force all clients to clear cache on reload
-  const CLIENT_VERSION = '2025-01-06-v1.4'; 
+  const CLIENT_VERSION = '2025-01-06-v1.4';
+
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [isTTSEnabled, setIsTTSEnabled] = useState(true);
+  const isTTSEnabledRef = useRef(isTTSEnabled);
+  const userRef = useRef(user);
+
+  useEffect(() => {
+    isTTSEnabledRef.current = isTTSEnabled;
+  }, [isTTSEnabled]);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   useEffect(() => {
     // 1. Version Check & Cache Clearing
     const storedVersion = localStorage.getItem('ms_client_version');
     if (storedVersion !== CLIENT_VERSION) {
-       console.log(`[Version Check] New version detected (${CLIENT_VERSION}). Clearing stale cache...`);
-       localStorage.clear(); // Wipe everything to be safe
-       localStorage.setItem('ms_client_version', CLIENT_VERSION);
-       // Optional: Reload once to ensure clean state if critical
+      console.log(`[Version Check] New version detected (${CLIENT_VERSION}). Clearing stale cache...`);
+      localStorage.clear(); // Wipe everything to be safe
+      localStorage.setItem('ms_client_version', CLIENT_VERSION);
+      // Optional: Reload once to ensure clean state if critical
     }
 
     // 2. Socket Connection
@@ -54,13 +72,16 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     socket.on('room:joined', ({ room, user }) => {
       setRoom(room);
       setUser(user);
+      if (room.activityLogs) setActivityLogs(room.activityLogs);
       localStorage.setItem('ms_user_name', user.name);
       localStorage.setItem('ms_last_room', room.roomId);
     });
 
     socket.on('room:update', (updatedRoom: Room) => {
+      // console.log('[RoomContext] room:update received', updatedRoom.activityLogs?.length);
       setRoom(updatedRoom);
-      
+      if (updatedRoom.activityLogs) setActivityLogs(updatedRoom.activityLogs);
+
       // Clear pending tracks once server update arrives
       setPendingTracks([]);
 
@@ -68,13 +89,13 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(prevUser => {
         if (!prevUser) return null;
         const updatedSelf = updatedRoom.users.find(u => u.userId === prevUser.userId);
-        
+
         // Save to session cache for persistence
         if (updatedSelf) {
-            localStorage.setItem('ms_user_name', updatedSelf.name);
-            localStorage.setItem('ms_last_room', updatedRoom.roomId);
+          localStorage.setItem('ms_user_name', updatedSelf.name);
+          localStorage.setItem('ms_last_room', updatedRoom.roomId);
         }
-        
+
         return updatedSelf || prevUser;
       });
     });
@@ -114,12 +135,28 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
+    socket.on('activity:new', (log: ActivityLog) => {
+      console.log('[RoomContext] activity:new received:', log);
+      setActivityLogs(prev => [log, ...prev].slice(0, 50));
+    });
+
+    socket.on('chat:receive', (message: ChatMessage) => {
+      setChatMessages(prev => [...prev, message]);
+
+      // Auto-speak if enabled and message is not from self
+      if (isTTSEnabledRef.current && message.userId !== userRef.current?.userId) {
+        speak(message.content);
+      }
+    });
+
     return () => {
       socket.off('room:joined');
       socket.off('room:update');
       socket.off('room:left');
       socket.off('room:reaction');
       socket.off('room:sound-effect');
+      socket.off('activity:new');
+      socket.off('chat:receive');
       socket.off('error');
     };
   }, []);
@@ -134,7 +171,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     socket.emit('room:join', { roomId, name });
   }, []);
 
-  const addTrack = useCallback((roomId: string, youtubeUrl: string, metadata: { title: string; thumbnail: string; duration: number }) => {
+  const addTrack = useCallback((roomId: string, youtubeUrl: string, metadata: { title: string; thumbnail: string; duration: number }, message?: string) => {
     if (!user || !room) return;
 
     // Check if user already has 4 tracks in the queue
@@ -154,7 +191,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
       addedBy: user.userId,
       hearts: [],
       addedAt: Date.now(),
-      status: 'pending'
+      status: 'pending',
+      message
     };
     setPendingTracks(prev => [...prev, tempTrack]);
 
@@ -162,7 +200,8 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
       roomId,
       youtubeUrl,
       userId: user.userId,
-      ...metadata
+      ...metadata,
+      message
     });
   }, [user]);
 
@@ -259,9 +298,46 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, [user, room]);
 
+  const speak = useCallback((text: string) => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'vi-VN';
+      window.speechSynthesis.speak(utterance);
+    }
+  }, []);
+
+  // Track Change Listener for TTS
+  const prevTrackId = useRef<string | null>(null);
+  useEffect(() => {
+    const currentTrack = room?.currentTrack;
+    // Only speak if user has enabled TTS and track changed
+    if (isTTSEnabledRef.current && currentTrack && currentTrack.trackId !== prevTrackId.current) {
+      if (currentTrack.message) {
+        speak(currentTrack.message);
+      }
+      prevTrackId.current = currentTrack.trackId;
+    }
+    if (!currentTrack) prevTrackId.current = null;
+  }, [room?.currentTrack, speak]); // dependency on speak
+
+  const sendChat = useCallback((content: string) => {
+    if (!user || !room) return;
+    socket.emit('chat:send', {
+      roomId: room.roomId,
+      content,
+      userId: user.userId,
+      userName: user.name
+    });
+  }, [user, room]);
+
+  const toggleTTS = useCallback(() => {
+    setIsTTSEnabled(prev => !prev);
+  }, []);
+
   return (
     <RoomContext.Provider value={{
-      room, user, error, createRoom, joinRoom, addTrack, syncPlayback, onTrackEnd, removeTrack, reorderTrack, setControlPermission, setPlayerPermission, heartTrack, voteSkip, sendReaction, sendSoundEffect, leaveRoom, clearError, pendingTracks
+      room, user, error, createRoom, joinRoom, addTrack, syncPlayback, onTrackEnd, removeTrack, reorderTrack, setControlPermission, setPlayerPermission, heartTrack, voteSkip, sendReaction, sendSoundEffect, leaveRoom, clearError, pendingTracks, activityLogs, chatMessages, sendChat, isTTSEnabled, toggleTTS
     }}>
       {children}
     </RoomContext.Provider>
