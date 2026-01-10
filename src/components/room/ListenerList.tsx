@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Crown, Headphones, Gamepad2, Heart } from 'lucide-react';
+import { Crown, Headphones, Gamepad2, Heart, Disc } from 'lucide-react';
 import { Room, User } from '@/types/room';
 
 interface ListenerListProps {
@@ -8,6 +8,7 @@ interface ListenerListProps {
   isAdmin: boolean;
   setPlayerPermission: (roomId: string, userId: string) => void;
   setControlPermission: (roomId: string, userId: string, canControl: boolean) => void;
+  setDjPermission: (roomId: string, userId: string, canDj: boolean) => void;
 }
 
 export const ListenerList = ({
@@ -15,7 +16,8 @@ export const ListenerList = ({
   user,
   isAdmin,
   setPlayerPermission,
-  setControlPermission
+  setControlPermission,
+  setDjPermission
 }: ListenerListProps) => {
   return (
     <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
@@ -43,6 +45,7 @@ export const ListenerList = ({
                   {u.role === 'admin' && <Crown className="w-3 h-3 text-yellow-500 flex-shrink-0" />}
                   {u.canPlay && <Headphones className="w-3 h-3 text-emerald-500 flex-shrink-0" />}
                   {u.canControl && <Gamepad2 className="w-3 h-3 text-amber-500 flex-shrink-0" />}
+                  {u.canDj && <Disc className="w-3 h-3 text-indigo-400 flex-shrink-0" />}
                 </span>
                 <div className="flex flex-wrap items-center gap-1.5 px-0.5">
                   {u.canPlay ? 
@@ -50,6 +53,7 @@ export const ListenerList = ({
                     <span className="text-[7px] font-black text-slate-600 bg-white/5 px-1 rounded-sm tracking-tighter uppercase">LISTENER</span>
                   }
                   {u.canControl && <span className="text-[7px] font-black text-amber-500 bg-amber-500/10 px-1 rounded-sm tracking-tighter uppercase">CONTROLLER</span>}
+                  {u.canDj && <span className="text-[7px] font-black text-indigo-400 bg-indigo-500/10 px-1 rounded-sm tracking-tighter uppercase">DJ</span>}
                   
                   {/* User's Total Hearts Received */}
                   {(room.queue.some(t => t.addedBy === u.userId && (t.hearts?.length || 0) > 0) || (room.currentTrack?.addedBy === u.userId && (room.currentTrack.hearts?.length || 0) > 0)) && (
@@ -84,6 +88,13 @@ export const ListenerList = ({
                       title={u.canControl ? "Remove Control Rights" : "Grant Control Rights"}
                     >
                       <Gamepad2 className="w-3 h-3" />
+                    </button>
+                    <button 
+                      onClick={() => setDjPermission(room.roomId, u.userId, !u.canDj)}
+                      className={`p-1.5 rounded-lg transition-all ${u.canDj ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30' : 'bg-surface-700 text-slate-400 hover:text-white'}`}
+                      title={u.canDj ? "Remove DJ Permissions" : "Grant DJ Permissions"}
+                    >
+                      <Disc className="w-3 h-3" />
                     </button>
                   </div>
                 )}

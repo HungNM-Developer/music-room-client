@@ -30,9 +30,25 @@ interface RoomContextType {
   activityLogs: ActivityLog[];
   chatMessages: ChatMessage[];
   sendChat: (content: string) => void;
+  setDjPermission: (roomId: string, targetUserId: string, canDj: boolean) => void;
+  triggerDjSound: (soundType: 'build' | 'drop' | 'clap' | 'horn' | 'airhorn' | 'laugh' | 'applause') => void;
 }
 
+
+
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
+
+const DJ_SOUNDS = {
+  build: '/sounds/build.mp3',
+  drop: '/sounds/drop.mp3',
+  clap: '/sounds/clap.mp3',
+  horn: '/sounds/horn.mp3',
+  airhorn: '/sounds/airhorn.mp3',
+  laugh: '/sounds/laugh.mp3',
+  applause: '/sounds/applause.wav',
+};
+
+
 
 // Voice preset configurations
 const getVoiceConfig = (preset?: VoicePreset): { pitch: number; rate: number } => {
@@ -64,7 +80,7 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [pendingTracks, setPendingTracks] = useState<Track[]>([]);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   // Bump this version to force all clients to clear cache on reload
-  const CLIENT_VERSION = '2025-01-10-v2.0';
+  const CLIENT_VERSION = '2025-01-10-v2.1';
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const userRef = useRef(user);
@@ -117,7 +133,21 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     });
 
+    socket.on('dj:event', ({ soundType }) => {
+      const audioUrl = DJ_SOUNDS[soundType as keyof typeof DJ_SOUNDS];
+      if (audioUrl) {
+        const audio = new Audio(audioUrl);
+        // Set specific volumes as per requirements
+        if (soundType === 'build') audio.volume = 0.7;
+        else if (soundType === 'clap') audio.volume = 0.5;
+        else audio.volume = 0.8;
+        
+        audio.play().catch(e => console.warn('[DJ] Playback blocked by browser', e));
+      }
+    });
+
     socket.on('room:left', () => {
+
       setRoom(null);
       setUser(null);
       setChatMessages([]); // Clear chat on leave
@@ -361,9 +391,30 @@ export const RoomProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   }, [user, room]);
 
+  const setDjPermission = useCallback((roomId: string, targetUserId: string, canDj: boolean) => {
+    if (!user || user.role !== 'admin') return;
+    socket.emit('dj:toggle-permission', {
+      roomId,
+      targetUserId,
+      canDj,
+      adminId: user.userId,
+    });
+  }, [user]);
+
+  const triggerDjSound = useCallback((soundType: 'build' | 'drop' | 'clap' | 'horn' | 'airhorn' | 'laugh' | 'applause') => {
+
+
+    if (!user || !room) return;
+    socket.emit('dj:trigger', {
+      roomId: room.roomId,
+      userId: user.userId,
+      soundType,
+    });
+  }, [user, room]);
+
   return (
     <RoomContext.Provider value={{
-      room, user, error, createRoom, joinRoom, addTrack, syncPlayback, onTrackEnd, removeTrack, reorderTrack, setControlPermission, setPlayerPermission, heartTrack, setTrackMessage, voteSkip, sendReaction, sendSoundEffect, leaveRoom, clearError, pendingTracks, activityLogs, chatMessages, sendChat
+      room, user, error, createRoom, joinRoom, addTrack, syncPlayback, onTrackEnd, removeTrack, reorderTrack, setControlPermission, setPlayerPermission, heartTrack, setTrackMessage, voteSkip, sendReaction, sendSoundEffect, leaveRoom, clearError, pendingTracks, activityLogs, chatMessages, sendChat, setDjPermission, triggerDjSound
     }}>
       {children}
     </RoomContext.Provider>

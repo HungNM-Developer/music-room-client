@@ -22,6 +22,7 @@ interface PlaybackControlsProps {
   voteSkip: (roomId: string) => void;
   sendReaction: (emoji: string) => void;
   sendSoundEffect: (effect: string) => void;
+  triggerDjSound: (soundType: 'build' | 'drop' | 'clap' | 'horn' | 'laugh' | 'applause') => void;
 }
 
 export const PlaybackControls = ({
@@ -40,7 +41,8 @@ export const PlaybackControls = ({
   heartTrack,
   voteSkip,
   sendReaction,
-  sendSoundEffect
+  sendSoundEffect,
+  triggerDjSound
 }: PlaybackControlsProps) => {
   const emojis = ['🔥', '💀', '🤣', '👏', '❤️', '👍', '✨', '🎵'];
   // const soundEffects = [
@@ -193,21 +195,30 @@ export const PlaybackControls = ({
       </div>
 
 
-      {/* Prank Soundboard Area */}
-      {/* <div className="mt-4 flex items-center justify-center gap-3">
-        {soundEffects.map((sfx) => (
-          <motion.button
-            key={sfx.id}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => sendSoundEffect(sfx.id)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all ${sfx.color}`}
-          >
-            {sfx.id === 'laugh' ? <span className="text-lg">🤣</span> : sfx.icon}
-            <span className="text-[10px] font-black uppercase tracking-wider">{sfx.label}</span>
-          </motion.button>
-        ))}
-      </div> */}
+      {/* Prank Soundboard Area (Only for DJ/Admin) */}
+      {(user?.canDj || user?.role === 'admin') && (
+        <div className="mt-4 flex items-center justify-center gap-3">
+          {[
+            { id: 'laugh', icon: '🤣', label: 'Laugh', color: 'text-yellow-400' },
+            { id: 'airhorn', icon: '📣', label: 'Airhorn', color: 'text-red-400' },
+            { id: 'applause', icon: '👏', label: 'Applause', color: 'text-green-400' },
+          ].map((sfx) => (
+
+            <motion.button
+              key={sfx.id}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => triggerDjSound(sfx.id as any)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all ${sfx.color}`}
+            >
+
+              <span className="text-lg">{sfx.icon}</span>
+              <span className="text-[10px] font-black uppercase tracking-wider">{sfx.label}</span>
+            </motion.button>
+          ))}
+        </div>
+      )}
+
     </motion.div>
   );
 };

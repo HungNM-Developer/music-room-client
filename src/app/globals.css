@@ -9,7 +9,9 @@
   --color-surface-800: oklch(0.16 0.03 240);
   --color-surface-700: oklch(0.2 0.04 240);
   --shadow-3xl: 0 35px 60px -15px rgba(0, 0, 0, 0.5);
+  --animate-spin-slow: spin 3s linear infinite;
 }
+
 
 @layer base {
   body {

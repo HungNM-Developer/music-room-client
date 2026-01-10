@@ -23,6 +23,7 @@ import { ChatList } from '@/components/room/ChatList';
 import { GlobalErrorToast } from '@/components/room/GlobalErrorToast';
 import { ActivityLogPopup } from '@/components/room/ActivityLogPopup';
 import { WishModal } from '@/components/room/WishModal';
+import { DJSoundboard } from '@/components/room/DJSoundboard';
 import { Track, VoicePreset } from '@/types/room';
 
 
@@ -33,9 +34,10 @@ export default function RoomPage() {
     room, user, addTrack, syncPlayback, onTrackEnd, joinRoom, error,
     removeTrack, reorderTrack, leaveRoom, clearError,
     setControlPermission, setPlayerPermission, heartTrack, setTrackMessage,
-    voteSkip, sendReaction, sendSoundEffect, pendingTracks, activityLogs
-
+    voteSkip, sendReaction, sendSoundEffect, pendingTracks, activityLogs,
+    chatMessages, sendChat, setDjPermission, triggerDjSound
   } = useRoom();
+
   const [urlInput, setUrlInput] = useState('');
   const [nameInput, setNameInput] = useState('');
 
@@ -332,7 +334,14 @@ export default function RoomPage() {
                   voteSkip={voteSkip}
                   sendReaction={sendReaction}
                   sendSoundEffect={sendSoundEffect}
+                  triggerDjSound={triggerDjSound}
                 />
+
+
+                {/* --- DJ Soundboard (Only for DJ/Admin) --- */}
+                {(user?.canDj || isAdmin) && (
+                  <DJSoundboard />
+                )}
 
                 {/* Mobile Overlay Search (Mobile Only) */}
                 <div className="md:hidden glass-effect p-6 rounded-[2rem]">
@@ -398,6 +407,7 @@ export default function RoomPage() {
                           isAdmin={isAdmin}
                           setPlayerPermission={setPlayerPermission}
                           setControlPermission={setControlPermission}
+                          setDjPermission={setDjPermission}
                         />
                       )}
                     </AnimatePresence>
