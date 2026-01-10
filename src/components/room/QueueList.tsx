@@ -1,9 +1,10 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Music, Heart, ChevronUp, ChevronDown, Trash2, Layers } from 'lucide-react';
+import { Music, Heart, ChevronUp, ChevronDown, Trash2, Layers, Sparkles } from 'lucide-react';
 import { triggerHearts } from './HeartCanvas';
 import { Room, Track, User } from '@/types/room';
 
 interface QueueListProps {
+
   room: Room;
   user: User;
   pendingTracks: Track[];
@@ -12,6 +13,8 @@ interface QueueListProps {
   heartTrack: (roomId: string, trackId: string) => void;
   reorderTrack: (roomId: string, from: number, to: number) => void;
   removeTrack: (roomId: string, trackId: string) => void;
+  setTrackMessage: (roomId: string, trackId: string, message: string) => void;
+  onOpenWishModal: (track: Track) => void;
 }
 
 export const QueueList = ({
@@ -22,12 +25,14 @@ export const QueueList = ({
   isAdmin,
   heartTrack,
   reorderTrack,
-  removeTrack
+  removeTrack,
+  setTrackMessage,
+  onOpenWishModal
 }: QueueListProps) => {
   const combinedQueue = [...room.queue, ...pendingTracks];
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+    <div className="flex-1 overflow-y-auto p-6 custom-scrollbar relative">
       <AnimatePresence mode="popLayout">
         {combinedQueue.length > 0 ? (
           combinedQueue.map((track, idx) => (
@@ -64,6 +69,9 @@ export const QueueList = ({
                   <h4 className="text-xs font-bold truncate text-slate-200 group-hover:text-white transition-colors">
                     {track.title}
                   </h4>
+                  {track.message && (
+                    <Sparkles className="w-2.5 h-2.5 text-brand-primary animate-pulse" />
+                  )}
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[9px] text-slate-500 font-medium">
@@ -71,13 +79,28 @@ export const QueueList = ({
                   </span>
                   
                   {!track.status && (
-                    <div className="flex items-center gap-1.5 translate-x-1">
+                    <div className="flex items-center gap-1.5 translate-x-1 overflow-x-auto no-scrollbar max-w-[200px] sm:max-w-none pb-0.5 shrink-0">
+
+                      {track.addedBy === user.userId && (
+                        <button
+                          onClick={() => onOpenWishModal(track)}
+                          className={`p-1.5 px-2.5 flex items-center gap-1.5 rounded-lg border transition-all shrink-0 ${
+                            track.message
+                            ? 'bg-brand-primary/20 border-brand-primary/50 text-brand-primary' 
+                            : 'bg-surface-900 border-white/5 text-slate-500 hover:text-brand-primary hover:border-brand-primary/30'
+                          }`}
+                          title="Gửi lời chúc"
+                        >
+                          <Sparkles className={`w-3 h-3 ${track.message ? 'fill-current' : ''}`} />
+                        </button>
+                      )}
+
                       <button 
                         onClick={(e) => {
                           heartTrack(room.roomId, track.trackId);
                           triggerHearts(e.clientX, e.clientY);
                         }}
-                        className={`p-1.5 px-2.5 flex items-center gap-1.5 rounded-lg border transition-all ${
+                        className={`p-1.5 px-2.5 flex items-center gap-1.5 rounded-lg border transition-all shrink-0 ${
                           track.hearts?.includes(user!.userId) 
                           ? 'bg-red-500/20 border-red-500/50 text-red-400' 
                           : 'bg-surface-900 border-white/5 text-slate-500 hover:text-red-400 hover:border-red-400/30'
@@ -92,7 +115,7 @@ export const QueueList = ({
                           <button 
                             onClick={() => reorderTrack(room.roomId, idx, idx - 1)}
                             disabled={idx === 0}
-                            className="p-1 text-slate-500 hover:text-brand-primary transition-all bg-surface-900 rounded-lg border border-white/5 disabled:opacity-20" 
+                            className="p-1 text-slate-500 hover:text-brand-primary transition-all bg-surface-900 rounded-lg border border-white/5 disabled:opacity-20 shrink-0" 
                             title="Move Up"
                           >
                             <ChevronUp className="w-3 h-3" />
@@ -100,7 +123,7 @@ export const QueueList = ({
                           <button 
                             onClick={() => reorderTrack(room.roomId, idx, idx + 1)}
                             disabled={idx === room.queue.length - 1}
-                            className="p-1 text-slate-500 hover:text-brand-primary transition-all bg-surface-900 rounded-lg border border-white/5 disabled:opacity-20" 
+                            className="p-1 text-slate-500 hover:text-brand-primary transition-all bg-surface-900 rounded-lg border border-white/5 disabled:opacity-20 shrink-0" 
                             title="Move Down"
                           >
                             <ChevronDown className="w-3 h-3" />
@@ -110,7 +133,7 @@ export const QueueList = ({
                       {(isAdmin || track.addedBy === user.userId) && (
                         <button 
                           onClick={() => removeTrack(room.roomId, track.trackId)}
-                          className="p-1.5 text-slate-500 hover:text-red-400 transition-all bg-surface-900 rounded-lg border border-white/5" 
+                          className="p-1.5 text-slate-500 hover:text-red-400 transition-all bg-surface-900 rounded-lg border border-white/5 shrink-0" 
                           title="Remove Track"
                         >
                           <Trash2 className="w-3 h-3" />
@@ -118,6 +141,7 @@ export const QueueList = ({
                       )}
                     </div>
                   )}
+
                 </div>
               </div>
             </motion.div>
@@ -132,3 +156,5 @@ export const QueueList = ({
     </div>
   );
 };
+
+

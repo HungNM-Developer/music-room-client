@@ -15,8 +15,6 @@ interface RoomHeaderProps {
   getYouTubeId: (url?: string) => string | null;
   probedMetadata: any;
   isProbing: boolean;
-  messageInput: string;
-  setMessageInput: (val: string) => void;
 }
 
 export const RoomHeader = ({
@@ -31,9 +29,7 @@ export const RoomHeader = ({
   youtubeError,
   getYouTubeId,
   probedMetadata,
-  isProbing,
-  messageInput,
-  setMessageInput
+  isProbing
 }: RoomHeaderProps) => {
   return (
     <header className="relative z-50 flex-col gap-4 h-auto py-5 md:flex-row md:h-24 border-b border-white/5 px-4 md:px-10 flex items-center justify-between sticky top-0 rounded-b-[2.5rem] mx-2 md:mx-6 my-2 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.5)] bg-white/[0.03] backdrop-blur-3xl">
@@ -84,26 +80,6 @@ export const RoomHeader = ({
             {isProbing && !probedMetadata ? 'Fetching...' : 'Add Music'}
           </button>
         </div>
-
-        {/* Optional TTS Message Input */}
-        <AnimatePresence>
-          {probedMetadata && (
-            <motion.div
-              initial={{ height: 0, opacity: 0, marginTop: 0 }}
-              animate={{ height: 'auto', opacity: 1, marginTop: 12 }}
-              exit={{ height: 0, opacity: 0, marginTop: 0 }}
-              className="w-full overflow-hidden"
-            >
-              <input
-                type="text"
-                value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
-                placeholder="Lời nhắn (sẽ được đọc khi bài hát phát)..."
-                className="w-full bg-indigo-500/10 border border-indigo-500/30 rounded-xl py-2 px-4 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 text-indigo-300 placeholder:text-indigo-500/50"
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
       </form>
 
       <div className="flex items-center gap-3">
@@ -143,3 +119,4 @@ export const RoomHeader = ({
     </header>
   );
 };
+

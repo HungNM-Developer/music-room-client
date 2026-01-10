@@ -178,19 +178,20 @@ export const PlaybackControls = ({
       </div>
 
       {/* Emoji Reactions Bar */}
-      <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-center gap-2 md:gap-4 overflow-x-auto no-scrollbar pb-2">
+      <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-start md:justify-center gap-2 md:gap-4 overflow-x-auto no-scrollbar pb-4 px-2 relative z-50 flex-nowrap">
+
         {emojis.map((emoji) => (
           <motion.button
             key={emoji}
-            whileHover={{ scale: 1.2, y: -5 }}
-            whileTap={{ scale: 0.9 }}
+            whileTap={{ scale: 0.8 }}
             onClick={() => sendReaction(emoji)}
-            className="text-xl md:text-2xl p-2 rounded-2xl hover:bg-white/5 transition-colors"
+            className="text-2xl md:text-3xl p-3 md:p-2 rounded-2xl hover:bg-white/5 transition-colors shrink-0 outline-none"
           >
             {emoji}
           </motion.button>
         ))}
       </div>
+
 
       {/* Prank Soundboard Area */}
       {/* <div className="mt-4 flex items-center justify-center gap-3">

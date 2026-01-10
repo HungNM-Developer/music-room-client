@@ -1,8 +1,8 @@
 import { LayoutList, Users, MessageSquare } from 'lucide-react';
 
 interface SidebarTabsProps {
-  activeTab: 'queue' | 'users' | 'chat';
-  setActiveTab: (tab: 'queue' | 'users' | 'chat') => void;
+  activeTab: 'queue' | 'users';
+  setActiveTab: (tab: 'queue' | 'users') => void;
   queueLength: number;
   listenersCount: number;
 }
@@ -26,13 +26,7 @@ export const SidebarTabs = ({ activeTab, setActiveTab, queueLength, listenersCou
         <Users className="w-4 h-4" /> Listeners
         <span className="bg-white/20 text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-black backdrop-blur-md">{listenersCount}</span>
       </button>
-      <button
-        onClick={() => setActiveTab('chat')}
-        className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-2xl transition-all font-black text-[11px] uppercase tracking-[0.2em]
-              ${activeTab === 'chat' ? 'bg-gradient-to-br from-pink-500 to-rose-500 text-white shadow-[0_10px_30px_-5px_rgba(244,63,94,0.5)]' : 'text-slate-500 hover:text-slate-300'}`}
-      >
-        <MessageSquare className="w-4 h-4" /> Chat
-      </button>
     </div>
   );
 };
+

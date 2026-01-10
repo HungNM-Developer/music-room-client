@@ -1,5 +1,8 @@
 export type Role = 'admin' | 'user';
 
+export type VoicePreset = 'radio' | 'drama' | 'baby' | 'panic' | 'chipmunk' | 'sleepy';
+
+
 export interface User {
   userId: string;
   name: string;
@@ -20,6 +23,7 @@ export interface Track {
   addedAt: number;
   status?: 'pending' | 'active';
   message?: string;
+  voicePreset?: VoicePreset;
 }
 
 export interface PlaybackState {

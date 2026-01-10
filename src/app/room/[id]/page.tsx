@@ -21,8 +21,9 @@ import { QueueList } from '@/components/room/QueueList';
 import { ListenerList } from '@/components/room/ListenerList';
 import { ChatList } from '@/components/room/ChatList';
 import { GlobalErrorToast } from '@/components/room/GlobalErrorToast';
-import { StudioLinks } from '@/components/room/StudioLinks';
 import { ActivityLogPopup } from '@/components/room/ActivityLogPopup';
+import { WishModal } from '@/components/room/WishModal';
+import { Track, VoicePreset } from '@/types/room';
 
 
 export default function RoomPage() {
@@ -31,14 +32,15 @@ export default function RoomPage() {
   const {
     room, user, addTrack, syncPlayback, onTrackEnd, joinRoom, error,
     removeTrack, reorderTrack, leaveRoom, clearError,
-    setControlPermission, setPlayerPermission, heartTrack, voteSkip,
-    sendReaction, sendSoundEffect, pendingTracks, activityLogs
+    setControlPermission, setPlayerPermission, heartTrack, setTrackMessage,
+    voteSkip, sendReaction, sendSoundEffect, pendingTracks, activityLogs
+
   } = useRoom();
   const [urlInput, setUrlInput] = useState('');
   const [nameInput, setNameInput] = useState('');
-  const [messageInput, setMessageInput] = useState('');
 
-  const [activeTab, setActiveTab] = useState<'queue' | 'users' | 'chat'>('queue');
+  const [activeTab, setActiveTab] = useState<'queue' | 'users'>('queue');
+
   const [probedMetadata, setProbedMetadata] = useState<{ title: string, duration: number, thumbnail: string } | null>(null);
   const [isProbing, setIsProbing] = useState(false);
   const [youtubeError, setYoutubeError] = useState<string | null>(null);
@@ -48,6 +50,30 @@ export default function RoomPage() {
   const [displayTime, setDisplayTime] = useState(0);
   const [copied, setCopied] = useState(false);
   const playerRef = useRef<any>(null);
+
+  // Global Wish Modal State
+  const [wishModalOpen, setWishModalOpen] = useState(false);
+  const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
+  const [wishInput, setWishInput] = useState('');
+  const [voicePreset, setVoicePreset] = useState<VoicePreset>('radio');
+
+  const handleOpenWishModal = (track: Track) => {
+    setSelectedTrack(track);
+    setWishInput(track.message || '');
+    setVoicePreset(track.voicePreset || 'radio');
+    setWishModalOpen(true);
+  };
+
+  const handleSaveWish = () => {
+    if (selectedTrack && room) {
+      setTrackMessage(room.roomId, selectedTrack.trackId, wishInput, voicePreset);
+      setWishModalOpen(false);
+      setSelectedTrack(null);
+      setWishInput('');
+      setVoicePreset('radio');
+    }
+  };
+
 
   // Handle auto-clearing errors for toasts
   useEffect(() => {
@@ -181,10 +207,9 @@ export default function RoomPage() {
       title: 'New Track',
       thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
       duration: 0
-    }, messageInput);
+    });
 
     setUrlInput('');
-    setMessageInput('');
     setProbedMetadata(null);
     setIsProbing(false);
     setYoutubeError(null);
@@ -192,7 +217,6 @@ export default function RoomPage() {
 
   const handleUrlChange = (val: string) => {
     setUrlInput(val);
-    setMessageInput('');
     setProbedMetadata(null);
     setYoutubeError(null);
 
@@ -213,7 +237,8 @@ export default function RoomPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-slate-200 relative selection:bg-brand-primary/30">
+    <div className="min-h-[150vh] bg-[#050505] text-slate-200 relative selection:bg-brand-primary/30 pb-[250px] md:pb-24">
+
       <HeartCanvas />
 
       {/* --- Immersive Ambient Background (PERSISTENT) --- */}
@@ -273,14 +298,12 @@ export default function RoomPage() {
               getYouTubeId={getYouTubeId}
               probedMetadata={probedMetadata}
               isProbing={isProbing}
-              messageInput={messageInput}
-              setMessageInput={setMessageInput}
             />
 
             {/* Main Layout: Dynamic height for fluid scrolling on all screens */}
-            <main className="max-w-[1700px] mx-auto p-3 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 h-auto">
+            <main className="max-w-[1700px] mx-auto p-3 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 min-h-[calc(100vh-80px)]">
               {/* Cinematic Stage Area */}
-              <div className="lg:col-span-8 space-y-6 pb-10 relative z-10">
+              <div className="lg:col-span-8 space-y-6 pb-10 relative z-20">
                 <CinemaStage
                   canPlay={canPlay}
                   currentVideoId={currentVideoId}
@@ -340,17 +363,16 @@ export default function RoomPage() {
               </div>
 
               {/* Studio Control Center (Sidebar) */}
-              <div className="lg:col-span-4 flex flex-col gap-8 h-auto lg:h-[calc(100vh-140px)] lg:sticky lg:top-28">
-                <div className="glass-effect rounded-[3rem] flex flex-col flex-1 overflow-hidden shadow-2xl">
-                  {/* --- Advanced Tab Control --- */}
+              <div className="lg:col-span-4 flex flex-col gap-6 h-auto lg:sticky lg:top-24">
+                {/* --- Queue & Listeners Card --- */}
+                <div className="glass-effect rounded-[2.5rem] flex flex-col h-[600px] lg:h-[590px] overflow-hidden shadow-2xl border border-white/5">
                   <SidebarTabs
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
+                    activeTab={activeTab as any}
+                    setActiveTab={setActiveTab as any}
                     queueLength={room.queue.length}
                     listenersCount={room.users.length}
                   />
 
-                  {/* --- Dynamic Content Area --- */}
                   <div className="flex-1 overflow-hidden flex flex-col relative">
                     <AnimatePresence mode="wait">
                       {activeTab === 'queue' ? (
@@ -364,8 +386,11 @@ export default function RoomPage() {
                           heartTrack={heartTrack}
                           reorderTrack={reorderTrack}
                           removeTrack={removeTrack}
+                          setTrackMessage={setTrackMessage}
+                          onOpenWishModal={handleOpenWishModal}
                         />
-                      ) : activeTab === 'users' ? (
+
+                      ) : (
                         <ListenerList
                           key="listener-list"
                           room={room}
@@ -374,21 +399,22 @@ export default function RoomPage() {
                           setPlayerPermission={setPlayerPermission}
                           setControlPermission={setControlPermission}
                         />
-                      ) : (
-                        <ChatList />
                       )}
                     </AnimatePresence>
                   </div>
                 </div>
 
-                <StudioLinks room={room} handleCopyLink={handleCopyLink} />
+                {/* --- Separate Chat Section --- */}
+                <div className="glass-effect rounded-[2.5rem] flex flex-col h-[520px] lg:h-[500px] overflow-hidden shadow-2xl border border-white/5">
+                  <ChatList />
+                </div>
               </div>
             </main>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Global Error Toast */}
+      {/* Global Utils */}
       <ActivityLogPopup logs={activityLogs} />
 
       <GlobalErrorToast
@@ -396,6 +422,18 @@ export default function RoomPage() {
         user={user}
         clearError={clearError}
       />
+
+      <WishModal 
+        isOpen={wishModalOpen}
+        onClose={() => setWishModalOpen(false)}
+        track={selectedTrack}
+        wishInput={wishInput}
+        setWishInput={setWishInput}
+        voicePreset={voicePreset}
+        setVoicePreset={setVoicePreset}
+        onSave={handleSaveWish}
+      />
     </div>
   );
 }
+
