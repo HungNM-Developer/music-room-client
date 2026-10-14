@@ -61,7 +61,7 @@ export const RoomBackground = ({ thumbnail }: RoomBackgroundProps) => {
       
       {/* Soft Vignette and Texture */}
       <div className="absolute inset-0 z-20 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
-      <div className="absolute inset-0 z-30 opacity-[0.04] mix-blend-overlay pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+      <div className="absolute inset-0 z-30 opacity-[0.04] mix-blend-overlay pointer-events-none bg-[url('/noise.svg')]" />
     </div>
   );
 };
