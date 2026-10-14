@@ -1,120 +1,179 @@
 'use client';
 
-import { QRCodeSVG } from 'qrcode.react';
+import { Radio } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
+import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useState } from 'react';
-import { PlayerEngine } from '@/components/player/PlayerEngine';
 import { Banners } from '@/components/room/Banners';
 import { HeartCanvas, triggerReaction } from '@/components/room/HeartCanvas';
-import { useRoom } from '@/context/RoomContext';
+import { LiveDial } from '@/components/room/TuningDial';
+import { Button } from '@/components/ui/Button';
+import { Field } from '@/components/ui/Field';
+import { OnAirLamp } from '@/components/ui/OnAirLamp';
+import { Thumb } from '@/components/ui/Thumb';
+import { normalizeRoomCode } from '@/contracts/text';
 import { useOrigin } from '@/hooks/useOrigin';
-import { normalizeRoomCode, PinSchema } from '@/contracts';
 import { errorMessage, vi } from '@/i18n/vi';
-import { formatDuration } from '@/lib/time';
+import { isPin } from '@/lib/validate';
+import { useRoom } from '@/state/hooks';
+import { room } from '@/state/room-store';
+
+const PlayerEngine = dynamic(() => import('@/components/player/PlayerEngine').then((m) => m.PlayerEngine), {
+  ssr: false,
+  loading: () => <div className="aspect-video w-full rounded-panel bg-dial-deep" />,
+});
 
 /** /r/CODE/host — the speaker device (D8, TC-120…TC-131). */
 export default function HostPage() {
   const params = useParams<{ code: string }>();
   const code = normalizeRoomCode(params.code ?? '');
-  const { enter, snapshot, memberId, connection, send, playerRevoked, clearPlayerRevoked, onReaction } = useRoom();
+  const memberId = useRoom((s) => s.memberId);
+  const connection = useRoom((s) => s.connection);
+
+  useEffect(() => room.enter(code, 'host'), [code]);
+  useEffect(
+    () => room.onReaction((e) => triggerReaction(window.innerWidth * (0.1 + Math.random() * 0.8), window.innerHeight - 80, e.emoji)),
+    [],
+  );
+
+  if (connection === 'connected' && !memberId) return <HostLogin code={code} />;
+  return <HostScreen code={code} />;
+}
+
+function HostLogin({ code }: { code: string }) {
   const [pin, setPin] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [volume, setVolume] = useState(100);
-  const origin = useOrigin();
-
-  useEffect(() => {
-    enter(code, 'host');
-  }, [code, enter]);
-  useEffect(
-    () => onReaction((e) => triggerReaction(Math.random() * window.innerWidth, window.innerHeight - 80, e.emoji)),
-    [onReaction],
-  );
+  const [busy, setBusy] = useState(false);
 
   async function register(e: React.FormEvent) {
     e.preventDefault();
-    const r = await send('host:register', { code, pin });
+    setBusy(true);
+    const r = await room.send('host:register', { code, pin });
+    setBusy(false);
     if (!r.ok) setError(errorMessage(r.error.code, r.error.params));
   }
 
-  if (connection === 'connected' && !memberId) {
-    return (
-      <main className="min-h-dvh flex items-center justify-center bg-surface-900 px-4">
-        <form onSubmit={register} className="w-full max-w-sm glass-effect rounded-[2rem] p-8 space-y-4">
-          <h1 className="text-2xl font-black">{vi.host.title}</h1>
-          <label className="block space-y-1.5">
-            <span className="text-xs font-semibold text-slate-400">{vi.host.pin}</span>
-            <input value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))} type="password" inputMode="numeric" maxLength={8} autoFocus className="w-full input-field text-center tracking-[0.5em] text-xl" />
-          </label>
-          {error && <p role="alert" className="text-sm text-red-200 bg-red-500/10 rounded-xl p-3">{error}</p>}
-          <button type="submit" disabled={!PinSchema.safeParse(pin).success} className="w-full btn-primary disabled:opacity-50">
-            {vi.host.open}
-          </button>
-        </form>
-      </main>
-    );
-  }
+  return (
+    <main className="flex min-h-dvh items-center justify-center px-4 py-10">
+      <form onSubmit={register} className="w-full max-w-sm space-y-5 rounded-panel bg-panel p-6 sm:p-8">
+        <p className="flex items-center gap-2 text-[14px] font-semibold text-amber">
+          <Radio className="h-5 w-5" aria-hidden /> {vi.appName}
+        </p>
+        <div>
+          <h1 className="type-display text-[30px] font-bold leading-tight">{vi.host.title}</h1>
+          <p className="mt-1 text-sage">{vi.host.pinNote}</p>
+        </div>
+        <Field
+          label={vi.host.pin}
+          value={pin}
+          onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+          type="password"
+          inputMode="numeric"
+          autoComplete="off"
+          maxLength={8}
+          autoFocus
+          className="type-display text-center text-[24px] tracking-[0.5em]"
+        />
+        {error && (
+          <p role="alert" className="rounded-row border border-onair/50 bg-onair/10 p-3 text-[14px]">
+            {error}
+          </p>
+        )}
+        <Button type="submit" variant="primary" disabled={busy || !isPin(pin)} className="w-full">
+          {vi.host.open}
+        </Button>
+      </form>
+    </main>
+  );
+}
 
+function HostScreen({ code }: { code: string }) {
+  const np = useRoom((s) => s.snapshot?.nowPlaying ?? null);
+  const queue = useRoom((s) => s.snapshot?.queue);
+  const playerRevoked = useRoom((s) => s.playerRevoked);
+  const [volume, setVolume] = useState(100);
+  const origin = useOrigin();
   const joinUrl = origin ? `${origin}/r/${code}` : '';
-  const np = snapshot?.nowPlaying;
-  const next = snapshot?.queue.slice(0, 2) ?? [];
+  const next = (queue ?? []).slice(0, 3);
+  const live = np?.status === 'PLAYING';
+  const picker = np?.item.addedBy?.displayName;
 
   return (
-    <main className="min-h-dvh bg-[#05050b] text-white p-4 md:p-8">
+    <main className="min-h-dvh px-4 py-4 md:px-8 md:py-6">
       <HeartCanvas />
-      <div className="max-w-[1600px] mx-auto grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <section className="lg:col-span-2 min-w-0 space-y-4">
+      <div className="mx-auto grid max-w-[1600px] gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
+        <section className="min-w-0 space-y-5">
           {playerRevoked ? (
-            <div className="aspect-video rounded-[2rem] glass-effect flex flex-col items-center justify-center gap-4 p-6 text-center">
-              <p className="text-lg">
-                {playerRevoked === 'permission' ? vi.host.movedByAdmin : vi.host.replaced}
-              </p>
-              <button
-                type="button"
-                className="btn-primary"
-                onClick={() => clearPlayerRevoked()}
-              >
+            <div className="flex aspect-video flex-col items-center justify-center gap-5 rounded-panel border border-line bg-panel p-6 text-center">
+              <p className="max-w-md text-[18px]">{playerRevoked === 'permission' ? vi.host.movedByAdmin : vi.host.replaced}</p>
+              <Button variant="primary" onClick={() => room.clearPlayerRevoked()}>
                 {vi.host.takeBack}
-              </button>
+              </Button>
             </div>
           ) : (
             <PlayerEngine volume={volume} />
           )}
-          <div className="flex items-center gap-4">
-            <div className="min-w-0 flex-1">
-              <h1 className="text-2xl md:text-3xl font-black truncate">
-                {np ? np.item.track.title : vi.host.idle}
-              </h1>
-              {np && (
-                <p className="text-slate-400">
-                  {np.item.addedBy ? vi.nowPlaying.addedBy(np.item.addedBy.displayName) : vi.nowPlaying.fallback}
-                  {np.item.track.durationSec ? ` · ${formatDuration(np.item.track.durationSec)}` : ''}
-                </p>
-              )}
-            </div>
-            <label className="flex items-center gap-2 text-sm text-slate-400">
-              {vi.host.volume}
-              <input type="range" min={0} max={100} value={volume} onChange={(e) => setVolume(Number(e.target.value))} />
-            </label>
+
+          <div>
+            <OnAirLamp live={live}>{live ? vi.host.onAir : np ? vi.nowPlaying.paused : vi.host.waiting}</OnAirLamp>
+            <h1 className="type-display mt-3 line-clamp-2 text-[clamp(28px,4vw,56px)] font-extrabold leading-[1.02] [unicode-bidi:plaintext]">
+              {np ? np.item.track.title : vi.host.idle}
+            </h1>
+            {np && (
+              <p className="mt-2 text-[18px] text-sage">{picker ? vi.nowPlaying.pickedBy(picker) : vi.nowPlaying.fallback}</p>
+            )}
           </div>
+
+          {np?.item.wishMessage && picker && (
+            <figure className="max-w-3xl border-l-[3px] border-amber pl-4">
+              <figcaption className="text-[14px] text-sage">{vi.nowPlaying.wishFrom(picker)}</figcaption>
+              <blockquote className="mt-1 text-[20px] leading-snug [overflow-wrap:anywhere]">{np.item.wishMessage}</blockquote>
+            </figure>
+          )}
+
+          {np && <LiveDial size="large" />}
+
+          <label className="flex max-w-sm items-center gap-3 text-[14px] text-sage">
+            {vi.host.volume}
+            <input type="range" min={0} max={100} value={volume} onChange={(e) => setVolume(Number(e.target.value))} className="flex-1" />
+            <span className="w-10 text-right tabular-nums">{vi.host.volumeValue(volume)}</span>
+          </label>
+
           <Banners />
         </section>
-        <aside className="glass-effect rounded-[2rem] p-6 space-y-5 text-center">
-          <p className="text-sm font-bold uppercase tracking-widest text-slate-400">{vi.host.scan}</p>
-          <div className="mx-auto w-fit rounded-2xl bg-white p-3">
-            {joinUrl && <QRCodeSVG value={joinUrl} size={200} />}
+
+        <aside className="space-y-8">
+          <div className="rounded-panel bg-paper p-6 text-center text-dial">
+            <h2 className="type-display text-[24px] font-bold">{vi.host.scan}</h2>
+            <div className="mx-auto mt-4 w-fit">
+              {joinUrl ? (
+                <QRCodeSVG value={joinUrl} size={220} fgColor="#0f2a26" bgColor="#f3ecdd" marginSize={0} title={joinUrl} />
+              ) : (
+                <div className="h-[220px] w-[220px]" />
+              )}
+            </div>
+            <p className="type-display mt-4 text-[44px] font-extrabold leading-none tracking-[0.12em]">{code}</p>
+            <p className="mt-2 text-[13px] text-dial/70 [overflow-wrap:anywhere]">{joinUrl}</p>
           </div>
-          <p className="text-xl font-black">{vi.host.code(code)}</p>
-          <div className="text-left space-y-2">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{vi.host.next}</p>
-            {next.length === 0 && <p className="text-sm text-slate-500">—</p>}
-            <ol className="space-y-2">
-              {next.map((q) => (
-                <li key={q.id} className="rounded-xl bg-white/5 px-3 py-2 text-sm">
-                  <span className="font-semibold">{q.track.title}</span>
-                  <span className="text-slate-400"> · {q.addedBy?.displayName ?? vi.nowPlaying.fallback}</span>
-                </li>
-              ))}
-            </ol>
+
+          <div>
+            <h2 className="type-display mb-2 text-[22px] font-bold">{vi.host.next}</h2>
+            {next.length === 0 ? (
+              <p className="text-sage">{vi.host.nextEmpty}</p>
+            ) : (
+              <ol className="divide-y divide-line/70">
+                {next.map((q) => (
+                  <li key={q.id} className="flex items-center gap-3 py-3">
+                    <Thumb url={q.track.thumbnailUrl} size={52} />
+                    <div className="min-w-0">
+                      <p className="truncate text-[16px] font-medium [unicode-bidi:plaintext]">{q.track.title}</p>
+                      <p className="truncate text-[14px] text-sage">{q.addedBy?.displayName ?? vi.nowPlaying.fallback}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            )}
           </div>
         </aside>
       </div>

@@ -1,49 +1,48 @@
 'use client';
 
-import { RefreshCw, WifiOff, Speaker } from 'lucide-react';
-import { useRoom } from '@/context/RoomContext';
+import { RefreshCw, Speaker, WifiOff } from 'lucide-react';
 import { useOrigin } from '@/hooks/useOrigin';
 import { vi } from '@/i18n/vi';
+import { useRoom, useVersionMismatch } from '@/state/hooks';
 
 /** Connection / version / player banners (TC-123, TC-192, TC-200). */
 export function Banners() {
-  const { connection, versionMismatch, snapshot, code, kind } = useRoom();
+  const connection = useRoom((s) => s.connection);
+  const kind = useRoom((s) => s.kind);
+  const code = useRoom((s) => s.code);
+  const player = useRoom((s) => s.snapshot?.player ?? null);
+  const versionMismatch = useVersionMismatch();
   const origin = useOrigin();
   const items: { key: string; icon: React.ReactNode; text: string; action?: React.ReactNode }[] = [];
 
   if (versionMismatch) {
     items.push({
       key: 'version',
-      icon: <RefreshCw className="w-4 h-4" aria-hidden />,
+      icon: <RefreshCw className="h-4 w-4" aria-hidden />,
       text: vi.banners.newVersion,
       action: (
-        <button className="underline font-bold" onClick={() => window.location.reload()}>
+        <button type="button" className="font-semibold text-amber underline-offset-2 hover:underline" onClick={() => window.location.reload()}>
           {vi.banners.reload}
         </button>
       ),
     });
   }
   if (connection === 'reconnecting') {
-    items.push({ key: 'conn', icon: <WifiOff className="w-4 h-4" aria-hidden />, text: vi.banners.reconnecting });
+    items.push({ key: 'conn', icon: <WifiOff className="h-4 w-4" aria-hidden />, text: vi.banners.reconnecting });
   }
-  if (snapshot && kind === 'member' && connection === 'connected' && !snapshot.player.online) {
+  if (player && kind === 'member' && connection === 'connected' && !player.online) {
     items.push({
       key: 'player',
-      icon: <Speaker className="w-4 h-4" aria-hidden />,
-      text: snapshot.player.memberId
-        ? vi.banners.playerOffline
-        : vi.banners.noPlayer(`${origin}/r/${code}/host`),
+      icon: <Speaker className="h-4 w-4" aria-hidden />,
+      text: player.memberId ? vi.banners.playerOffline : vi.banners.noPlayer(`${origin}/r/${code}/host`),
     });
   }
   if (!items.length) return null;
   return (
     <div className="space-y-2" role="status" aria-live="polite">
       {items.map((b) => (
-        <div
-          key={b.key}
-          className="flex items-center gap-3 rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-50"
-        >
-          {b.icon}
+        <div key={b.key} className="flex items-center gap-3 rounded-row border border-amber/35 bg-amber/10 px-4 py-3 text-[14px]">
+          <span className="text-amber">{b.icon}</span>
           {/* min-w-0 + anywhere-wrap: long URLs must not widen the page on phones */}
           <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">{b.text}</span>
           {b.action}

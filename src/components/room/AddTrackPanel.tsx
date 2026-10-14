@@ -1,25 +1,28 @@
 'use client';
 
-import { Plus, Search } from 'lucide-react';
+import { Check, Loader2, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
+import { Button } from '@/components/ui/Button';
+import { Thumb } from '@/components/ui/Thumb';
 import { useToast } from '@/components/ui/Toast';
-import { useRoom } from '@/context/RoomContext';
 import type { TrackSummary } from '@/contracts';
 import { useAct } from '@/hooks/useAct';
 import { vi } from '@/i18n/vi';
 import { classifyInput } from '@/lib/add-input';
 import { formatDuration } from '@/lib/time';
+import { useMe, useRoom } from '@/state/hooks';
 
 export function AddTrackPanel() {
-  const { snapshot, me } = useRoom();
+  const searchEnabled = useRoom((s) => s.snapshot?.searchEnabled ?? false);
+  const me = useMe();
   const act = useAct();
   const toast = useToast();
   const [input, setInput] = useState('');
   const [results, setResults] = useState<TrackSummary[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [adding, setAdding] = useState<string | null>(null);
+  const [added, setAdded] = useState<Set<string>>(() => new Set());
   const kind = classifyInput(input);
-  const searchEnabled = snapshot?.searchEnabled ?? false;
 
   async function add(trackInput: string) {
     setAdding(trackInput);
@@ -27,6 +30,7 @@ export function AddTrackPanel() {
     setAdding(null);
     if (r) {
       toast(vi.add.added(r.title), 'success');
+      setAdded((s) => new Set(s).add(trackInput));
       if (trackInput === input.trim()) setInput('');
     }
   }
@@ -34,71 +38,82 @@ export function AddTrackPanel() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (busy || kind === 'empty') return;
-    if (kind === 'link') {
-      setBusy(true);
-      await add(input.trim());
-      setBusy(false);
-      return;
-    }
     setBusy(true);
-    const r = await act('search:query', { q: input });
+    if (kind === 'link') {
+      await add(input.trim());
+    } else {
+      const r = await act('search:query', { q: input });
+      setResults(r ? r.results : null);
+    }
     setBusy(false);
-    setResults(r ? r.results : null);
   }
 
   if (me?.isDevice) return null;
 
   return (
-    <section aria-label={vi.tabs.add} className="glass-effect rounded-[2rem] p-4 md:p-6 space-y-4">
-      <form onSubmit={submit} className="flex gap-2">
-        <label htmlFor="add-input" className="sr-only">{vi.add.placeholder}</label>
-        <input
-          id="add-input"
-          value={input}
-          onChange={(e) => {
-            setInput(e.target.value);
-            setResults(null);
-          }}
-          maxLength={2048}
-          placeholder={vi.add.placeholder}
-          className="flex-1 min-w-0 input-field"
-          autoComplete="off"
-          enterKeyHint={kind === 'link' ? 'go' : 'search'}
-        />
-        <button type="submit" disabled={busy || kind === 'empty'} className="btn-primary !px-4 shrink-0 disabled:opacity-50">
-          {kind === 'link' ? <Plus className="w-4 h-4" aria-hidden /> : <Search className="w-4 h-4" aria-hidden />}
-          <span>{kind === 'link' ? vi.add.addLink : vi.add.search}</span>
-        </button>
+    <section aria-labelledby="add-title" className="space-y-4">
+      <h2 id="add-title" className="type-display px-1 text-[20px] font-bold">
+        {vi.add.title}
+      </h2>
+      <form onSubmit={submit} className="space-y-2" role="search">
+        <label htmlFor="add-input" className="sr-only">
+          {vi.add.label}
+        </label>
+        <div className="flex gap-2">
+          <div className="relative min-w-0 flex-1">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-sage" aria-hidden />
+            <input
+              id="add-input"
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value);
+                setResults(null);
+              }}
+              maxLength={2048}
+              placeholder={vi.add.placeholder}
+              className="field !pl-11"
+              autoComplete="off"
+              enterKeyHint={kind === 'link' ? 'go' : 'search'}
+            />
+          </div>
+          <Button type="submit" variant="primary" disabled={busy || kind === 'empty'} className="shrink-0">
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : kind === 'link' ? <Plus className="h-4 w-4" aria-hidden /> : null}
+            {kind === 'link' ? vi.add.addLink : vi.add.search}
+          </Button>
+        </div>
+        <p className="px-1 text-[13px] text-sage">{searchEnabled ? vi.add.tip : vi.add.searchOff}</p>
       </form>
-      <p className="text-xs text-slate-500">{searchEnabled ? vi.add.tip : vi.add.searchOff}</p>
 
-      {results && results.length === 0 && <p className="text-sm text-slate-400">{vi.add.noResults}</p>}
+      {results && results.length === 0 && <p className="px-1 text-sage">{vi.add.noResults}</p>}
       {results && results.length > 0 && (
-        <ul className="space-y-2">
-          {results.map((t) => (
-            <li key={t.id} className="flex items-center gap-3 rounded-2xl p-2 bg-white/[0.03] border border-white/5">
-              <div className="w-14 h-10 rounded-lg overflow-hidden bg-white/5 shrink-0">
-                {t.thumbnailUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={t.thumbnailUrl} alt="" className="w-full h-full object-cover" />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold truncate [unicode-bidi:plaintext]" title={t.title}>{t.title}</p>
-                <p className="text-xs text-slate-400 truncate">
-                  {[t.channel, t.durationSec ? formatDuration(t.durationSec) : null].filter(Boolean).join(' · ')}
-                </p>
-              </div>
-              <button
-                type="button"
-                disabled={adding !== null}
-                onClick={() => add(t.id)}
-                className="btn-secondary !px-3 !py-2 text-sm disabled:opacity-50"
-              >
-                {vi.add.addResult}
-              </button>
-            </li>
-          ))}
+        <ul aria-label={vi.add.results} className="divide-y divide-line/70 rounded-panel bg-panel px-1">
+          {results.map((t) => {
+            const done = added.has(t.id);
+            return (
+              <li key={t.id} className="flex items-center gap-3 py-2.5 pl-2.5 pr-1.5">
+                <Thumb url={t.thumbnailUrl} size={72} ratio="wide" />
+                <div className="min-w-0 flex-1">
+                  <p className="line-clamp-2 text-[14px] font-medium leading-snug [unicode-bidi:plaintext]" title={t.title}>
+                    {t.title}
+                  </p>
+                  <p className="mt-0.5 flex gap-2 text-[12px] text-sage">
+                    {t.channel && <span className="truncate">{t.channel}</span>}
+                    {t.durationSec ? <span className="shrink-0 tabular-nums">{formatDuration(t.durationSec)}</span> : null}
+                  </p>
+                </div>
+                <Button size="sm" disabled={adding !== null || done} onClick={() => add(t.id)} aria-label={`${vi.add.addResult} ${t.title}`}>
+                  {adding === t.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                  ) : done ? (
+                    <Check className="h-4 w-4 text-amber" aria-hidden />
+                  ) : (
+                    <Plus className="h-4 w-4" aria-hidden />
+                  )}
+                  <span className="hidden sm:inline">{vi.add.addResult}</span>
+                </Button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>

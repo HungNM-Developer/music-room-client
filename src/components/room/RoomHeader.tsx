@@ -1,53 +1,64 @@
 'use client';
 
-import { History, LogOut, Share2 } from 'lucide-react';
+import { Check, History, Link2, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { IconButton } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
-import { useRoom } from '@/context/RoomContext';
 import { vi } from '@/i18n/vi';
+import { useRoom } from '@/state/hooks';
+import { room } from '@/state/room-store';
 
 export function RoomHeader({ onOpenLog }: { onOpenLog: () => void }) {
-  const { snapshot, leave } = useRoom();
+  const name = useRoom((s) => s.snapshot?.room.name);
+  const code = useRoom((s) => s.snapshot?.room.code);
   const toast = useToast();
   const router = useRouter();
-  if (!snapshot) return null;
+  const [copied, setCopied] = useState(false);
+  if (!name || !code) return null;
 
-  async function share() {
-    const url = `${window.location.origin}/r/${snapshot!.room.code}`;
+  async function copyLink() {
+    const url = `${window.location.origin}/r/${code}`;
     try {
       await navigator.clipboard.writeText(url);
-      toast(vi.header.shared, 'success');
+      setCopied(true);
+      toast(vi.header.copied, 'success');
+      setTimeout(() => setCopied(false), 2000);
     } catch {
       toast(url);
     }
   }
 
   return (
-    <header className="sticky top-0 z-40 backdrop-blur-xl bg-black/30 border-b border-white/5">
-      <div className="max-w-7xl mx-auto flex items-center gap-3 px-4 py-3">
+    <header className="sticky top-0 z-40 border-b border-line bg-dial/95 pt-[env(safe-area-inset-top)] backdrop-blur-sm">
+      <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-2.5">
         <div className="min-w-0 flex-1">
-          <h1 className="text-lg font-black truncate">{snapshot.room.name}</h1>
-          <p className="text-xs text-slate-400">
-            {vi.header.code}: <span className="font-mono font-bold tracking-widest text-indigo-300">{snapshot.room.code}</span>
-          </p>
+          <h1 className="type-display truncate text-[20px] font-bold leading-tight">{name}</h1>
+          <button
+            type="button"
+            onClick={copyLink}
+            title={vi.header.copyLink}
+            className="-ml-1 inline-flex items-center gap-1.5 rounded-md px-1 text-[13px] text-sage hover:text-paper"
+          >
+            {vi.header.code}
+            <span className="type-display text-[15px] font-bold tracking-[0.12em] text-amber">{code}</span>
+            {copied ? <Check className="h-3.5 w-3.5 text-amber" aria-hidden /> : <Link2 className="h-3.5 w-3.5" aria-hidden />}
+            <span className="sr-only">{vi.header.copyLink}</span>
+          </button>
         </div>
-        <button type="button" onClick={onOpenLog} aria-label={vi.header.log} className="btn-secondary !p-2.5">
-          <History className="w-4 h-4" aria-hidden />
-        </button>
-        <button type="button" onClick={share} className="btn-secondary !px-3 !py-2 text-sm">
-          <Share2 className="w-4 h-4" aria-hidden /> <span className="hidden sm:inline">{vi.header.share}</span>
-        </button>
-        <button
-          type="button"
+        <IconButton label={vi.header.log} onClick={onOpenLog}>
+          <History className="h-5 w-5" aria-hidden />
+        </IconButton>
+        <IconButton
+          label={vi.header.leave}
+          tone="danger"
           onClick={async () => {
-            await leave();
+            await room.leave();
             router.push('/');
           }}
-          aria-label={vi.header.leave}
-          className="btn-secondary !p-2.5 text-red-200"
         >
-          <LogOut className="w-4 h-4" aria-hidden />
-        </button>
+          <LogOut className="h-5 w-5" aria-hidden />
+        </IconButton>
       </div>
     </header>
   );

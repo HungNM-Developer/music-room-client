@@ -2,15 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import YouTube, { type YouTubeEvent, type YouTubePlayer } from 'react-youtube';
-import { useRoom } from '@/context/RoomContext';
-import {
-  PLAYER_ERROR_CODES,
-  PLAYER_PROGRESS_INTERVAL_MS,
-  type PlayerCommand,
-  type VoicePreset,
-} from '@/contracts';
+import { Play } from 'lucide-react';
+import type { PlayerCommand, VoicePreset } from '@/contracts';
+import { PLAYER_ERROR_CODES } from '@/contracts/constants';
+import { PLAYER_PROGRESS_INTERVAL_MS } from '@/contracts/events';
 import { vi } from '@/i18n/vi';
 import { estimatePosition } from '@/lib/time';
+import { useRoom } from '@/state/hooks';
+import { room } from '@/state/room-store';
 
 /** Minimal player surface the engine drives (implemented by the YouTube iframe). */
 interface PlayerAdapter {
@@ -35,14 +34,36 @@ const VOICE: Record<VoicePreset, { pitch: number; rate: number }> = {
 };
 
 const DJ_FILES: Record<string, string> = {
-  build: '/sounds/build.mp3',
-  drop: '/sounds/drop.mp3',
-  clap: '/sounds/clap.mp3',
+  build: '/sounds/build.m4a',
+  drop: '/sounds/drop.m4a',
+  clap: '/sounds/clap.m4a',
   horn: '/sounds/horn.mp3',
   airhorn: '/sounds/airhorn.mp3',
-  laugh: '/sounds/laugh.mp3',
-  applause: '/sounds/applause.wav',
+  laugh: '/sounds/laugh.m4a',
+  applause: '/sounds/applause.m4a',
 };
+
+/**
+ * DJ sounds are fetched once (after "Bắt đầu phát") and reused. A sound that is still
+ * playing is cloned so rapid taps overlap instead of restarting.
+ */
+const djPool = new Map<string, HTMLAudioElement>();
+function preloadDj(): void {
+  for (const src of Object.values(DJ_FILES)) {
+    if (djPool.has(src)) continue;
+    const a = new Audio(src);
+    a.preload = 'auto';
+    a.volume = 0.8;
+    djPool.set(src, a);
+  }
+}
+function playDj(src: string): void {
+  const base = djPool.get(src) ?? new Audio(src);
+  const a = base.paused ? base : (base.cloneNode() as HTMLAudioElement);
+  a.volume = 0.8;
+  a.currentTime = 0;
+  a.play().catch(() => console.warn('[player] DJ sound blocked'));
+}
 
 /** Chrome may garbage-collect a pending utterance and never fire onend; keep a reference. */
 let currentUtterance: SpeechSynthesisUtterance | null = null;
@@ -69,7 +90,12 @@ function speak(text: string, preset: VoicePreset | null, onDone: () => void): bo
 }
 
 export function PlayerEngine({ volume = 100 }: { volume?: number }) {
-  const { playerCommand, offset, send, onDj, connection, connectCount, memberId } = useRoom();
+  const playerCommand = useRoom((s) => s.playerCommand);
+  const offset = useRoom((s) => s.offset);
+  const connection = useRoom((s) => s.connection);
+  const connectCount = useRoom((s) => s.connectCount);
+  const memberId = useRoom((s) => s.memberId);
+  const send = room.send;
   const adapterRef = useRef<PlayerAdapter | null>(null);
   const [ready, setReady] = useState(false);
   const [started, setStarted] = useState(false);
@@ -182,17 +208,14 @@ export function PlayerEngine({ volume = 100 }: { volume?: number }) {
   }, [started, report, send]);
 
   // ---------------------------------------------------------------- DJ sounds play here only (R-34)
-  useEffect(
-    () =>
-      onDj((e) => {
-        const src = DJ_FILES[e.soundType];
-        if (!src || !started) return;
-        const audio = new Audio(src);
-        audio.volume = 0.8;
-        audio.play().catch(() => console.warn('[player] DJ sound blocked'));
-      }),
-    [onDj, started],
-  );
+  useEffect(() => {
+    if (!started) return;
+    preloadDj();
+    return room.onDj((e) => {
+      const src = DJ_FILES[e.soundType];
+      if (src) playDj(src);
+    });
+  }, [started]);
 
   // ---------------------------------------------------------------- player events
   const onPlaying = useCallback(() => {
@@ -229,16 +252,19 @@ export function PlayerEngine({ volume = 100 }: { volume?: number }) {
   };
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-[2rem] bg-black">
+    <div className="relative aspect-video w-full overflow-hidden rounded-panel bg-dial-deep">
       <YouTubeAdapter adapterRef={adapterRef} onReady={() => setReady(true)} onPlaying={onPlaying} onEnded={onEnded} onError={onError} />
       {!started && (
         <button
           type="button"
           onClick={start}
-          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-black/80 backdrop-blur-md text-white"
+          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-dial-deep/95 p-6 text-center"
         >
-          <span className="rounded-3xl bg-white px-8 py-4 text-lg font-black text-black">{vi.host.start}</span>
-          <span className="text-sm text-slate-300">{vi.host.startNote}</span>
+          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-amber text-amber-ink transition-transform hover:scale-105">
+            <Play className="ml-1 h-9 w-9" fill="currentColor" aria-hidden />
+          </span>
+          <span className="type-display text-[26px] font-bold">{vi.host.start}</span>
+          <span className="max-w-xs text-[14px] text-sage">{vi.host.startNote}</span>
         </button>
       )}
     </div>
@@ -256,6 +282,14 @@ interface AdapterProps {
 /** Visible YouTube iframe (≥ 200×200, never hidden — YouTube API policy, TC-131). */
 function YouTubeAdapter({ adapterRef, onReady, onPlaying, onEnded, onError }: AdapterProps) {
   const ytRef = useRef<YouTubePlayer | null>(null);
+  // A destroyed player (unmount, StrictMode remount) throws on every call: forget it.
+  useEffect(
+    () => () => {
+      adapterRef.current = null;
+      ytRef.current = null;
+    },
+    [adapterRef],
+  );
   return (
     <YouTube
       className="absolute inset-0 w-full h-full"
@@ -275,14 +309,24 @@ function YouTubeAdapter({ adapterRef, onReady, onPlaying, onEnded, onError }: Ad
       onReady={(e: YouTubeEvent) => {
         const p = e.target;
         ytRef.current = p;
+        // The iframe can disappear under us (navigation, remount); never let that crash an effect.
+        const safe = <A extends unknown[], R>(fn: (...a: A) => R, fallback: R) => (...a: A): R => {
+          try {
+            return fn(...a);
+          } catch {
+            return fallback;
+          }
+        };
         adapterRef.current = {
-          load: (videoId, startSec, autoplay) =>
-            autoplay ? p.loadVideoById({ videoId, startSeconds: startSec }) : p.cueVideoById({ videoId, startSeconds: startSec }),
-          play: () => p.playVideo(),
-          pause: () => p.pauseVideo(),
-          seek: (s) => p.seekTo(s, true),
-          currentTime: () => Number(p.getCurrentTime?.() ?? 0),
-          setVolume: (v) => p.setVolume(v),
+          load: safe((videoId: string, startSec: number, autoplay: boolean) => {
+            if (autoplay) p.loadVideoById({ videoId, startSeconds: startSec });
+            else p.cueVideoById({ videoId, startSeconds: startSec });
+          }, undefined),
+          play: safe(() => void p.playVideo(), undefined),
+          pause: safe(() => void p.pauseVideo(), undefined),
+          seek: safe((s: number) => void p.seekTo(s, true), undefined),
+          currentTime: safe(() => Number(p.getCurrentTime?.() ?? 0), 0),
+          setVolume: safe((v: number) => void p.setVolume(v), undefined),
         };
         onReady();
       }}

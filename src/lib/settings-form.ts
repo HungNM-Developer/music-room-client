@@ -1,5 +1,5 @@
 import type { RoomSettings } from '@/contracts';
-import { parseYouTubePlaylist } from '@/contracts';
+import { parseYouTubePlaylist } from '@/contracts/youtube';
 
 export interface SettingsForm {
   thresholdPct: string;

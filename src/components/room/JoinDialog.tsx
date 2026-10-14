@@ -1,23 +1,26 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/Button';
+import { Dialog } from '@/components/ui/Dialog';
 import { Field } from '@/components/ui/Field';
-import { useRoom } from '@/context/RoomContext';
-import { DisplayNameSchema } from '@/contracts';
 import { errorMessage, vi } from '@/i18n/vi';
 import { lastName, rememberName } from '@/lib/session-store';
+import { isDisplayName } from '@/lib/validate';
+import { room } from '@/state/room-store';
 
-/** Shown on /r/CODE when there is no valid session (TC-015, TC-021). */
+/** Shown on /r/CODE when there is no valid session (TC-015, TC-021). Cannot be dismissed. */
 export function JoinDialog({ code, notice }: { code: string; notice?: string | null }) {
-  const room = useRoom();
   const [roomName, setRoomName] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(notice ?? null);
   const [busy, setBusy] = useState(false);
 
   // Prefill after hydration: the server render has no localStorage.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setName((n) => n || lastName()), []);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setError(notice ?? null), [notice]);
   useEffect(() => {
     let alive = true;
@@ -29,10 +32,9 @@ export function JoinDialog({ code, notice }: { code: string; notice?: string | n
     return () => {
       alive = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code]);
 
-  const valid = DisplayNameSchema.safeParse(name).success;
+  const valid = isDisplayName(name);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -45,37 +47,29 @@ export function JoinDialog({ code, notice }: { code: string; notice?: string | n
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md px-4">
-      <form
-        onSubmit={submit}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="join-title"
-        className="w-full max-w-md glass-effect rounded-[2rem] p-8 space-y-5"
-      >
-        <h1 id="join-title" className="text-2xl font-black">
-          {roomName ? vi.joinDialog.title(roomName) : vi.joinDialog.loading}
-        </h1>
+    <Dialog open dismissable={false} onClose={() => undefined} title={roomName ? vi.joinDialog.title(roomName) : vi.joinDialog.loading}>
+      <form onSubmit={submit} className="space-y-4">
         <Field
           label={vi.home.yourName}
           placeholder={vi.home.yourNamePlaceholder}
           value={name}
           maxLength={30}
+          autoComplete="nickname"
           autoFocus
           onChange={(e) => setName(e.target.value)}
         />
         {error && (
-          <p role="alert" className="text-sm text-red-200 bg-red-500/10 border border-red-500/20 rounded-xl p-3">
+          <p role="alert" className="rounded-row border border-onair/50 bg-onair/10 p-3 text-[14px]">
             {error}
           </p>
         )}
-        <button type="submit" disabled={!valid || busy || !roomName} className="w-full btn-primary disabled:opacity-50">
+        <Button type="submit" variant="primary" disabled={!valid || busy || !roomName} className="w-full">
           {vi.joinDialog.submit}
-        </button>
-        <Link href="/" className="block text-center text-sm text-slate-400 hover:text-white">
+        </Button>
+        <Link href="/" className="block py-2 text-center text-[14px] text-sage hover:text-paper">
           {vi.joinDialog.backHome}
         </Link>
       </form>
-    </div>
+    </Dialog>
   );
 }

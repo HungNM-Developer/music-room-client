@@ -2,14 +2,13 @@
 
 import { useCallback } from 'react';
 import { useToast } from '@/components/ui/Toast';
-import { useRoom } from '@/context/RoomContext';
 import type { CommandName, CommandPayload } from '@/contracts';
 import { errorMessage } from '@/i18n/vi';
 import type { CommandResult } from '@/lib/socket';
+import { room } from '@/state/room-store';
 
 /** Sends a command; on failure shows the exact Vietnamese message and returns null. */
 export function useAct() {
-  const room = useRoom();
   const toast = useToast();
   return useCallback(
     async <K extends CommandName>(
@@ -22,6 +21,6 @@ export function useAct() {
       if (!opts.silent) toast(errorMessage(r.error.code, r.error.params), 'error');
       return null;
     },
-    [room, toast],
+    [toast],
   );
 }

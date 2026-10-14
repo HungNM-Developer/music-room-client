@@ -1,107 +1,101 @@
 'use client';
 
-import { Pause, Play, SkipForward } from 'lucide-react';
-import { useRoom } from '@/context/RoomContext';
-import { REACTIONS } from '@/contracts';
+import { Pause, Play, SkipForward, StepForward } from 'lucide-react';
+import { Button, IconButton } from '@/components/ui/Button';
+import { OnAirLamp } from '@/components/ui/OnAirLamp';
+import { Thumb } from '@/components/ui/Thumb';
+import { REACTIONS } from '@/contracts/constants';
 import { useAct } from '@/hooks/useAct';
-import { useNow } from '@/hooks/useNow';
 import { vi } from '@/i18n/vi';
-import { estimatePosition, formatDuration } from '@/lib/time';
-import { PlayingVisualizer } from './PlayingVisualizer';
+import { useMe, useRoom } from '@/state/hooks';
+import { LiveDial } from './TuningDial';
 
+/** The song on air: cover, who picked it, their wish, the dial and the controls. */
 export function NowPlayingCard() {
-  const { snapshot, offset, me } = useRoom();
+  const np = useRoom((s) => s.snapshot?.nowPlaying ?? null);
+  const me = useMe();
   const act = useAct();
-  const now = useNow(500);
-  const np = snapshot?.nowPlaying ?? null;
 
   if (!np) {
     return (
-      <section aria-label={vi.nowPlaying.title} className="glass-effect rounded-[2rem] p-6 text-center text-slate-400">
-        {vi.nowPlaying.idle}
+      <section aria-label={vi.nowPlaying.title} className="rounded-panel bg-panel p-5">
+        <OnAirLamp live={false}>{vi.nowPlaying.paused}</OnAirLamp>
+        <h2 className="type-display mt-3 text-[24px] font-bold leading-tight">{vi.nowPlaying.idleTitle}</h2>
+        <p className="mt-1 text-sage">{vi.nowPlaying.idle}</p>
       </section>
     );
   }
 
   const t = np.item.track;
-  const pos = estimatePosition({ ...np, durationSec: t.durationSec }, offset, now);
-  const pct = t.durationSec ? Math.min(100, (pos / t.durationSec) * 100) : 0;
+  const playing = np.status === 'PLAYING';
   const canControl = me?.role === 'ADMIN' || me?.canControl;
   const voted = Boolean(me && np.skip.voters.includes(me.id));
   const canVote = me && !me.isDevice;
+  const picker = np.item.addedBy?.displayName;
 
   return (
-    <section aria-label={vi.nowPlaying.title} className="glass-effect rounded-[2rem] p-5 md:p-6 space-y-4">
-      <div className="flex gap-4 items-center">
-        <div className="relative w-20 h-20 md:w-24 md:h-24 shrink-0 rounded-2xl overflow-hidden bg-white/5">
-          {t.thumbnailUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={t.thumbnailUrl} alt="" className="w-full h-full object-cover" />
-          )}
-        </div>
-        <div className="min-w-0 flex-1 space-y-1">
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-emerald-300">
-            {np.status === 'PLAYING' ? <PlayingVisualizer /> : null}
-            {np.status === 'PLAYING' ? vi.nowPlaying.title : vi.nowPlaying.paused}
-          </div>
-          <h2 className="text-lg md:text-xl font-black truncate [unicode-bidi:plaintext]" title={t.title}>
+    <section aria-label={vi.nowPlaying.title} className="rounded-panel bg-panel p-4 sm:p-5">
+      <OnAirLamp live={playing}>{playing ? vi.nowPlaying.live : vi.nowPlaying.paused}</OnAirLamp>
+
+      <div className="mt-3 flex gap-3.5">
+        <Thumb url={t.thumbnailUrl} size={76} className="rounded-row" />
+        <div className="min-w-0 flex-1">
+          <h2 className="type-display line-clamp-2 text-[22px] font-bold leading-[1.1] [unicode-bidi:plaintext]" title={t.title}>
             {t.title}
           </h2>
-          <p className="text-sm text-slate-400 truncate">
-            {np.item.addedBy ? vi.nowPlaying.addedBy(np.item.addedBy.displayName) : vi.nowPlaying.fallback}
-            {t.channel ? ` · ${t.channel}` : ''}
+          <p className="mt-1 truncate text-[14px] text-sage">
+            {picker ? vi.nowPlaying.pickedBy(picker) : vi.nowPlaying.fallback}
           </p>
+          {t.channel && <p className="truncate text-[13px] text-sage/80">{t.channel}</p>}
         </div>
       </div>
 
-      <div className="space-y-1">
-        <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-brand-primary to-brand-accent transition-[width] duration-500" style={{ width: `${pct}%` }} />
-        </div>
-        <div className="flex justify-between text-xs text-slate-400 tabular-nums">
-          <span>{formatDuration(pos)}</span>
-          <span>{t.durationSec ? formatDuration(t.durationSec) : vi.nowPlaying.unknownDuration}</span>
-        </div>
+      {np.item.wishMessage && picker && (
+        <figure className="mt-4 border-l-2 border-amber pl-3">
+          <figcaption className="text-[13px] text-sage">{vi.nowPlaying.wishFrom(picker)}</figcaption>
+          <blockquote className="mt-0.5 whitespace-pre-wrap [overflow-wrap:anywhere]">{np.item.wishMessage}</blockquote>
+        </figure>
+      )}
+
+      <div className="mt-5">
+        <LiveDial />
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {canVote && (
-          <button
-            type="button"
-            disabled={voted}
-            onClick={() => act('queue:vote-skip', { queueItemId: np.item.id })}
-            className="btn-secondary !px-4 !py-2 text-sm disabled:opacity-60"
-          >
-            <SkipForward className="w-4 h-4" aria-hidden />
-            {voted ? `${vi.nowPlaying.voted} · ` : ''}
-            {vi.nowPlaying.voteSkip(np.skip.votes, np.skip.required)}
-          </button>
-        )}
-        {canControl && (
-          <>
-            <button
-              type="button"
-              onClick={() =>
-                act('playback:control', {
-                  action: np.status === 'PLAYING' ? 'pause' : 'play',
-                  queueItemId: np.item.id,
-                })
-              }
-              className="btn-secondary !px-4 !py-2 text-sm"
+      {(canVote || canControl) && (
+        <div className="mt-4 flex items-center gap-2">
+          {canVote && (
+            <Button
+              size="sm"
+              disabled={voted}
+              aria-pressed={voted}
+              onClick={() => act('queue:vote-skip', { queueItemId: np.item.id })}
+              className="flex-1 sm:flex-none"
             >
-              {np.status === 'PLAYING' ? <Pause className="w-4 h-4" aria-hidden /> : <Play className="w-4 h-4" aria-hidden />}
-              {np.status === 'PLAYING' ? vi.nowPlaying.pause : vi.nowPlaying.play}
-            </button>
-            <button
-              type="button"
-              onClick={() => act('playback:control', { action: 'skip', queueItemId: np.item.id })}
-              className="btn-secondary !px-4 !py-2 text-sm"
-            >
-              {vi.nowPlaying.skipNow}
-            </button>
-          </>
-        )}
-      </div>
+              <SkipForward className="h-4 w-4" aria-hidden />
+              {voted ? vi.nowPlaying.voted(np.skip.votes, np.skip.required) : vi.nowPlaying.voteSkip(np.skip.votes, np.skip.required)}
+            </Button>
+          )}
+          {canControl && (
+            <>
+              <Button
+                size="sm"
+                variant="primary"
+                aria-label={playing ? vi.nowPlaying.pause : vi.nowPlaying.play}
+                onClick={() => act('playback:control', { action: playing ? 'pause' : 'play', queueItemId: np.item.id })}
+                className="w-12 !px-0"
+              >
+                {playing ? <Pause className="h-5 w-5" aria-hidden /> : <Play className="h-5 w-5" aria-hidden />}
+              </Button>
+              <IconButton
+                label={vi.nowPlaying.skipNow}
+                onClick={() => act('playback:control', { action: 'skip', queueItemId: np.item.id })}
+              >
+                <StepForward className="h-5 w-5" aria-hidden />
+              </IconButton>
+            </>
+          )}
+        </div>
+      )}
     </section>
   );
 }
@@ -109,14 +103,14 @@ export function NowPlayingCard() {
 export function ReactionBar() {
   const act = useAct();
   return (
-    <div className="flex flex-wrap gap-2" role="group" aria-label="Reaction">
+    <div className="grid grid-cols-8 gap-1" role="group" aria-label={vi.nowPlaying.reactions}>
       {REACTIONS.map((emoji) => (
         <button
           key={emoji}
           type="button"
-          aria-label={`Thả ${emoji}`}
+          aria-label={vi.nowPlaying.react(emoji)}
           onClick={() => act('room:reaction', { emoji }, { silent: true })}
-          className="w-11 h-11 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 active:scale-90 transition text-xl"
+          className="flex h-11 items-center justify-center rounded-row text-[22px] transition-transform hover:bg-panel active:scale-90"
         >
           {emoji}
         </button>

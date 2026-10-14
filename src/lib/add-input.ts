@@ -1,4 +1,4 @@
-import { looksLikeLink, parseYouTubeVideo } from '@/contracts';
+import { looksLikeLink, parseYouTubeVideo } from '@/contracts/youtube';
 
 export type InputKind = 'empty' | 'link' | 'query';
 

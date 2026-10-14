@@ -1,11 +1,6 @@
 import { io, type Socket } from 'socket.io-client';
-import {
-  ACK_TIMEOUT_MS,
-  type Ack,
-  type CommandName,
-  type CommandPayload,
-  type CommandResults,
-} from '@/contracts';
+import type { Ack, CommandName, CommandPayload, CommandResults } from '@/contracts';
+import { ACK_TIMEOUT_MS } from '@/contracts/events';
 
 export type CommandResult<K extends CommandName> = K extends keyof CommandResults
   ? CommandResults[K]
