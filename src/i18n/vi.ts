@@ -69,8 +69,6 @@ export const vi = {
     skipNow: 'Chuyển bài',
     pause: 'Tạm dừng',
     play: 'Phát',
-    reactions: 'Thả cảm xúc',
-    react: (emoji: string) => `Thả ${emoji}`,
   },
 
   queue: {
@@ -176,11 +174,19 @@ export const vi = {
     placeholder: 'Nhắn cho cả phòng…',
     send: 'Gửi',
     empty: 'Chưa có tin nhắn nào. Chào cả phòng một câu?',
+    open: 'Mở trò chuyện',
+    minimize: 'Thu nhỏ trò chuyện',
+    unread: (n: number) => `${n} tin mới`,
+    hostEmpty: 'Tin nhắn của mọi người sẽ hiện ở đây.',
+    you: 'Bạn',
+    reactions: 'Thả cảm xúc lên màn hình của cả phòng',
+    react: (emoji: string) => `Thả ${emoji}`,
+    djToggle: 'Bàn DJ',
   },
 
   dj: {
     title: 'Bàn DJ',
-    note: 'Âm thanh phát trên loa của phòng.',
+    note: 'Phát trên loa của phòng',
     sounds: {
       build: 'Dồn nhịp',
       drop: 'Drop',

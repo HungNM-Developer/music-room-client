@@ -6,9 +6,9 @@ import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AddTrackPanel } from '@/components/room/AddTrackPanel';
 import { Banners } from '@/components/room/Banners';
-import { ChatPanel } from '@/components/room/ChatPanel';
+import { ChatOverlay } from '@/components/room/Chat';
 import { HeartCanvas, triggerReaction } from '@/components/room/HeartCanvas';
-import { NowPlayingCard, ReactionBar } from '@/components/room/NowPlayingCard';
+import { NowPlayingCard } from '@/components/room/NowPlayingCard';
 import { PeoplePanel } from '@/components/room/PeoplePanel';
 import { QueueList } from '@/components/room/QueueList';
 import { RoomHeader } from '@/components/room/RoomHeader';
@@ -21,7 +21,6 @@ import { room } from '@/state/room-store';
 // Loaded only when used: most members never see these.
 const PlayerEngine = dynamic(() => import('@/components/player/PlayerEngine').then((m) => m.PlayerEngine), { ssr: false });
 const SettingsPanel = dynamic(() => import('@/components/room/SettingsPanel').then((m) => m.SettingsPanel), { ssr: false });
-const DjPads = dynamic(() => import('@/components/room/DjPads').then((m) => m.DjPads), { ssr: false });
 const ActivityLog = dynamic(() => import('@/components/room/ActivityLog').then((m) => m.ActivityLog), { ssr: false });
 const JoinDialog = dynamic(() => import('@/components/room/JoinDialog').then((m) => m.JoinDialog), { ssr: false });
 
@@ -53,6 +52,7 @@ export default function RoomPage() {
   // Legacy path (TC-129): a member granted canPlay plays from this page; the engine claims the lease.
   const isPlayer = Boolean(me?.canPlay && !me.isDevice);
   const needsJoin = connection === 'connected' && !memberId;
+  const canChat = Boolean(memberId && me && !me.isDevice);
   const notice = revoked === 'kicked' ? vi.banners.kicked : revoked === 'invalid' ? errorMessage('UNAUTHENTICATED') : null;
 
   const tabs: TabDef<TabKey>[] = [
@@ -69,12 +69,13 @@ export default function RoomPage() {
   });
 
   return (
-    <div className="min-h-dvh pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-12">
+    // Bottom padding clears the tab bar and the floating chat head.
+    <div className="min-h-dvh pb-[calc(9rem+env(safe-area-inset-bottom))] lg:pb-28">
       <HeartCanvas />
       <RoomHeader onOpenLog={() => setLogOpen(true)} />
 
-      <main className="mx-auto max-w-6xl px-4 pt-4 lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-x-8 lg:pt-6">
-        <div className="mb-4 empty:hidden lg:col-span-2">
+      <main className="mx-auto max-w-6xl px-4 pt-4 lg:grid lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-x-8 lg:pt-6">
+        <div className="mb-4 empty:hidden lg:col-span-full">
           <Banners />
         </div>
 
@@ -86,7 +87,6 @@ export default function RoomPage() {
             </div>
           )}
           <NowPlayingCard />
-          <ReactionBar />
           <QueueList onAdd={() => setTab('add')} />
         </div>
 
@@ -106,12 +106,12 @@ export default function RoomPage() {
           </div>
           <div {...panel('people')} className={`space-y-6 ${tab === 'people' ? '' : 'hidden'}`}>
             <PeoplePanel />
-            <DjPads />
-            <ChatPanel />
             <SettingsPanel />
           </div>
         </div>
       </main>
+
+      {canChat && <ChatOverlay />}
 
       <nav aria-label={vi.tabs.label} className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-dial pb-[env(safe-area-inset-bottom)] lg:hidden">
         <TabList variant="bar" idPrefix="room" label={vi.tabs.label} tabs={tabs} value={tab} onChange={setTab} />

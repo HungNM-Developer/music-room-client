@@ -28,6 +28,8 @@ export function Dialog({ open, onClose, title, description, children, dismissabl
     if (!d || !open) return;
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     if (!d.open) d.showModal();
+    // React's autoFocus never reaches the DOM attribute, so <dialog> would focus the close button.
+    d.querySelector<HTMLElement>('[data-autofocus]')?.focus();
     return () => {
       if (d.open) d.close();
       if (opener?.isConnected) opener.focus();

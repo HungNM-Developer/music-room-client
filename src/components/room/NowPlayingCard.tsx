@@ -4,7 +4,6 @@ import { Pause, Play, SkipForward, StepForward } from 'lucide-react';
 import { Button, IconButton } from '@/components/ui/Button';
 import { OnAirLamp } from '@/components/ui/OnAirLamp';
 import { Thumb } from '@/components/ui/Thumb';
-import { REACTIONS } from '@/contracts/constants';
 import { useAct } from '@/hooks/useAct';
 import { vi } from '@/i18n/vi';
 import { useMe, useRoom } from '@/state/hooks';
@@ -97,24 +96,5 @@ export function NowPlayingCard() {
         </div>
       )}
     </section>
-  );
-}
-
-export function ReactionBar() {
-  const act = useAct();
-  return (
-    <div className="grid grid-cols-8 gap-1" role="group" aria-label={vi.nowPlaying.reactions}>
-      {REACTIONS.map((emoji) => (
-        <button
-          key={emoji}
-          type="button"
-          aria-label={vi.nowPlaying.react(emoji)}
-          onClick={() => act('room:reaction', { emoji }, { silent: true })}
-          className="flex h-11 items-center justify-center rounded-row text-[22px] transition-transform hover:bg-panel active:scale-90"
-        >
-          {emoji}
-        </button>
-      ))}
-    </div>
   );
 }

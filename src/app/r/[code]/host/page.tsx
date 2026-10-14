@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useState } from 'react';
 import { Banners } from '@/components/room/Banners';
+import { HostChat } from '@/components/room/Chat';
 import { HeartCanvas, triggerReaction } from '@/components/room/HeartCanvas';
 import { LiveDial } from '@/components/room/TuningDial';
 import { Button } from '@/components/ui/Button';
@@ -104,16 +105,19 @@ function HostScreen({ code }: { code: string }) {
       <HeartCanvas />
       <div className="mx-auto grid max-w-[1600px] gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
         <section className="min-w-0 space-y-5">
-          {playerRevoked ? (
-            <div className="flex aspect-video flex-col items-center justify-center gap-5 rounded-panel border border-line bg-panel p-6 text-center">
-              <p className="max-w-md text-[18px]">{playerRevoked === 'permission' ? vi.host.movedByAdmin : vi.host.replaced}</p>
-              <Button variant="primary" onClick={() => room.clearPlayerRevoked()}>
-                {vi.host.takeBack}
-              </Button>
-            </div>
-          ) : (
-            <PlayerEngine volume={volume} />
-          )}
+          {/* Video height follows the screen so title, dial and volume fit on one TV screen. */}
+          <div className="w-full max-w-[max(360px,calc((100dvh-27rem)*16/9))]">
+            {playerRevoked ? (
+              <div className="flex aspect-video flex-col items-center justify-center gap-5 rounded-panel border border-line bg-panel p-6 text-center">
+                <p className="max-w-md text-[18px]">{playerRevoked === 'permission' ? vi.host.movedByAdmin : vi.host.replaced}</p>
+                <Button variant="primary" onClick={() => room.clearPlayerRevoked()}>
+                  {vi.host.takeBack}
+                </Button>
+              </div>
+            ) : (
+              <PlayerEngine volume={volume} />
+            )}
+          </div>
 
           <div>
             <OnAirLamp live={live}>{live ? vi.host.onAir : np ? vi.nowPlaying.paused : vi.host.waiting}</OnAirLamp>
@@ -143,17 +147,17 @@ function HostScreen({ code }: { code: string }) {
           <Banners />
         </section>
 
-        <aside className="space-y-8">
+        <aside className="space-y-7">
           <div className="rounded-panel bg-paper p-6 text-center text-dial">
             <h2 className="type-display text-[24px] font-bold">{vi.host.scan}</h2>
             <div className="mx-auto mt-4 w-fit">
               {joinUrl ? (
-                <QRCodeSVG value={joinUrl} size={220} fgColor="#0f2a26" bgColor="#f3ecdd" marginSize={0} title={joinUrl} />
+                <QRCodeSVG value={joinUrl} size={180} fgColor="#0f2a26" bgColor="#f3ecdd" marginSize={0} title={joinUrl} />
               ) : (
-                <div className="h-[220px] w-[220px]" />
+                <div className="h-[180px] w-[180px]" />
               )}
             </div>
-            <p className="type-display mt-4 text-[44px] font-extrabold leading-none tracking-[0.12em]">{code}</p>
+            <p className="type-display mt-4 text-[40px] font-extrabold leading-none tracking-[0.12em]">{code}</p>
             <p className="mt-2 text-[13px] text-dial/70 [overflow-wrap:anywhere]">{joinUrl}</p>
           </div>
 
@@ -175,6 +179,8 @@ function HostScreen({ code }: { code: string }) {
               </ol>
             )}
           </div>
+
+          <HostChat />
         </aside>
       </div>
     </main>

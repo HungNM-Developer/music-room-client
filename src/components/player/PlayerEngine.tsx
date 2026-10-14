@@ -258,7 +258,7 @@ export function PlayerEngine({ volume = 100 }: { volume?: number }) {
         <button
           type="button"
           onClick={start}
-          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-dial-deep/95 p-6 text-center"
+          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-dial-deep p-6 text-center"
         >
           <span className="flex h-20 w-20 items-center justify-center rounded-full bg-amber text-amber-ink transition-transform hover:scale-105">
             <Play className="ml-1 h-9 w-9" fill="currentColor" aria-hidden />

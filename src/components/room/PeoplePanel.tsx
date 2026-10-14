@@ -161,7 +161,7 @@ export function PeoplePanel() {
               type="password"
               autoComplete="off"
               maxLength={8}
-              autoFocus
+              data-autofocus
               className="type-display text-center text-[22px] tracking-[0.5em]"
             />
             <Button type="submit" variant="primary" disabled={!isPin(pin)} className="w-full">

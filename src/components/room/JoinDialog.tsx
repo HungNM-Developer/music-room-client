@@ -55,7 +55,7 @@ export function JoinDialog({ code, notice }: { code: string; notice?: string | n
           value={name}
           maxLength={30}
           autoComplete="nickname"
-          autoFocus
+          data-autofocus
           onChange={(e) => setName(e.target.value)}
         />
         {error && (

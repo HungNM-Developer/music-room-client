@@ -42,6 +42,8 @@ export interface RoomState {
   /** serverTime − local time (ms), for progress (R-50). */
   offset: number;
   chat: ChatMessageView[];
+  /** Messages from others since the chat was last on screen (dock badge). */
+  chatUnread: number;
   logs: ActivityLogView[];
   connection: Connection;
   /** Increments on every successful (re)connection; used to re-claim the player lease. */
@@ -59,6 +61,7 @@ export const INITIAL_STATE: RoomState = {
   snapshot: null,
   offset: 0,
   chat: [],
+  chatUnread: 0,
   logs: [],
   connection: 'idle',
   connectCount: 0,
@@ -74,6 +77,7 @@ const ROOM_RESET: Partial<RoomState> = {
   snapshot: null,
   memberId: null,
   chat: [],
+  chatUnread: 0,
   logs: [],
   playerCommand: null,
   playerRevoked: null,
@@ -138,7 +142,12 @@ class RoomStore {
       })),
     );
     s.on('chat:history', (chat: ChatMessageView[]) => this.set({ chat }));
-    s.on('chat:receive', (m: ChatMessageView) => this.set((st) => ({ chat: [...st.chat, m].slice(-200) })));
+    s.on('chat:receive', (m: ChatMessageView) =>
+      this.set((st) => ({
+        chat: [...st.chat, m].slice(-200),
+        chatUnread: m.memberId === st.memberId ? st.chatUnread : st.chatUnread + 1,
+      })),
+    );
     s.on('activity:history', (logs: ActivityLogView[]) => this.set({ logs }));
     s.on('activity:new', (l: ActivityLogView) => this.set((st) => ({ logs: [l, ...st.logs].slice(0, 200) })));
     s.on('player:command', (c: PlayerCommand) => this.set({ playerCommand: c, playerRevoked: null }));
@@ -210,6 +219,10 @@ class RoomStore {
   };
 
   clearPlayerRevoked = (): void => this.set({ playerRevoked: null });
+
+  markChatRead = (): void => {
+    if (this.state.chatUnread) this.set({ chatUnread: 0 });
+  };
 
   onReaction = (l: Listener<ReactionEvent>): (() => void) => {
     this.reactionListeners.add(l);
