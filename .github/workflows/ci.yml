@@ -3,8 +3,9 @@ name: ci
 on:
   pull_request:
   push:
-    branches: [develop, main]
+    branches: [develop, main, 'feat/**']
     tags: ['v*']
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -47,10 +48,25 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           path: music-room-client
+      # Server source matching this client change: same owner as the PR head (a fork
+      # for outside contributors) and the same branch name if it exists, else develop.
+      - name: Pick server repository and branch
+        id: server
+        working-directory: .
+        env:
+          OWNER: ${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+        run: |
+          if git ls-remote --exit-code --heads "https://github.com/$OWNER/music-room-server.git" "$BRANCH" > /dev/null; then
+            echo "ref=$BRANCH" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=develop" >> "$GITHUB_OUTPUT"
+          fi
+          echo "repo=$OWNER/music-room-server" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
-          repository: ${{ github.repository_owner }}/music-room-server
-          ref: develop
+          repository: ${{ steps.server.outputs.repo }}
+          ref: ${{ steps.server.outputs.ref }}
           path: music-room-server
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
