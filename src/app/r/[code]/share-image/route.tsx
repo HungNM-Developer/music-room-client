@@ -42,6 +42,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ code: st
   const body = 'Body, BodyVi';
   const display = 'Display, DisplayVi';
   const column = { display: 'flex', flexDirection: 'column' } as const;
+  // Slack / iMessage crop previews to a centred square (x 285–915). The QR and the room
+  // code live inside it; room and song details sit on the sides for wide previews.
+  const side = { ...column, width: 280, height: 566 } as const;
 
   return new ImageResponse(
     (
@@ -49,52 +52,47 @@ export async function GET(req: Request, { params }: { params: Promise<{ code: st
         {art && (
           <img src={art} alt="" width={1200} height={900} style={{ position: 'absolute', left: 0, top: -135, width: 1200, height: 900, objectFit: 'cover' }} />
         )}
-        {/* satori has no `inset`: size the shade explicitly so the text stays readable */}
-        <div
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            width: 1200,
-            height: 630,
-            display: 'flex',
-            backgroundImage: `linear-gradient(90deg, ${C.dial} 0%, rgba(15,42,38,0.94) 52%, rgba(15,42,38,0.62) 100%)`,
-          }}
-        />
-        <div style={{ display: 'flex', width: 1200, height: 630, padding: 64, position: 'relative' }}>
-          <div style={{ ...column, width: 640, height: 502 }}>
-            <div style={{ display: 'flex', alignItems: 'center', color: C.amber, fontSize: 28 }}>
-              <div style={{ width: 14, height: 14, borderRadius: 7, background: C.amber, marginRight: 12 }} />
+        {/* satori has no `inset`: size the shade explicitly so text and QR stay crisp */}
+        <div style={{ position: 'absolute', left: 0, top: 0, width: 1200, height: 630, display: 'flex', background: 'rgba(15,42,38,0.86)' }} />
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: 1200, height: 630, padding: '32px 48px', position: 'relative' }}>
+          <div style={{ ...side, justifyContent: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', color: C.amber, fontSize: 24 }}>
+              <div style={{ width: 12, height: 12, borderRadius: 6, background: C.amber, marginRight: 10 }} />
               {vi.appName}
             </div>
-            <div style={{ display: 'flex', marginTop: 24, fontFamily: display, fontSize: 72, lineHeight: 1.02, letterSpacing: -1, lineClamp: 2 }}>
-              {preview?.name ?? vi.home.headline}
+            <div style={{ display: 'flex', marginTop: 18, fontFamily: display, fontSize: 50, lineHeight: 1.04, letterSpacing: -0.5, lineClamp: 4 }}>
+              {preview?.name ?? vi.appName}
             </div>
+            <div style={{ display: 'flex', marginTop: 18, fontSize: 22, lineHeight: 1.4, color: C.sage, lineClamp: 3 }}>{vi.home.headline}</div>
+          </div>
+
+          <div style={{ ...column, alignItems: 'center', width: 472, height: 566, padding: '28px 36px 24px', background: C.paper, borderRadius: 32, color: C.dial }}>
+            <img src={qrSvgDataUri(url, C.dial, C.paper)} alt="" width={400} height={400} />
+            <div style={{ display: 'flex', marginTop: 14, fontFamily: display, fontSize: 64, lineHeight: 1, letterSpacing: 10 }}>{code}</div>
+            <div style={{ display: 'flex', marginTop: 10, fontSize: 22, color: '#3f5e57' }}>{vi.share.scan}</div>
+          </div>
+
+          <div style={{ ...side, justifyContent: 'center' }}>
             {np ? (
-              <div style={{ ...column, marginTop: 32 }}>
-                <div style={{ display: 'flex' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', background: C.onair, fontSize: 22, padding: '6px 18px', borderRadius: 999 }}>
-                    <div style={{ width: 10, height: 10, borderRadius: 5, background: C.paper, marginRight: 10 }} />
+              <div style={{ ...column }}>
+                {art && (
+                  <img src={art} alt="" width={280} height={158} style={{ width: 280, height: 158, objectFit: 'cover', borderRadius: 16 }} />
+                )}
+                <div style={{ display: 'flex', marginTop: 18 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', background: C.onair, fontSize: 20, padding: '5px 14px', borderRadius: 999 }}>
+                    <div style={{ width: 9, height: 9, borderRadius: 5, background: C.paper, marginRight: 8 }} />
                     {vi.nowPlaying.live}
                   </div>
                 </div>
-                <div style={{ display: 'flex', marginTop: 14, fontSize: 34, lineHeight: 1.25, lineClamp: 2 }}>{np.title}</div>
+                <div style={{ display: 'flex', marginTop: 12, fontSize: 26, lineHeight: 1.3, lineClamp: 3 }}>{np.title}</div>
                 {np.addedBy ? (
-                  <div style={{ display: 'flex', marginTop: 8, fontSize: 26, color: C.sage }}>{vi.nowPlaying.pickedBy(np.addedBy)}</div>
+                  <div style={{ display: 'flex', marginTop: 8, fontSize: 20, color: C.sage }}>{vi.nowPlaying.pickedBy(np.addedBy)}</div>
                 ) : null}
               </div>
             ) : (
-              <div style={{ display: 'flex', marginTop: 32, fontSize: 30, lineHeight: 1.35, color: C.sage }}>{vi.appTagline}</div>
+              <div style={{ display: 'flex', fontSize: 24, lineHeight: 1.4, color: C.sage }}>{vi.share.idle}</div>
             )}
-            <div style={{ display: 'flex', alignItems: 'flex-end', marginTop: 'auto' }}>
-              <div style={{ display: 'flex', fontSize: 26, color: C.sage, marginRight: 18, marginBottom: 10 }}>{vi.share.roomCode}</div>
-              <div style={{ display: 'flex', fontFamily: display, fontSize: 64, lineHeight: 1, color: C.amber, letterSpacing: 8 }}>{code}</div>
-            </div>
-          </div>
-
-          <div style={{ ...column, alignItems: 'center', justifyContent: 'center', marginLeft: 'auto', alignSelf: 'center', width: 372, height: 440, background: C.paper, borderRadius: 32 }}>
-            <img src={qrSvgDataUri(url, C.dial, C.paper)} alt="" width={292} height={292} />
-            <div style={{ display: 'flex', marginTop: 24, fontFamily: display, fontSize: 32, color: C.dial }}>{vi.share.scan}</div>
           </div>
         </div>
       </div>
