@@ -6,6 +6,9 @@ import { fetchRoomPreview, requestOrigin } from '@/lib/room-preview';
 
 type Params = { params: Promise<{ code: string }> };
 
+/** Bump when the share image layout changes, so Slack & co. re-fetch instead of reusing their cache. */
+const SHARE_IMAGE_DESIGN = 2;
+
 /** Cache-buster for the share image: changes with the song, short in the URL. */
 function shortHash(s: string): string {
   let h = 5381;
@@ -22,7 +25,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const origin = requestOrigin(h);
   // Absolute URL on the origin the visitor used; the card changes with the song.
   const image = {
-    url: `${origin}/r/${code}/share-image?v=${shortHash(preview?.nowPlaying?.title ?? '')}`,
+    url: `${origin}/r/${code}/share-image?v=${shortHash(`${SHARE_IMAGE_DESIGN}:${preview?.nowPlaying?.title ?? ''}`)}`,
     width: 1200,
     height: 630,
     alt: vi.share.imageAlt(preview?.name ?? code),
