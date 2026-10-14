@@ -107,7 +107,7 @@ export function PeoplePanel() {
           </button>
         )}
       </div>
-      <ul className="space-y-1" data-testid="members">
+      <ul className="space-y-1">
         {members.map((m) => (
           <li key={m.id} className="flex items-center gap-3 rounded-2xl px-2 py-2 hover:bg-white/[0.03]">
             <span

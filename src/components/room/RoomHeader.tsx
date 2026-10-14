@@ -28,7 +28,7 @@ export function RoomHeader({ onOpenLog }: { onOpenLog: () => void }) {
         <div className="min-w-0 flex-1">
           <h1 className="text-lg font-black truncate">{snapshot.room.name}</h1>
           <p className="text-xs text-slate-400">
-            {vi.header.code}: <span className="font-mono font-bold tracking-widest text-indigo-300" data-testid="room-code">{snapshot.room.code}</span>
+            {vi.header.code}: <span className="font-mono font-bold tracking-widest text-indigo-300">{snapshot.room.code}</span>
           </p>
         </div>
         <button type="button" onClick={onOpenLog} aria-label={vi.header.log} className="btn-secondary !p-2.5">

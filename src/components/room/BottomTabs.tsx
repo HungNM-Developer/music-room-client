@@ -27,7 +27,7 @@ export function BottomTabs({ tab, onChange, queueCount }: { tab: TabKey; onChang
             <span className="relative">
               {t.icon}
               {t.key === 'room' && queueCount > 0 && (
-                <span className="absolute -top-1.5 -right-3 rounded-full bg-brand-primary px-1.5 text-[10px] tabular-nums" data-testid="queue-count">
+                <span className="absolute -top-1.5 -right-3 rounded-full bg-brand-primary px-1.5 text-[10px] tabular-nums">
                   {queueCount}
                 </span>
               )}

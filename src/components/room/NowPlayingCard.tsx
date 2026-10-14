@@ -44,7 +44,7 @@ export function NowPlayingCard() {
             {np.status === 'PLAYING' ? <PlayingVisualizer /> : null}
             {np.status === 'PLAYING' ? vi.nowPlaying.title : vi.nowPlaying.paused}
           </div>
-          <h2 className="text-lg md:text-xl font-black truncate [unicode-bidi:plaintext]" title={t.title} data-testid="now-playing-title">
+          <h2 className="text-lg md:text-xl font-black truncate [unicode-bidi:plaintext]" title={t.title}>
             {t.title}
           </h2>
           <p className="text-sm text-slate-400 truncate">
@@ -71,7 +71,6 @@ export function NowPlayingCard() {
             disabled={voted}
             onClick={() => act('queue:vote-skip', { queueItemId: np.item.id })}
             className="btn-secondary !px-4 !py-2 text-sm disabled:opacity-60"
-            data-testid="vote-skip"
           >
             <SkipForward className="w-4 h-4" aria-hidden />
             {voted ? `${vi.nowPlaying.voted} · ` : ''}

@@ -65,7 +65,7 @@ export default function HostPage() {
         <section className="lg:col-span-2 min-w-0 space-y-4">
           {playerRevoked ? (
             <div className="aspect-video rounded-[2rem] glass-effect flex flex-col items-center justify-center gap-4 p-6 text-center">
-              <p className="text-lg" data-testid="host-revoked">
+              <p className="text-lg">
                 {playerRevoked === 'permission' ? vi.host.movedByAdmin : vi.host.replaced}
               </p>
               <button
@@ -81,7 +81,7 @@ export default function HostPage() {
           )}
           <div className="flex items-center gap-4">
             <div className="min-w-0 flex-1">
-              <h1 className="text-2xl md:text-3xl font-black truncate" data-testid="host-title">
+              <h1 className="text-2xl md:text-3xl font-black truncate">
                 {np ? np.item.track.title : vi.host.idle}
               </h1>
               {np && (
@@ -103,11 +103,11 @@ export default function HostPage() {
           <div className="mx-auto w-fit rounded-2xl bg-white p-3">
             {joinUrl && <QRCodeSVG value={joinUrl} size={200} />}
           </div>
-          <p className="text-xl font-black" data-testid="host-code">{vi.host.code(code)}</p>
+          <p className="text-xl font-black">{vi.host.code(code)}</p>
           <div className="text-left space-y-2">
             <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{vi.host.next}</p>
             {next.length === 0 && <p className="text-sm text-slate-500">—</p>}
-            <ol className="space-y-2" data-testid="host-next">
+            <ol className="space-y-2">
               {next.map((q) => (
                 <li key={q.id} className="rounded-xl bg-white/5 px-3 py-2 text-sm">
                   <span className="font-semibold">{q.track.title}</span>

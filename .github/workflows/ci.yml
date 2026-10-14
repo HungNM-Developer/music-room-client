@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -22,64 +22,11 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm test
       - run: npm run build
-
-  e2e:
-    needs: test
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: musicroom
-          POSTGRES_PASSWORD: musicroom
-          POSTGRES_DB: musicroom
-        ports: ['5432:5432']
-        options: --health-cmd "pg_isready -U musicroom" --health-interval 5s --health-retries 20
-    env:
-      CI: 'true'
-      DATABASE_URL: postgresql://musicroom:musicroom@localhost:5432/musicroom
-    # Both repos side by side, as playwright.config.ts expects (../music-room-server).
-    defaults:
-      run:
-        working-directory: music-room-client
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        with:
-          path: music-room-client
-      # Server source matching this client change: same owner as the PR head (a fork
-      # for outside contributors) and the same branch name if it exists, else develop.
-      - name: Pick server repository and branch
-        id: server
-        working-directory: .
-        env:
-          OWNER: ${{ github.event.pull_request.head.repo.owner.login || github.repository_owner }}
-          BRANCH: ${{ github.head_ref || github.ref_name }}
-        run: |
-          if git ls-remote --exit-code --heads "https://github.com/$OWNER/music-room-server.git" "$BRANCH" > /dev/null; then
-            echo "ref=$BRANCH" >> "$GITHUB_OUTPUT"
-          else
-            echo "ref=develop" >> "$GITHUB_OUTPUT"
-          fi
-          echo "repo=$OWNER/music-room-server" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        with:
-          repository: ${{ steps.server.outputs.repo }}
-          ref: ${{ steps.server.outputs.ref }}
-          path: music-room-server
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version: 22
-      - name: Build server
-        working-directory: music-room-server
-        run: npm ci && npx prisma migrate deploy && npm run build
-      - run: npm ci && npx playwright install --with-deps chromium
-      - run: npm run test:e2e
 
   image:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: test
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: read

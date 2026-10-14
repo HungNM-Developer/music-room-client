@@ -41,7 +41,6 @@ export function Banners() {
       {items.map((b) => (
         <div
           key={b.key}
-          data-testid={`banner-${b.key}`}
           className="flex items-center gap-3 rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-3 text-sm text-amber-50"
         >
           {b.icon}

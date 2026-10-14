@@ -12,7 +12,7 @@ import {
 import { vi } from '@/i18n/vi';
 import { estimatePosition } from '@/lib/time';
 
-/** Minimal surface both the YouTube iframe and the E2E fake implement (spec §14). */
+/** Minimal player surface the engine drives (implemented by the YouTube iframe). */
 interface PlayerAdapter {
   load(videoId: string, startSec: number, autoplay: boolean): void;
   play(): void;
@@ -22,7 +22,6 @@ interface PlayerAdapter {
   setVolume(v: number): void;
 }
 
-const FAKE = process.env.NEXT_PUBLIC_E2E === '1';
 const DRIFT_SEC = 2.5;
 const DUCK_VOLUME = 20; // R-34
 
@@ -230,12 +229,8 @@ export function PlayerEngine({ volume = 100 }: { volume?: number }) {
   };
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-[2rem] bg-black" data-testid="player">
-      {FAKE ? (
-        <FakePlayer adapterRef={adapterRef} onReady={() => setReady(true)} onPlaying={onPlaying} onEnded={onEnded} onError={onError} />
-      ) : (
-        <YouTubeAdapter adapterRef={adapterRef} onReady={() => setReady(true)} onPlaying={onPlaying} onEnded={onEnded} onError={onError} />
-      )}
+    <div className="relative aspect-video w-full overflow-hidden rounded-[2rem] bg-black">
+      <YouTubeAdapter adapterRef={adapterRef} onReady={() => setReady(true)} onPlaying={onPlaying} onEnded={onEnded} onError={onError} />
       {!started && (
         <button
           type="button"
@@ -297,55 +292,5 @@ function YouTubeAdapter({ adapterRef, onReady, onPlaying, onEnded, onError }: Ad
       }}
       onError={(e: YouTubeEvent<number>) => onError(e.data)}
     />
-  );
-}
-
-/** E2E stand-in (NEXT_PUBLIC_E2E=1). Exposes window.__mrPlayer so Playwright can end/fail tracks. */
-function FakePlayer({ adapterRef, onReady, onPlaying, onEnded, onError }: AdapterProps) {
-  const [state, setState] = useState({ videoId: null as string | null, playing: false, t: 0, volume: 100 });
-  const s = useRef(state);
-  s.current = state;
-  const handlers = useRef({ onPlaying, onEnded, onError });
-  handlers.current = { onPlaying, onEnded, onError };
-
-  useEffect(() => {
-    let base = { t: 0, at: Date.now(), playing: false };
-    const now = () => (base.playing ? base.t + (Date.now() - base.at) / 1000 : base.t);
-    const update = (patch: Partial<typeof state>) => setState((x) => ({ ...x, ...patch }));
-    adapterRef.current = {
-      load: (videoId, startSec, autoplay) => {
-        base = { t: startSec, at: Date.now(), playing: autoplay };
-        update({ videoId, playing: autoplay, t: startSec });
-        if (autoplay) setTimeout(() => handlers.current.onPlaying(), 50);
-      },
-      play: () => {
-        if (base.playing) return;
-        base = { t: now(), at: Date.now(), playing: true };
-        update({ playing: true });
-        handlers.current.onPlaying();
-      },
-      pause: () => {
-        base = { t: now(), at: Date.now(), playing: false };
-        update({ playing: false });
-      },
-      seek: (sec) => {
-        base = { ...base, t: sec, at: Date.now() };
-      },
-      currentTime: now,
-      setVolume: (v) => update({ volume: v }),
-    };
-    (window as unknown as { __mrPlayer: unknown }).__mrPlayer = {
-      end: () => handlers.current.onEnded(),
-      error: (code: number) => handlers.current.onError(code),
-      state: () => ({ ...s.current, t: now() }),
-    };
-    onReady();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return (
-    <div className="absolute inset-0 flex items-center justify-center text-slate-300 text-sm" data-testid="fake-player">
-      {state.videoId ? `FAKE ▶ ${state.videoId} ${state.playing ? 'playing' : 'paused'} vol ${state.volume}` : 'FAKE idle'}
-    </div>
   );
 }
