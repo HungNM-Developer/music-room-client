@@ -33,7 +33,7 @@ export function NowPlayingCard() {
   const picker = np.item.addedBy?.displayName;
 
   return (
-    <section aria-label={vi.nowPlaying.title} className="rounded-panel bg-panel p-4 sm:p-5">
+    <section aria-label={vi.nowPlaying.title} className="rounded-panel border border-paper/10 bg-panel/80 p-4 sm:p-5">
       <OnAirLamp live={playing}>{playing ? vi.nowPlaying.live : vi.nowPlaying.paused}</OnAirLamp>
 
       <div className="mt-3 flex gap-3.5">

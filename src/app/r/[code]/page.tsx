@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { AddTrackPanel } from '@/components/room/AddTrackPanel';
+import { Backdrop } from '@/components/room/Backdrop';
 import { Banners } from '@/components/room/Banners';
 import { ChatOverlay } from '@/components/room/Chat';
 import { HeartCanvas, triggerReaction } from '@/components/room/HeartCanvas';
@@ -14,6 +15,7 @@ import { QueueList } from '@/components/room/QueueList';
 import { RoomHeader } from '@/components/room/RoomHeader';
 import { panelId, tabId, TabList, type TabDef } from '@/components/ui/Tabs';
 import { normalizeRoomCode } from '@/contracts/text';
+import { useRoomMood } from '@/hooks/useRoomMood';
 import { errorMessage, vi } from '@/i18n/vi';
 import { useMe, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
@@ -36,6 +38,7 @@ export default function RoomPage() {
   const me = useMe();
   const [tab, setTab] = useState<TabKey>('room');
   const [logOpen, setLogOpen] = useState(false);
+  useRoomMood();
 
   useEffect(() => room.enter(code, 'member'), [code]);
 
@@ -70,7 +73,8 @@ export default function RoomPage() {
 
   return (
     // Bottom padding clears the tab bar and the floating chat head.
-    <div className="min-h-dvh pb-[calc(9rem+env(safe-area-inset-bottom))] lg:pb-28">
+    <div className="relative isolate min-h-dvh pb-[calc(9rem+env(safe-area-inset-bottom))] lg:pb-28">
+      <Backdrop />
       <HeartCanvas />
       <RoomHeader onOpenLog={() => setLogOpen(true)} />
 

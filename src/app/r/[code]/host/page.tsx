@@ -5,18 +5,18 @@ import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useState } from 'react';
+import { Backdrop } from '@/components/room/Backdrop';
 import { Banners } from '@/components/room/Banners';
 import { HostChat } from '@/components/room/Chat';
 import { HeartCanvas, triggerReaction } from '@/components/room/HeartCanvas';
 import { LiveDial } from '@/components/room/TuningDial';
 import { Button } from '@/components/ui/Button';
-import { Field } from '@/components/ui/Field';
 import { OnAirLamp } from '@/components/ui/OnAirLamp';
 import { Thumb } from '@/components/ui/Thumb';
 import { normalizeRoomCode } from '@/contracts/text';
 import { useOrigin } from '@/hooks/useOrigin';
+import { useRoomMood } from '@/hooks/useRoomMood';
 import { errorMessage, vi } from '@/i18n/vi';
-import { isPin } from '@/lib/validate';
 import { useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 
@@ -31,6 +31,11 @@ export default function HostPage() {
   const code = normalizeRoomCode(params.code ?? '');
   const memberId = useRoom((s) => s.memberId);
   const connection = useRoom((s) => s.connection);
+  // No PIN: any browser with the room code becomes the speaker. Registration runs
+  // automatically; a failure (network, unknown room) shows the reason and a retry.
+  const [failure, setFailure] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const needsLogin = connection === 'connected' && !memberId;
 
   useEffect(() => room.enter(code, 'host'), [code]);
   useEffect(
@@ -38,55 +43,43 @@ export default function HostPage() {
     [],
   );
 
-  if (connection === 'connected' && !memberId) return <HostLogin code={code} />;
-  return <HostScreen code={code} />;
-}
+  useEffect(() => {
+    if (!needsLogin) return;
+    void (async () => {
+      const r = await room.send('host:register', { code });
+      if (!r.ok) setFailure(errorMessage(r.error.code, r.error.params));
+    })();
+  }, [needsLogin, code, attempt]);
 
-function HostLogin({ code }: { code: string }) {
-  const [pin, setPin] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  async function register(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    const r = await room.send('host:register', { code, pin });
-    setBusy(false);
-    if (!r.ok) setError(errorMessage(r.error.code, r.error.params));
-  }
-
-  return (
-    <main className="flex min-h-dvh items-center justify-center px-4 py-10">
-      <form onSubmit={register} className="w-full max-w-sm space-y-5 rounded-panel bg-panel p-6 sm:p-8">
-        <p className="flex items-center gap-2 text-[14px] font-semibold text-amber">
-          <Radio className="h-5 w-5" aria-hidden /> {vi.appName}
-        </p>
-        <div>
-          <h1 className="type-display text-[30px] font-bold leading-tight">{vi.host.title}</h1>
-          <p className="mt-1 text-sage">{vi.host.pinNote}</p>
+  if (needsLogin && failure) {
+    return (
+      <main className="flex min-h-dvh items-center justify-center px-4 py-10">
+        <div className="w-full max-w-sm space-y-5 rounded-panel bg-panel p-6 text-center sm:p-8">
+          <p role="alert">{failure}</p>
+          <Button
+            variant="primary"
+            className="w-full"
+            onClick={() => {
+              setFailure(null);
+              setAttempt((n) => n + 1);
+            }}
+          >
+            {vi.host.retry}
+          </Button>
         </div>
-        <Field
-          label={vi.host.pin}
-          value={pin}
-          onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-          type="password"
-          inputMode="numeric"
-          autoComplete="off"
-          maxLength={8}
-          autoFocus
-          className="type-display text-center text-[24px] tracking-[0.5em]"
-        />
-        {error && (
-          <p role="alert" className="rounded-row border border-onair/50 bg-onair/10 p-3 text-[14px]">
-            {error}
-          </p>
-        )}
-        <Button type="submit" variant="primary" disabled={busy || !isPin(pin)} className="w-full">
-          {vi.host.open}
-        </Button>
-      </form>
-    </main>
-  );
+      </main>
+    );
+  }
+  if (needsLogin) {
+    return (
+      <main className="flex min-h-dvh items-center justify-center px-4">
+        <p className="flex items-center gap-2 text-sage" role="status">
+          <Radio className="h-5 w-5 text-amber motion-safe:animate-pulse" aria-hidden /> {vi.host.opening}
+        </p>
+      </main>
+    );
+  }
+  return <HostScreen code={code} />;
 }
 
 function HostScreen({ code }: { code: string }) {
@@ -94,6 +87,7 @@ function HostScreen({ code }: { code: string }) {
   const queue = useRoom((s) => s.snapshot?.queue);
   const playerRevoked = useRoom((s) => s.playerRevoked);
   const [volume, setVolume] = useState(100);
+  useRoomMood();
   const origin = useOrigin();
   const joinUrl = origin ? `${origin}/r/${code}` : '';
   const next = (queue ?? []).slice(0, 3);
@@ -101,7 +95,8 @@ function HostScreen({ code }: { code: string }) {
   const picker = np?.item.addedBy?.displayName;
 
   return (
-    <main className="min-h-dvh px-4 py-4 md:px-8 md:py-6">
+    <main className="relative isolate min-h-dvh px-4 py-4 md:px-8 md:py-6">
+      <Backdrop height="h-dvh" />
       <HeartCanvas />
       <div className="mx-auto grid max-w-[1600px] gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
         <section className="min-w-0 space-y-5">

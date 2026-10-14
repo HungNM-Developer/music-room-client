@@ -29,7 +29,6 @@ import { clockOffset } from '@/lib/time';
 export type Connection = 'idle' | 'connecting' | 'connected' | 'reconnecting';
 
 export interface Health {
-  setupRequired: boolean;
   searchEnabled: boolean;
   contractsVersion: string;
 }
