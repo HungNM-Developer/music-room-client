@@ -1,4 +1,21 @@
-import { type Browser, type Page, expect } from '@playwright/test';
+import { type Browser, type BrowserContext, type Page, expect } from '@playwright/test';
+
+/** Extra contexts opened during a test; closed after it so Chrome does not pile up live rooms. */
+const extraContexts: BrowserContext[] = [];
+
+export async function newCtx(
+  browser: Browser,
+  options?: Parameters<Browser['newContext']>[0],
+): Promise<BrowserContext> {
+  const ctx = await browser.newContext(options);
+  extraContexts.push(ctx);
+  return ctx;
+}
+
+/** Use as `test.afterEach(closeExtraContexts)` in every spec file. */
+export async function closeExtraContexts(): Promise<void> {
+  await Promise.all(extraContexts.splice(0).map((c) => c.close().catch(() => undefined)));
+}
 
 let seq = 0;
 export const uniqueName = (base: string) => `${base} ${Date.now() % 100000}-${++seq}`;
@@ -18,7 +35,7 @@ export async function createRoomUI(page: Page, name = 'An', pin = '1234'): Promi
 
 /** Joins as a new member in a fresh browser context (separate localStorage). */
 export async function joinAs(browser: Browser, code: string, name: string): Promise<Page> {
-  const ctx = await browser.newContext();
+  const ctx = await newCtx(browser);
   const page = await ctx.newPage();
   await page.goto(`/r/${code}`);
   await expect(page.getByRole('dialog')).toContainText('Vào phòng');
@@ -30,7 +47,7 @@ export async function joinAs(browser: Browser, code: string, name: string): Prom
 
 /** Opens the speaker page in a desktop context, enters the PIN and presses start. */
 export async function openHost(browser: Browser, code: string, pin = '1234'): Promise<Page> {
-  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const ctx = await newCtx(browser, { viewport: { width: 1280, height: 800 } });
   const page = await ctx.newPage();
   await page.goto(`/r/${code}/host`);
   await page.getByLabel('Mã PIN quản trị').fill(pin);

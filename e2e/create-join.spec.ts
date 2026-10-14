@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { createRoomUI, joinAs } from './helpers';
+import { closeExtraContexts, createRoomUI, joinAs, newCtx } from './helpers';
+
+test.afterEach(closeExtraContexts);
 
 test('TC-001/TC-015 create a room, then a colleague joins via the link', async ({ page, browser }) => {
   const code = await createRoomUI(page, 'An');
@@ -15,7 +17,7 @@ test('TC-001/TC-015 create a room, then a colleague joins via the link', async (
 
 test('TC-016 duplicate name shows the exact message', async ({ page, browser }) => {
   const code = await createRoomUI(page, 'An');
-  const ctx = await browser.newContext();
+  const ctx = await newCtx(browser);
   const p2 = await ctx.newPage();
   await p2.goto(`/r/${code}`);
   await p2.getByLabel('Tên của bạn').fill('an');
