@@ -37,16 +37,16 @@ export const HeartCanvas: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const handleAddReaction = (e: CustomEvent) => {
-      const { x, y, emoji } = e.detail;
+    const handleAddReaction = (event: Event) => {
+      const { x, y, emoji } = (event as CustomEvent<{ x: number; y: number; emoji?: string }>).detail;
       const count = emoji ? 1 : 5; // Hearts come in bursts, emojis single but bigger
       for (let i = 0; i < count; i++) {
         particlesRef.current.push(createParticle(x, y, emoji));
       }
     };
 
-    window.addEventListener('add-reaction' as any, handleAddReaction);
-    return () => window.removeEventListener('add-reaction' as any, handleAddReaction);
+    window.addEventListener('add-reaction', handleAddReaction);
+    return () => window.removeEventListener('add-reaction', handleAddReaction);
   }, [createParticle]);
 
   const drawParticle = (ctx: CanvasRenderingContext2D, p: Particle) => {
@@ -72,49 +72,40 @@ export const HeartCanvas: React.FC = () => {
     ctx.restore();
   };
 
-  const animate = useCallback(() => {
+  useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    particlesRef.current = particlesRef.current.filter((p) => {
-      p.y -= p.speedY;
-      p.x += p.speedX;
-      p.opacity -= 0.01;
-      p.rotation += p.rotateSpeed;
-      
-      if (p.opacity > 0) {
-        drawParticle(ctx, p);
-        return true;
-      }
-      return false;
-    });
-
-    requestRef.current = requestAnimationFrame(animate);
-  }, []);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     };
+    const frame = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particlesRef.current = particlesRef.current.filter((p) => {
+        p.y -= p.speedY;
+        p.x += p.speedX;
+        p.opacity -= 0.01;
+        p.rotation += p.rotateSpeed;
+        if (p.opacity > 0) {
+          drawParticle(ctx, p);
+          return true;
+        }
+        return false;
+      });
+      requestRef.current = requestAnimationFrame(frame);
+    };
 
     window.addEventListener('resize', resize);
     resize();
-
-    requestRef.current = requestAnimationFrame(animate);
-
+    requestRef.current = requestAnimationFrame(frame);
     return () => {
       window.removeEventListener('resize', resize);
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
-  }, [animate]);
+  }, []);
 
   return (
     <canvas
