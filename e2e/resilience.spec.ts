@@ -85,6 +85,10 @@ test('no horizontal overflow on a phone, with banners, queue and long titles', a
 
 test('no console errors (incl. hydration) on home, room and host pages', async ({ page, browser }) => {
   const errors: string[] = [];
+  // Failed requests too (a third-party asset once broke with HTTP 402 and slipped through).
+  page.on('response', (r) => {
+    if (r.status() >= 400) errors.push(`HTTP ${r.status()} ${r.url()}`);
+  });
   const watch = (p: import('@playwright/test').Page) =>
     p.on('console', (m) => {
       if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errors.push(m.text().slice(0, 200));
