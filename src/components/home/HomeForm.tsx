@@ -5,24 +5,18 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { panelId, tabId, TabList } from '@/components/ui/Tabs';
-import { useToast } from '@/components/ui/Toast';
 import { errorMessage, vi } from '@/i18n/vi';
 import { lastName, rememberName } from '@/lib/session-store';
-import { isDisplayName, isPin, isRoomCode, isRoomName } from '@/lib/validate';
-import { useRoom } from '@/state/hooks';
+import { isDisplayName, isRoomCode, isRoomName } from '@/lib/validate';
 import { room } from '@/state/room-store';
 
 type Mode = 'create' | 'join';
 
 export function HomeForm() {
   const router = useRouter();
-  const toast = useToast();
-  const setupRequired = useRoom((s) => s.health?.setupRequired ?? false);
   const [mode, setMode] = useState<Mode>('create');
   const [name, setName] = useState('');
   const [roomName, setRoomName] = useState('');
-  const [pin, setPin] = useState('');
-  const [setupPassword, setSetupPassword] = useState('');
   const [code, setCode] = useState('');
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState(false);
@@ -35,11 +29,9 @@ export function HomeForm() {
   const ok = {
     name: isDisplayName(name),
     roomName: isRoomName(roomName),
-    pin: isPin(pin),
     code: isRoomCode(code),
-    setup: !setupRequired || setupPassword.trim().length > 0,
   };
-  const canSubmit = !busy && ok.name && (mode === 'create' ? ok.roomName && ok.pin && ok.setup : ok.code);
+  const canSubmit = !busy && ok.name && (mode === 'create' ? ok.roomName : ok.code);
   const touch = (k: string) => setTouched((t) => ({ ...t, [k]: true }));
 
   async function submit(e: React.FormEvent) {
@@ -52,8 +44,6 @@ export function HomeForm() {
         ? await room.send('room:create', {
             name: roomName,
             displayName: name,
-            adminPin: pin,
-            ...(setupRequired ? { setupPassword } : {}),
           })
         : await room.send('room:join', { code, displayName: name });
     setBusy(false);
@@ -62,7 +52,6 @@ export function HomeForm() {
       return;
     }
     rememberName(name.trim());
-    if (mode === 'create') toast(vi.home.pinNote, 'info');
     router.push(`/r/${r.data.code}`);
   }
 
@@ -102,43 +91,16 @@ export function HomeForm() {
           invalid={touched.name && !ok.name}
         />
         {mode === 'create' ? (
-          <>
-            <Field
-              label={vi.home.roomName}
-              placeholder={vi.home.roomNamePlaceholder}
-              value={roomName}
-              maxLength={50}
-              onChange={(e) => setRoomName(e.target.value)}
-              onBlur={() => touch('roomName')}
-              hint={vi.home.hintRoomName}
-              invalid={touched.roomName && !ok.roomName}
-            />
-            <Field
-              label={vi.home.pin}
-              placeholder={vi.home.pinPlaceholder}
-              value={pin}
-              inputMode="numeric"
-              type="password"
-              autoComplete="new-password"
-              maxLength={8}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-              onBlur={() => touch('pin')}
-              hint={vi.home.hintPin}
-              invalid={touched.pin && !ok.pin}
-            />
-            {setupRequired && (
-              <Field
-                label={vi.home.setupPassword}
-                type="password"
-                value={setupPassword}
-                autoComplete="off"
-                onChange={(e) => setSetupPassword(e.target.value)}
-                onBlur={() => touch('setup')}
-                hint={vi.home.hintSetupPassword}
-                invalid={touched.setup && !ok.setup}
-              />
-            )}
-          </>
+          <Field
+            label={vi.home.roomName}
+            placeholder={vi.home.roomNamePlaceholder}
+            value={roomName}
+            maxLength={50}
+            onChange={(e) => setRoomName(e.target.value)}
+            onBlur={() => touch('roomName')}
+            hint={vi.home.hintRoomName}
+            invalid={touched.roomName && !ok.roomName}
+          />
         ) : (
           <Field
             label={vi.home.roomCode}

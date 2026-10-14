@@ -1,15 +1,13 @@
 'use client';
 
-import { MoreHorizontal, ShieldCheck } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button, IconButton } from '@/components/ui/Button';
 import { Dialog, SheetAction } from '@/components/ui/Dialog';
-import { Field } from '@/components/ui/Field';
 import type { MemberView } from '@/contracts';
 import { useAct } from '@/hooks/useAct';
 import { vi } from '@/i18n/vi';
-import { isPin } from '@/lib/validate';
 import { useMe, useRoom } from '@/state/hooks';
 
 function Badge({ children, tone }: { children: React.ReactNode; tone: 'amber' | 'onair' | 'plain' }) {
@@ -28,8 +26,6 @@ export function PeoplePanel() {
   const act = useAct();
   const [menuFor, setMenuFor] = useState<MemberView | null>(null);
   const [kick, setKick] = useState<MemberView | null>(null);
-  const [claimOpen, setClaimOpen] = useState(false);
-  const [pin, setPin] = useState('');
   const sorted = useMemo(
     () =>
       [...(members ?? [])].sort(
@@ -47,19 +43,11 @@ export function PeoplePanel() {
 
   return (
     <section aria-labelledby="people-title">
-      <div className="mb-2 flex items-center justify-between gap-2 px-1">
-        <div>
-          <h2 id="people-title" className="type-display text-[20px] font-bold">
-            {vi.people.title}
-          </h2>
-          <p className="text-[13px] text-sage">{vi.people.online(online)}</p>
-        </div>
-        {me && !isAdmin && !me.isDevice && (
-          <Button size="sm" onClick={() => setClaimOpen(true)}>
-            <ShieldCheck className="h-4 w-4" aria-hidden />
-            {vi.people.claimAdmin}
-          </Button>
-        )}
+      <div className="mb-2 px-1">
+        <h2 id="people-title" className="type-display text-[20px] font-bold">
+          {vi.people.title}
+        </h2>
+        <p className="text-[13px] text-sage">{vi.people.online(online)}</p>
       </div>
 
       <ul className="divide-y divide-line/70 rounded-panel bg-panel px-1">
@@ -136,38 +124,6 @@ export function PeoplePanel() {
               {vi.people.kickYes}
             </Button>
           </div>
-        </Dialog>
-      )}
-
-      {claimOpen && (
-        <Dialog open onClose={() => setClaimOpen(false)} title={vi.people.claimTitle}>
-          <form
-            className="space-y-4"
-            onSubmit={async (e) => {
-              e.preventDefault();
-              const ok = await act('admin:claim', { pin });
-              if (ok) {
-                setClaimOpen(false);
-                setPin('');
-              }
-            }}
-          >
-            <p className="text-sage">{vi.people.claimNote}</p>
-            <Field
-              label={vi.home.pin}
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
-              inputMode="numeric"
-              type="password"
-              autoComplete="off"
-              maxLength={8}
-              data-autofocus
-              className="type-display text-center text-[22px] tracking-[0.5em]"
-            />
-            <Button type="submit" variant="primary" disabled={!isPin(pin)} className="w-full">
-              {vi.people.claimSubmit}
-            </Button>
-          </form>
         </Dialog>
       )}
     </section>

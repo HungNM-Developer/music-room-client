@@ -17,19 +17,13 @@ export const vi = {
     yourNamePlaceholder: 'Minh Anh',
     roomName: 'Tên phòng',
     roomNamePlaceholder: 'Phòng Dev tầng 3',
-    pin: 'Mã PIN quản trị',
-    pinPlaceholder: '4–8 chữ số',
-    setupPassword: 'Mật khẩu cài đặt',
     roomCode: 'Mã phòng',
     roomCodePlaceholder: 'K7M2QX',
     create: 'Tạo phòng',
     join: 'Vào phòng',
     hintName: 'Tên dài 1–30 ký tự',
     hintRoomName: 'Tên phòng dài 1–50 ký tự',
-    hintPin: 'PIN gồm 4–8 chữ số',
     hintCode: 'Mã phòng gồm 6 ký tự',
-    hintSetupPassword: 'Nhập mật khẩu cài đặt do người quản lý máy chủ cung cấp',
-    pinNote: 'Dùng PIN này để mở trang máy phát và nhận lại quyền quản trị.',
     steps: [
       'Tạo phòng, mở trang máy phát trên máy tính nối loa',
       'Mọi người quét mã QR trên màn hình để vào phòng',
@@ -146,10 +140,6 @@ export const vi = {
     kickNote: 'Người này có thể vào lại bằng mã phòng.',
     kickYes: 'Mời ra',
     cancel: 'Hủy',
-    claimAdmin: 'Nhận quyền quản trị',
-    claimTitle: 'Nhận quyền quản trị',
-    claimNote: 'Nhập mã PIN quản trị đã đặt khi tạo phòng.',
-    claimSubmit: 'Xác nhận',
   },
 
   settings: {
@@ -201,10 +191,9 @@ export const vi = {
   log: { title: 'Nhật ký hoạt động', empty: 'Chưa có hoạt động nào.', close: 'Đóng' },
 
   host: {
-    title: 'Mở máy phát',
-    pinNote: 'Máy này sẽ phát nhạc cho cả phòng. Nhập mã PIN quản trị để tiếp tục.',
+    opening: 'Đang mở máy phát…',
+    retry: 'Thử lại',
     pin: 'Mã PIN quản trị',
-    open: 'Mở máy phát',
     start: 'Bắt đầu phát',
     startNote: 'Trình duyệt cần một lần bấm để cho phép phát nhạc.',
     scan: 'Quét để chọn bài',
@@ -237,11 +226,6 @@ const ERRORS: Record<ClientErrorCode, (p: ErrorParams) => string> = {
   VALIDATION: () => 'Dữ liệu chưa hợp lệ. Hãy kiểm tra lại rồi thử lại.',
   ROOM_NOT_FOUND: () => 'Không tìm thấy phòng. Hãy kiểm tra lại mã phòng.',
   NAME_TAKEN: () => 'Tên này đã có người dùng trong phòng. Hãy chọn tên khác.',
-  PIN_INVALID: (p) => `Mã PIN không đúng. Bạn còn ${p.remaining} lần thử.`,
-  PIN_LOCKED: (p) =>
-    `Bạn đã nhập sai PIN quá nhiều lần. Hãy thử lại sau ${p.minutes} phút.`,
-  SETUP_PASSWORD_INVALID: () =>
-    'Mật khẩu cài đặt không đúng. Hãy hỏi người quản lý máy chủ.',
   QUEUE_LIMIT: (p) =>
     `Bạn đã có ${p.max} bài đang chờ. Hãy đợi bài của bạn phát rồi thêm tiếp.`,
   TRACK_TOO_LONG: (p) =>
