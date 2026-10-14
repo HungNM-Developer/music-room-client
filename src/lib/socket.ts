@@ -1,6 +1,12 @@
 import { io, type Socket } from 'socket.io-client';
 import type { Ack, CommandName, CommandPayload, CommandResults } from '@/contracts';
-import { ACK_TIMEOUT_MS } from '@/contracts/events';
+
+/**
+ * How long a command may wait for its ack before it counts as a network error. Longer
+ * than the contract's 8 s: a sleepy free-tier server (Render) answers slowly, and the
+ * optimistic UI keeps the change on screen meanwhile.
+ */
+export const CLIENT_ACK_TIMEOUT_MS = 15_000;
 
 export type CommandResult<K extends CommandName> = K extends keyof CommandResults
   ? CommandResults[K]
@@ -37,7 +43,7 @@ export async function send<K extends CommandName>(
   payload: CommandPayload<K>,
 ): Promise<ClientAck<CommandResult<K>>> {
   try {
-    return (await socket.timeout(ACK_TIMEOUT_MS).emitWithAck(name, payload)) as Ack<
+    return (await socket.timeout(CLIENT_ACK_TIMEOUT_MS).emitWithAck(name, payload)) as Ack<
       CommandResult<K>
     >;
   } catch {

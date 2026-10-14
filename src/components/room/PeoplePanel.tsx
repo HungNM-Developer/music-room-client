@@ -9,6 +9,7 @@ import type { MemberView } from '@/contracts';
 import { useAct } from '@/hooks/useAct';
 import { vi } from '@/i18n/vi';
 import { useMe, useRoom } from '@/state/hooks';
+import { applyMembers } from '@/state/optimistic';
 
 function Badge({ children, tone }: { children: React.ReactNode; tone: 'amber' | 'onair' | 'plain' }) {
   const tones = {
@@ -21,6 +22,7 @@ function Badge({ children, tone }: { children: React.ReactNode; tone: 'amber' | 
 
 export function PeoplePanel() {
   const members = useRoom((s) => s.snapshot?.members);
+  const pending = useRoom((s) => s.pending);
   const playerId = useRoom((s) => s.snapshot?.player.memberId ?? null);
   const me = useMe();
   const act = useAct();
@@ -28,17 +30,17 @@ export function PeoplePanel() {
   const [kick, setKick] = useState<MemberView | null>(null);
   const sorted = useMemo(
     () =>
-      [...(members ?? [])].sort(
+      [...applyMembers(members ?? [], pending)].sort(
         (a, b) => Number(b.online) - Number(a.online) || a.displayName.localeCompare(b.displayName, 'vi'),
       ),
-    [members],
+    [members, pending],
   );
   const isAdmin = me?.role === 'ADMIN';
   const online = sorted.filter((m) => m.online).length;
 
   const setPerm = (m: MemberView, patch: Partial<Pick<MemberView, 'canControl' | 'canDj' | 'canPlay'>> & { role?: 'ADMIN' | 'USER' }) => {
     setMenuFor(null);
-    void act('permission:set', { memberId: m.id, ...patch });
+    void act('permission:set', { memberId: m.id, ...patch }, { optimistic: { kind: 'perm', memberId: m.id, patch } });
   };
 
   return (
@@ -118,7 +120,7 @@ export function PeoplePanel() {
               onClick={async () => {
                 const target = kick;
                 setKick(null);
-                await act('member:kick', { memberId: target.id });
+                await act('member:kick', { memberId: target.id }, { optimistic: { kind: 'kick', memberId: target.id } });
               }}
             >
               {vi.people.kickYes}

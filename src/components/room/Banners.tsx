@@ -1,7 +1,8 @@
 'use client';
 
-import { RefreshCw, Speaker, WifiOff } from 'lucide-react';
+import { Hourglass, RefreshCw, Speaker, WifiOff } from 'lucide-react';
 import { useOrigin } from '@/hooks/useOrigin';
+import { useSlow } from '@/hooks/useSlow';
 import { vi } from '@/i18n/vi';
 import { useRoom, useVersionMismatch } from '@/state/hooks';
 
@@ -13,6 +14,8 @@ export function Banners() {
   const player = useRoom((s) => s.snapshot?.player ?? null);
   const versionMismatch = useVersionMismatch();
   const origin = useOrigin();
+  // A first connection that takes this long usually means a free-tier server waking up.
+  const waking = useSlow(connection === 'connecting', 2500);
   const items: { key: string; icon: React.ReactNode; text: string; action?: React.ReactNode }[] = [];
 
   if (versionMismatch) {
@@ -26,6 +29,9 @@ export function Banners() {
         </button>
       ),
     });
+  }
+  if (waking) {
+    items.push({ key: 'waking', icon: <Hourglass className="h-4 w-4" aria-hidden />, text: vi.banners.waking });
   }
   if (connection === 'reconnecting') {
     items.push({ key: 'conn', icon: <WifiOff className="h-4 w-4" aria-hidden />, text: vi.banners.reconnecting });

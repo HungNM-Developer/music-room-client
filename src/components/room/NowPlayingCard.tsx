@@ -1,19 +1,23 @@
 'use client';
 
-import { Pause, Play, SkipForward, StepForward } from 'lucide-react';
+import { Loader2, Pause, Play, SkipForward, StepForward } from 'lucide-react';
+import { useState } from 'react';
 import { Button, IconButton } from '@/components/ui/Button';
 import { OnAirLamp } from '@/components/ui/OnAirLamp';
 import { Thumb } from '@/components/ui/Thumb';
 import { useAct } from '@/hooks/useAct';
 import { vi } from '@/i18n/vi';
-import { useMe, useRoom } from '@/state/hooks';
+import { estimatePosition } from '@/lib/time';
+import { useMe, useNowPlaying, useRoom } from '@/state/hooks';
 import { LiveDial } from './TuningDial';
 
 /** The song on air: cover, who picked it, their wish, the dial and the controls. */
 export function NowPlayingCard() {
-  const np = useRoom((s) => s.snapshot?.nowPlaying ?? null);
+  const np = useNowPlaying();
+  const offset = useRoom((s) => s.offset);
   const me = useMe();
   const act = useAct();
+  const [skipping, setSkipping] = useState(false);
 
   if (!np) {
     return (
@@ -67,7 +71,7 @@ export function NowPlayingCard() {
               size="sm"
               disabled={voted}
               aria-pressed={voted}
-              onClick={() => act('queue:vote-skip', { queueItemId: np.item.id })}
+              onClick={() => act('queue:vote-skip', { queueItemId: np.item.id }, { optimistic: { kind: 'vote', itemId: np.item.id } })}
               className="flex-1 sm:flex-none"
             >
               <SkipForward className="h-4 w-4" aria-hidden />
@@ -80,16 +84,34 @@ export function NowPlayingCard() {
                 size="sm"
                 variant="primary"
                 aria-label={playing ? vi.nowPlaying.pause : vi.nowPlaying.play}
-                onClick={() => act('playback:control', { action: playing ? 'pause' : 'play', queueItemId: np.item.id })}
+                onClick={() => {
+                  // Freeze / resume the dial right away, from where it is now.
+                  const serverNow = Date.now() + offset;
+                  const positionSec = estimatePosition({ ...np, durationSec: t.durationSec }, offset, Date.now());
+                  void act(
+                    'playback:control',
+                    { action: playing ? 'pause' : 'play', queueItemId: np.item.id },
+                    {
+                      optimistic: { kind: 'playback', itemId: np.item.id, status: playing ? 'PAUSED' : 'PLAYING', positionSec, positionAt: serverNow },
+                    },
+                  );
+                }}
                 className="w-12 !px-0"
               >
                 {playing ? <Pause className="h-5 w-5" aria-hidden /> : <Play className="h-5 w-5" aria-hidden />}
               </Button>
               <IconButton
                 label={vi.nowPlaying.skipNow}
-                onClick={() => act('playback:control', { action: 'skip', queueItemId: np.item.id })}
+                disabled={skipping}
+                aria-busy={skipping}
+                onClick={async () => {
+                  // The next song is the server's call (fair queue, wishes): show progress, not a guess.
+                  setSkipping(true);
+                  await act('playback:control', { action: 'skip', queueItemId: np.item.id });
+                  setSkipping(false);
+                }}
               >
-                <StepForward className="h-5 w-5" aria-hidden />
+                {skipping ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden /> : <StepForward className="h-5 w-5" aria-hidden />}
               </IconButton>
             </>
           )}

@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import type { MemberView } from '@/contracts';
 import { isVersionMismatch } from '@/lib/version';
+import { applyNowPlaying } from './optimistic';
 import { INITIAL_STATE, room, type RoomState } from './room-store';
 
 /**
@@ -23,6 +24,14 @@ const selectMe = (s: RoomState): MemberView | null =>
 
 /** The current member's view (role, permissions), or null before joining. */
 export const useMe = () => useRoom(selectMe);
+
+/** The song on air with the user's pending vote / play / pause already applied. */
+export function useNowPlaying() {
+  const np = useRoom((s) => s.snapshot?.nowPlaying ?? null);
+  const pending = useRoom((s) => s.pending);
+  const meId = useRoom((s) => s.memberId);
+  return useMemo(() => applyNowPlaying(np, pending, meId), [np, pending, meId]);
+}
 
 export const useVersionMismatch = () => useRoom((s) => isVersionMismatch(s.health));
 

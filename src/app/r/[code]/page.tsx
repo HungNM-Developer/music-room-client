@@ -13,6 +13,7 @@ import { NowPlayingCard } from '@/components/room/NowPlayingCard';
 import { PeoplePanel } from '@/components/room/PeoplePanel';
 import { QueueList } from '@/components/room/QueueList';
 import { RoomHeader } from '@/components/room/RoomHeader';
+import { RoomSkeleton } from '@/components/room/RoomSkeleton';
 import { panelId, tabId, TabList, type TabDef } from '@/components/ui/Tabs';
 import { normalizeRoomCode } from '@/contracts/text';
 import { useRoomMood } from '@/hooks/useRoomMood';
@@ -35,6 +36,7 @@ export default function RoomPage() {
   const revoked = useRoom((s) => s.revoked);
   const connection = useRoom((s) => s.connection);
   const queueCount = useRoom((s) => s.snapshot?.queue.length ?? 0);
+  const hasSnapshot = useRoom((s) => Boolean(s.snapshot));
   const me = useMe();
   const [tab, setTab] = useState<TabKey>('room');
   const [logOpen, setLogOpen] = useState(false);
@@ -45,9 +47,11 @@ export default function RoomPage() {
   // Floating reactions + a visual cue for DJ sounds (audio plays on the speaker only, R-34).
   useEffect(
     () =>
-      room.onReaction((e) =>
-        triggerReaction(window.innerWidth * (0.15 + Math.random() * 0.7), window.innerHeight - 120, e.emoji),
-      ),
+      room.onReaction((e) => {
+        // My own reactions already floated up locally when I tapped them.
+        if (e.memberId === room.getState().memberId) return;
+        triggerReaction(window.innerWidth * (0.15 + Math.random() * 0.7), window.innerHeight - 120, e.emoji);
+      }),
     [],
   );
   useEffect(() => room.onDj(() => triggerReaction(window.innerWidth / 2, window.innerHeight - 120, '🎧')), []);
@@ -90,8 +94,14 @@ export default function RoomPage() {
               <PlayerEngine />
             </div>
           )}
-          <NowPlayingCard />
-          <QueueList onAdd={() => setTab('add')} />
+          {hasSnapshot ? (
+            <>
+              <NowPlayingCard />
+              <QueueList onAdd={() => setTab('add')} />
+            </>
+          ) : (
+            <RoomSkeleton />
+          )}
         </div>
 
         <div className="min-w-0 space-y-5">

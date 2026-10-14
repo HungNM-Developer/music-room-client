@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { vi } from '@/i18n/vi';
 import { estimatePosition, formatDuration } from '@/lib/time';
-import { useRoom } from '@/state/hooks';
+import { useNowPlaying, useRoom } from '@/state/hooks';
 
 type Size = 'compact' | 'large';
 
@@ -90,7 +90,7 @@ const prefersReducedMotion = () =>
 
 /** Live dial for the track that is playing now. Updates 4×/s without React renders. */
 export function LiveDial({ size = 'compact' }: { size?: Size }) {
-  const np = useRoom((s) => s.snapshot?.nowPlaying ?? null);
+  const np = useNowPlaying();
   const offset = useRoom((s) => s.offset);
   const trackRef = useRef<HTMLDivElement>(null);
   const timeRef = useRef<HTMLSpanElement>(null);
