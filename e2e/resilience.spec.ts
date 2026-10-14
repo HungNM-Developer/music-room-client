@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { addLink, createRoomUI, joinAs, openHost, yt } from './helpers';
+import { addLink, closeExtraContexts, createRoomUI, joinAs, openHost, yt } from './helpers';
+
+test.afterEach(closeExtraContexts);
 
 test('TC-200 offline shows "Đang kết nối lại…" and recovers', async ({ page, context }) => {
   await createRoomUI(page, 'An');

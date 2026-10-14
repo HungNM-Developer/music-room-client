@@ -1,5 +1,7 @@
 import { type BrowserContext, expect, test } from '@playwright/test';
-import { addLink, createRoomUI, yt } from './helpers';
+import { addLink, closeExtraContexts, createRoomUI, newCtx, yt } from './helpers';
+
+test.afterEach(closeExtraContexts);
 
 /** Records speechSynthesis.speak and media play() calls instead of making sound. */
 const spy = (ctx: BrowserContext) =>
@@ -25,7 +27,7 @@ test('TC-127/TC-128/TC-079 wishes and DJ sounds play on the speaker only; music 
   await spy(context);
   const code = await createRoomUI(page, 'An');
 
-  const hostCtx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const hostCtx = await newCtx(browser, { viewport: { width: 1280, height: 800 } });
   await spy(hostCtx);
   const host = await hostCtx.newPage();
   await host.goto(`/r/${code}/host`);
@@ -57,7 +59,7 @@ test('TC-127/TC-128/TC-079 wishes and DJ sounds play on the speaker only; music 
 
 test('review P2-7: a wish whose TTS never finishes does not leave the next track at 20%', async ({ page, browser }) => {
   const code = await createRoomUI(page, 'An');
-  const hostCtx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const hostCtx = await newCtx(browser, { viewport: { width: 1280, height: 800 } });
   await hostCtx.addInitScript(() => {
     SpeechSynthesis.prototype.speak = () => {}; // onend never fires (Chrome GC bug)
   });
@@ -83,7 +85,7 @@ test('review P2-7: a wish whose TTS never finishes does not leave the next track
 
 test('review P2-6: when the admin moves playback to someone else, the speaker stops at once', async ({ page, browser }) => {
   const code = await createRoomUI(page, 'An');
-  const hostCtx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const hostCtx = await newCtx(browser, { viewport: { width: 1280, height: 800 } });
   const host = await hostCtx.newPage();
   await host.goto(`/r/${code}/host`);
   await host.getByLabel('Mã PIN quản trị').fill('1234');
@@ -94,7 +96,7 @@ test('review P2-6: when the admin moves playback to someone else, the speaker st
   await addLink(page, yt(9921));
   await expect(host.getByTestId('fake-player')).toContainText('playing');
   await page.getByRole('tab', { name: 'Mọi người' }).click();
-  const binhCtx = await browser.newContext();
+  const binhCtx = await newCtx(browser);
   const binh = await binhCtx.newPage();
   await binh.goto(`/r/${code}`);
   await binh.getByLabel('Tên của bạn').fill('Bình');

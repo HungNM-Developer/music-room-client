@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { addLink, createRoomUI, joinAs, openHost, yt } from './helpers';
+import { addLink, closeExtraContexts, createRoomUI, joinAs, openHost, yt } from './helpers';
+
+test.afterEach(closeExtraContexts);
 
 test('TC-050/TC-078/TC-090 host plays, order matches everywhere, ended advances', async ({ page, browser }) => {
   const code = await createRoomUI(page, 'An');
