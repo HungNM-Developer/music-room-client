@@ -31,6 +31,25 @@ export const vi = {
     ],
   },
 
+  share: {
+    button: 'Chia sẻ phòng',
+    title: 'Mời vào phòng',
+    scan: 'Quét để vào phòng',
+    link: 'Link phòng',
+    copy: 'Sao chép',
+    copied: 'Đã sao chép link phòng',
+    native: 'Chia sẻ…',
+    download: 'Tải ảnh',
+    idle: 'Chưa có bài nào đang phát',
+    metaTitle: (room: string) => `${room} | Music Room`,
+    metaDesc: (song: string | null) =>
+      song
+        ? `Đang phát: ${song}. Mở link hoặc quét mã QR để cùng chọn nhạc.`
+        : 'Mở link hoặc quét mã QR để cùng chọn nhạc cho cả phòng.',
+    imageAlt: (room: string) => `Mã QR vào phòng ${room} trên Music Room`,
+    roomCode: 'Mã phòng',
+  },
+
   joinDialog: {
     title: (room: string) => `Vào phòng ${room}`,
     loading: 'Đang tìm phòng…',

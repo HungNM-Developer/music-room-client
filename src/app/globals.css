@@ -27,6 +27,25 @@
   --animate-rise: rise 180ms ease-out;
 }
 
+/* Room mood: these tokens are re-tinted per song on <html> (src/hooks/useRoomMood.ts).
+   Registering them as <color> lets the whole page cross-fade instead of snapping. */
+@property --color-dial { syntax: '<color>'; inherits: true; initial-value: #0f2a26; }
+@property --color-dial-deep { syntax: '<color>'; inherits: true; initial-value: #0a1f1c; }
+@property --color-panel { syntax: '<color>'; inherits: true; initial-value: #173a34; }
+@property --color-panel-hi { syntax: '<color>'; inherits: true; initial-value: #1e463f; }
+@property --color-line { syntax: '<color>'; inherits: true; initial-value: #2a524a; }
+@property --color-sage { syntax: '<color>'; inherits: true; initial-value: #a9c1b8; }
+
+html {
+  transition:
+    --color-dial 1.6s ease,
+    --color-dial-deep 1.6s ease,
+    --color-panel 1.6s ease,
+    --color-panel-hi 1.6s ease,
+    --color-line 1.6s ease,
+    --color-sage 1.6s ease;
+}
+
 @keyframes rise {
   from {
     opacity: 0;

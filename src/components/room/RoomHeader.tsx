@@ -1,6 +1,7 @@
 'use client';
 
-import { Check, History, Link2, LogOut } from 'lucide-react';
+import { Check, History, Link2, LogOut, Share2 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { IconButton } from '@/components/ui/Button';
@@ -9,12 +10,15 @@ import { vi } from '@/i18n/vi';
 import { useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 
+const ShareDialog = dynamic(() => import('./ShareDialog').then((m) => m.ShareDialog), { ssr: false });
+
 export function RoomHeader({ onOpenLog }: { onOpenLog: () => void }) {
   const name = useRoom((s) => s.snapshot?.room.name);
   const code = useRoom((s) => s.snapshot?.room.code);
   const toast = useToast();
   const router = useRouter();
   const [copied, setCopied] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   if (!name || !code) return null;
 
   async function copyLink() {
@@ -30,7 +34,7 @@ export function RoomHeader({ onOpenLog }: { onOpenLog: () => void }) {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-dial/95 pt-[env(safe-area-inset-top)] backdrop-blur-sm">
+    <header className="sticky top-0 z-40 border-b border-line/70 bg-dial/80 pt-[env(safe-area-inset-top)] backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-2.5">
         <div className="min-w-0 flex-1">
           <h1 className="type-display truncate text-[20px] font-bold leading-tight">{name}</h1>
@@ -46,6 +50,9 @@ export function RoomHeader({ onOpenLog }: { onOpenLog: () => void }) {
             <span className="sr-only">{vi.header.copyLink}</span>
           </button>
         </div>
+        <IconButton label={vi.share.button} onClick={() => setShareOpen(true)}>
+          <Share2 className="h-5 w-5" aria-hidden />
+        </IconButton>
         <IconButton label={vi.header.log} onClick={onOpenLog}>
           <History className="h-5 w-5" aria-hidden />
         </IconButton>
@@ -60,6 +67,7 @@ export function RoomHeader({ onOpenLog }: { onOpenLog: () => void }) {
           <LogOut className="h-5 w-5" aria-hidden />
         </IconButton>
       </div>
+      {shareOpen && <ShareDialog onClose={() => setShareOpen(false)} />}
     </header>
   );
 }

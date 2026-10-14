@@ -22,7 +22,7 @@ NEXT_PUBLIC_SERVER_URL=http://localhost:3001 npm run dev
 ## Deploy lên Vercel
 
 1. Import repo vào Vercel (framework: Next.js, giữ cấu hình mặc định).
-2. Thêm biến môi trường `NEXT_PUBLIC_SERVER_URL=https://<api>.onrender.com` (không có `/` ở cuối), rồi **Redeploy**. Biến này được nhúng vào lúc build.
+2. Thêm biến môi trường `NEXT_PUBLIC_SERVER_URL=https://<api>.onrender.com` (không có `/` ở cuối) và `PUBLIC_APP_URL=https://<app>.vercel.app` (domain chính thức dùng cho link và QR trong ảnh xem trước), rồi **Redeploy**. `NEXT_PUBLIC_SERVER_URL` được nhúng vào lúc build.
 3. Bên server (Render), đặt `PUBLIC_URL` và `CORS_ORIGINS` bằng domain Vercel. Nếu thiếu, trình duyệt sẽ bị chặn kết nối.
 
 Hướng dẫn đầy đủ (gồm Render và Postgres) nằm ở [`music-room-server/deploy/README.md` §8](https://github.com/HungNM-Developer/music-room-server/blob/develop/deploy/README.md).

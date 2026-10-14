@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useState } from 'react';
+import { Backdrop } from '@/components/room/Backdrop';
 import { Banners } from '@/components/room/Banners';
 import { HostChat } from '@/components/room/Chat';
 import { HeartCanvas, triggerReaction } from '@/components/room/HeartCanvas';
@@ -14,6 +15,7 @@ import { OnAirLamp } from '@/components/ui/OnAirLamp';
 import { Thumb } from '@/components/ui/Thumb';
 import { normalizeRoomCode } from '@/contracts/text';
 import { useOrigin } from '@/hooks/useOrigin';
+import { useRoomMood } from '@/hooks/useRoomMood';
 import { errorMessage, vi } from '@/i18n/vi';
 import { useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
@@ -85,6 +87,7 @@ function HostScreen({ code }: { code: string }) {
   const queue = useRoom((s) => s.snapshot?.queue);
   const playerRevoked = useRoom((s) => s.playerRevoked);
   const [volume, setVolume] = useState(100);
+  useRoomMood();
   const origin = useOrigin();
   const joinUrl = origin ? `${origin}/r/${code}` : '';
   const next = (queue ?? []).slice(0, 3);
@@ -92,7 +95,8 @@ function HostScreen({ code }: { code: string }) {
   const picker = np?.item.addedBy?.displayName;
 
   return (
-    <main className="min-h-dvh px-4 py-4 md:px-8 md:py-6">
+    <main className="relative isolate min-h-dvh px-4 py-4 md:px-8 md:py-6">
+      <Backdrop height="h-dvh" />
       <HeartCanvas />
       <div className="mx-auto grid max-w-[1600px] gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
         <section className="min-w-0 space-y-5">
