@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Synced from music-room-server (linted there).
+    "src/contracts/**",
   ]),
 ]);
 
