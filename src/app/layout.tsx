@@ -1,26 +1,40 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Be_Vietnam_Pro, Bricolage_Grotesque } from 'next/font/google';
 import './globals.css';
 import { ToastProvider } from '@/components/ui/Toast';
-import { RoomProvider } from '@/context/RoomContext';
+import { RoomRuntime } from '@/state/hooks';
 
-const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin', 'latin-ext'] });
-const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
+const body = Be_Vietnam_Pro({
+  variable: '--font-body',
+  subsets: ['latin', 'vietnamese'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+});
+const display = Bricolage_Grotesque({
+  variable: '--font-display-face',
+  subsets: ['latin', 'vietnamese'],
+  axes: ['wdth', 'opsz'],
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
-  title: 'Music Room — Cùng chọn nhạc',
+  title: 'Music Room',
   description: 'Cả văn phòng cùng chọn nhạc YouTube, phát chung một loa.',
 };
 
-export const viewport: Viewport = { themeColor: '#0b0b16', width: 'device-width', initialScale: 1 };
+export const viewport: Viewport = {
+  themeColor: '#0f2a26',
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="vi" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
-        <ToastProvider>
-          <RoomProvider>{children}</RoomProvider>
-        </ToastProvider>
+    <html lang="vi" className={`${body.variable} ${display.variable}`} suppressHydrationWarning>
+      <body suppressHydrationWarning>
+        <RoomRuntime />
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );

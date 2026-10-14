@@ -1,0 +1,33 @@
+'use client';
+
+import { useEffect, useSyncExternalStore } from 'react';
+import type { MemberView } from '@/contracts';
+import { isVersionMismatch } from '@/lib/version';
+import { INITIAL_STATE, room, type RoomState } from './room-store';
+
+/**
+ * Subscribes to one slice of room state. The selector must return a value that is
+ * stable between calls (a primitive or an object already in the state), otherwise
+ * React re-renders forever.
+ */
+export function useRoom<T>(selector: (s: RoomState) => T): T {
+  return useSyncExternalStore(
+    room.subscribe,
+    () => selector(room.getState()),
+    () => selector(INITIAL_STATE),
+  );
+}
+
+const selectMe = (s: RoomState): MemberView | null =>
+  s.snapshot?.members.find((m) => m.id === s.memberId) ?? null;
+
+/** The current member's view (role, permissions), or null before joining. */
+export const useMe = () => useRoom(selectMe);
+
+export const useVersionMismatch = () => useRoom((s) => isVersionMismatch(s.health));
+
+/** Mounted once in the root layout: opens the app-wide socket in the browser. */
+export function RoomRuntime() {
+  useEffect(() => room.start(), []);
+  return null;
+}

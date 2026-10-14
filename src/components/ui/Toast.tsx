@@ -1,6 +1,6 @@
 'use client';
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { Check, CircleAlert } from 'lucide-react';
 import { createContext, useCallback, useContext, useRef, useState } from 'react';
 
 type Tone = 'info' | 'success' | 'error';
@@ -12,7 +12,7 @@ interface Toast {
 
 const ToastContext = createContext<(text: string, tone?: Tone) => void>(() => {});
 
-/** Small polite toasts (role="status"); errors stay 6 s, others 3.5 s. */
+/** Small polite toasts above the tab bar; errors stay 6 s, others 3.5 s. */
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const seq = useRef(0);
@@ -27,27 +27,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       <div
         role="status"
         aria-live="polite"
-        className="fixed inset-x-0 bottom-24 lg:bottom-8 z-[100] flex flex-col items-center gap-2 px-4 pointer-events-none"
+        className="pointer-events-none fixed inset-x-0 bottom-[calc(8.5rem+env(safe-area-inset-bottom))] z-[100] flex flex-col items-center gap-2 px-4 lg:bottom-28"
       >
-        <AnimatePresence>
-          {toasts.map((t) => (
-            <motion.div
-              key={t.id}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className={`max-w-md w-full rounded-2xl px-4 py-3 text-sm font-medium shadow-2xl backdrop-blur-xl border ${
-                t.tone === 'error'
-                  ? 'bg-red-500/15 border-red-500/30 text-red-100'
-                  : t.tone === 'success'
-                    ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-50'
-                    : 'bg-white/10 border-white/15 text-white'
-              }`}
-            >
-              {t.text}
-            </motion.div>
-          ))}
-        </AnimatePresence>
+        {toasts.map((t) => (
+          <div
+            key={t.id}
+            className={`flex w-full max-w-md animate-rise items-start gap-2.5 rounded-row border bg-panel px-4 py-3 text-[14px] shadow-[0_12px_32px_-12px_rgb(0_0_0/0.6)] ${
+              t.tone === 'error' ? 'border-onair' : 'border-line'
+            }`}
+          >
+            {t.tone === 'success' && <Check className="mt-0.5 h-4 w-4 shrink-0 text-amber" aria-hidden />}
+            {t.tone === 'error' && <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-alert" aria-hidden />}
+            <span className="min-w-0 [overflow-wrap:anywhere]">{t.text}</span>
+          </div>
+        ))}
       </div>
     </ToastContext.Provider>
   );

@@ -1,115 +1,162 @@
 @import "tailwindcss";
 
+/* "Đài phát thanh của văn phòng": a radio dial at night. Flat surfaces, two accents
+   with fixed jobs — amber = controls / the dial needle, on-air red = live / feelings. */
 @theme {
-  --color-brand-primary: oklch(0.65 0.25 270);
-  --color-brand-secondary: oklch(0.55 0.2 300);
-  --color-brand-accent: oklch(0.7 0.3 330);
+  --color-dial: #0f2a26;
+  --color-dial-deep: #0a1f1c;
+  --color-panel: #173a34;
+  --color-panel-hi: #1e463f;
+  --color-line: #2a524a;
+  --color-paper: #f3ecdd;
+  --color-sage: #a9c1b8;
+  --color-amber: #f6a623;
+  --color-amber-hi: #ffb94a;
+  --color-amber-ink: #3a2503;
+  --color-onair: #e8483a;
+  --color-onair-deep: #c23b2f;
+  --color-alert: #ff9a8e;
+  --color-online: #5fd39a;
 
-  --color-surface-900: oklch(0.12 0.02 240);
-  --color-surface-800: oklch(0.16 0.03 240);
-  --color-surface-700: oklch(0.2 0.04 240);
-  --shadow-3xl: 0 35px 60px -15px rgba(0, 0, 0, 0.5);
-  --animate-spin-slow: spin 3s linear infinite;
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display-face), var(--font-body), ui-sans-serif, sans-serif;
+
+  --radius-panel: 20px;
+  --radius-row: 12px;
+
+  --animate-rise: rise 180ms ease-out;
 }
 
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
 
 @layer base {
+  html {
+    color-scheme: dark;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   body {
-    @apply bg-surface-900 text-slate-100 antialiased;
+    @apply bg-dial text-paper font-sans antialiased;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-amber);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--color-amber);
+    color: var(--color-amber-ink);
+  }
+
+  input,
+  textarea {
+    caret-color: var(--color-amber);
+  }
+
+  input[type='range'] {
+    accent-color: var(--color-amber);
   }
 }
 
 @layer components {
-
-  /* Soft-glow Gradients Design System */
-  .glass-effect {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(25px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow:
-      0 10px 40px -10px rgba(0, 0, 0, 0.5),
-      0 0 20px -5px rgba(99, 102, 241, 0.15);
-    /* Subtle brand glow */
+  .field {
+    @apply w-full rounded-row border border-line bg-dial-deep px-3.5 text-paper outline-none transition-colors placeholder:text-sage/60 focus:border-amber;
+    min-height: 48px;
   }
 
-  .glow-card {
-    background: rgba(255, 255, 255, 0.02);
-    backdrop-filter: blur(30px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow:
-      0 0 40px -10px rgba(99, 102, 241, 0.2),
-      0 20px 50px -15px rgba(0, 0, 0, 0.6);
+  /* Track titles, room names, the dial numbers: narrow and heavy, like a printed radio label. */
+  .type-display {
+    font-family: var(--font-display);
+    font-stretch: 82%;
+    font-variation-settings: 'opsz' 48;
+    letter-spacing: -0.01em;
   }
 
-  .soft-glow-primary {
-    box-shadow: 0 0 30px -5px rgba(99, 102, 241, 0.4);
+  /* Native <dialog>: focus trap, Esc and focus return come for free.
+     Bottom sheet on phones, centred card from 640px. */
+  .sheet {
+    margin: auto auto 0;
+    width: 100%;
+    max-width: 100%;
+    max-height: 88dvh;
+    padding: 0;
+    border: 1px solid var(--color-line);
+    border-bottom: 0;
+    border-radius: var(--radius-panel) var(--radius-panel) 0 0;
+    background: var(--color-panel);
+    color: var(--color-paper);
+    overflow: auto;
+    overscroll-behavior: contain;
   }
 
-  .soft-glow-accent {
-    box-shadow: 0 0 30px -5px rgba(217, 70, 239, 0.4);
+  .sheet[open] {
+    animation: sheet-in 200ms ease-out;
   }
 
-  .input-field {
-    @apply bg-white/5 border border-white/10 focus:border-brand-primary/50 focus:ring-4 focus:ring-brand-primary/10 outline-none px-4 py-3 rounded-2xl transition-all placeholder:text-slate-600 text-white;
-    backdrop-filter: blur(10px);
+  .sheet::backdrop {
+    background: rgb(5 15 13 / 0.72);
   }
 
-  .btn-primary {
-    @apply text-white font-bold px-8 py-3 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2;
-    background: linear-gradient(135deg, var(--color-brand-primary) 0%, var(--color-brand-accent) 100%);
-    box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
-  }
-
-  .btn-primary:hover {
-    box-shadow: 0 15px 30px -5px rgba(99, 102, 241, 0.6);
-    transform: translateY(-1px);
-  }
-
-  .btn-secondary {
-    @apply bg-white/5 border border-white/10 hover:bg-white/10 text-white font-semibold px-6 py-3 rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-2;
-    backdrop-filter: blur(10px);
+  @media (min-width: 640px) {
+    .sheet {
+      margin: auto;
+      max-width: 28rem;
+      border-bottom: 1px solid var(--color-line);
+      border-radius: var(--radius-panel);
+    }
   }
 }
 
-/* Minimalist Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
+/* Tuning dial: the needle position is --p (0…1) on .dial-track; 100cqw = track width. */
+.dial-track {
+  container-type: inline-size;
 }
 
-::-webkit-scrollbar-track {
-  background: transparent;
+.dial-needle {
+  transform: translateX(calc(var(--p, 0) * 100cqw));
+  transition: transform 250ms linear;
+  will-change: transform;
 }
 
-::-webkit-scrollbar-thumb {
-  @apply bg-white/10 rounded-full hover:bg-white/20;
+.dial-track[data-mode='sweep'] .dial-needle {
+  transition: transform 900ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-/* Animations */
-@keyframes float {
+.dial-track[data-mode='none'] .dial-needle {
+  transition: none;
+}
 
-  0%,
-  100% {
-    transform: translateY(0);
+.dial-hero .dial-needle {
+  animation: needle-in 1.6s cubic-bezier(0.2, 0.8, 0.2, 1) 250ms both;
+}
+
+@keyframes needle-in {
+  from {
+    transform: translateX(0);
   }
+}
 
-  50% {
-    transform: translateY(-10px);
+@keyframes sheet-in {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
   }
 }
 
-.animate-float {
-  animation: float 5s ease-in-out infinite;
-}
-
-.text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-primary via-indigo-400 to-brand-accent;
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

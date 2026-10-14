@@ -1,168 +1,148 @@
 'use client';
 
-import { MoreVertical, ShieldCheck } from 'lucide-react';
-import { useState } from 'react';
-import { useRoom } from '@/context/RoomContext';
+import { MoreHorizontal, ShieldCheck } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Avatar } from '@/components/ui/Avatar';
+import { Button, IconButton } from '@/components/ui/Button';
+import { Dialog, SheetAction } from '@/components/ui/Dialog';
+import { Field } from '@/components/ui/Field';
 import type { MemberView } from '@/contracts';
-import { PinSchema } from '@/contracts';
 import { useAct } from '@/hooks/useAct';
 import { vi } from '@/i18n/vi';
+import { isPin } from '@/lib/validate';
+import { useMe, useRoom } from '@/state/hooks';
 
-function Badge({ children, tone }: { children: React.ReactNode; tone: string }) {
-  return <span className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${tone}`}>{children}</span>;
-}
-
-function MemberMenu({ m, onKick }: { m: MemberView; onKick: (m: MemberView) => void }) {
-  const act = useAct();
-  const [open, setOpen] = useState(false);
-  const set = (patch: Partial<Pick<MemberView, 'canControl' | 'canDj' | 'canPlay'>> & { role?: 'ADMIN' | 'USER' }) => {
-    setOpen(false);
-    void act('permission:set', { memberId: m.id, ...patch });
+function Badge({ children, tone }: { children: React.ReactNode; tone: 'amber' | 'onair' | 'plain' }) {
+  const tones = {
+    amber: 'border-amber/50 text-amber',
+    onair: 'border-onair/60 text-alert',
+    plain: 'border-line text-sage',
   };
-  return (
-    <>
-      <button
-        type="button"
-        aria-label={`${vi.people.menu}: ${m.displayName}`}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen(true)}
-        className="rounded-xl p-2 text-slate-400 hover:text-white"
-      >
-        <MoreVertical className="w-4 h-4" aria-hidden />
-      </button>
-      {open && (
-        // Bottom sheet: easier to hit on phones than a dropdown near the tab bar.
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-4" onClick={() => setOpen(false)}>
-          <div
-            role="menu"
-            aria-label={m.displayName}
-            className="w-full max-w-sm rounded-[2rem] border border-white/10 bg-surface-800 p-2 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="px-3 py-2 text-sm font-bold text-slate-300">{m.displayName}</p>
-            {!m.isDevice && (
-              <>
-                <MenuItem onClick={() => set({ canControl: !m.canControl })}>
-                  {m.canControl ? vi.people.revokeControl : vi.people.grantControl}
-                </MenuItem>
-                <MenuItem onClick={() => set({ canDj: !m.canDj })}>{m.canDj ? vi.people.revokeDj : vi.people.grantDj}</MenuItem>
-                {!m.canPlay && <MenuItem onClick={() => set({ canPlay: true })}>{vi.people.makePlayer}</MenuItem>}
-                <MenuItem onClick={() => set({ role: m.role === 'ADMIN' ? 'USER' : 'ADMIN' })}>
-                  {m.role === 'ADMIN' ? vi.people.revokeAdmin : vi.people.grantAdmin}
-                </MenuItem>
-              </>
-            )}
-            <MenuItem
-              danger
-              onClick={() => {
-                setOpen(false);
-                onKick(m);
-              }}
-            >
-              {vi.people.kick}
-            </MenuItem>
-            <MenuItem onClick={() => setOpen(false)}>{vi.people.cancel}</MenuItem>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
-function MenuItem({ children, onClick, danger }: { children: React.ReactNode; onClick: () => void; danger?: boolean }) {
-  return (
-    <button
-      type="button"
-      role="menuitem"
-      onClick={onClick}
-      className={`block w-full rounded-xl px-3 py-3 text-left text-sm hover:bg-white/10 ${danger ? 'text-red-300' : 'text-slate-100'}`}
-    >
-      {children}
-    </button>
-  );
+  return <span className={`rounded-full border px-2 py-px text-[11px] font-medium ${tones[tone]}`}>{children}</span>;
 }
 
 export function PeoplePanel() {
-  const { snapshot, me } = useRoom();
+  const members = useRoom((s) => s.snapshot?.members);
+  const playerId = useRoom((s) => s.snapshot?.player.memberId ?? null);
+  const me = useMe();
   const act = useAct();
+  const [menuFor, setMenuFor] = useState<MemberView | null>(null);
   const [kick, setKick] = useState<MemberView | null>(null);
   const [claimOpen, setClaimOpen] = useState(false);
   const [pin, setPin] = useState('');
-  const members = [...(snapshot?.members ?? [])].sort(
-    (a, b) => Number(b.online) - Number(a.online) || a.displayName.localeCompare(b.displayName, 'vi'),
+  const sorted = useMemo(
+    () =>
+      [...(members ?? [])].sort(
+        (a, b) => Number(b.online) - Number(a.online) || a.displayName.localeCompare(b.displayName, 'vi'),
+      ),
+    [members],
   );
   const isAdmin = me?.role === 'ADMIN';
-  const online = members.filter((m) => m.online).length;
+  const online = sorted.filter((m) => m.online).length;
+
+  const setPerm = (m: MemberView, patch: Partial<Pick<MemberView, 'canControl' | 'canDj' | 'canPlay'>> & { role?: 'ADMIN' | 'USER' }) => {
+    setMenuFor(null);
+    void act('permission:set', { memberId: m.id, ...patch });
+  };
 
   return (
-    <section aria-labelledby="people-title" className="glass-effect rounded-[2rem] p-4 md:p-6 space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <h2 id="people-title" className="text-sm font-black uppercase tracking-widest text-slate-300">
-          {vi.people.title} <span className="text-slate-500 normal-case tracking-normal font-medium">· {online} {vi.people.online}</span>
-        </h2>
+    <section aria-labelledby="people-title">
+      <div className="mb-2 flex items-center justify-between gap-2 px-1">
+        <div>
+          <h2 id="people-title" className="type-display text-[20px] font-bold">
+            {vi.people.title}
+          </h2>
+          <p className="text-[13px] text-sage">{vi.people.online(online)}</p>
+        </div>
         {me && !isAdmin && !me.isDevice && (
-          <button type="button" onClick={() => setClaimOpen(true)} className="btn-secondary !px-3 !py-1.5 text-xs">
-            <ShieldCheck className="w-4 h-4" aria-hidden /> {vi.people.claimAdmin}
-          </button>
+          <Button size="sm" onClick={() => setClaimOpen(true)}>
+            <ShieldCheck className="h-4 w-4" aria-hidden />
+            {vi.people.claimAdmin}
+          </Button>
         )}
       </div>
-      <ul className="space-y-1">
-        {members.map((m) => (
-          <li key={m.id} className="flex items-center gap-3 rounded-2xl px-2 py-2 hover:bg-white/[0.03]">
-            <span
-              className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-black text-black/80 shrink-0"
-              style={{ backgroundColor: m.color }}
-              aria-hidden
-            >
-              {m.displayName.slice(0, 1).toUpperCase()}
-            </span>
+
+      <ul className="divide-y divide-line/70 rounded-panel bg-panel px-1">
+        {sorted.map((m) => (
+          <li key={m.id} className="flex items-center gap-3 py-2.5 pl-2.5 pr-1">
+            <Avatar name={m.displayName} color={m.color} online={m.online} />
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold truncate">
-                <span className={`inline-block w-2 h-2 rounded-full mr-2 ${m.online ? 'bg-emerald-400' : 'bg-slate-600'}`} aria-label={m.online ? 'online' : 'offline'} />
-                {m.displayName} {m.id === me?.id && <span className="text-slate-400 font-normal">{vi.people.you}</span>}
+              <p className={`truncate font-medium ${m.online ? '' : 'text-sage'}`}>
+                {m.displayName} {m.id === me?.id && <span className="font-normal text-sage">{vi.people.you}</span>}
+                <span className="sr-only">{m.online ? ', online' : ', offline'}</span>
               </p>
-              <div className="flex flex-wrap gap-1 mt-0.5">
-                {m.role === 'ADMIN' && <Badge tone="bg-amber-400/20 text-amber-200">{vi.people.badges.admin}</Badge>}
-                {(m.canPlay || snapshot?.player.memberId === m.id) && <Badge tone="bg-emerald-400/20 text-emerald-200">{vi.people.badges.player}</Badge>}
-                {m.canControl && m.role !== 'ADMIN' && <Badge tone="bg-sky-400/20 text-sky-200">{vi.people.badges.control}</Badge>}
-                {m.canDj && m.role !== 'ADMIN' && <Badge tone="bg-fuchsia-400/20 text-fuchsia-200">{vi.people.badges.dj}</Badge>}
+              <div className="mt-1 flex flex-wrap gap-1 empty:hidden">
+                {m.role === 'ADMIN' && <Badge tone="amber">{vi.people.badges.admin}</Badge>}
+                {(m.canPlay || playerId === m.id) && <Badge tone="onair">{vi.people.badges.player}</Badge>}
+                {m.canControl && m.role !== 'ADMIN' && <Badge tone="plain">{vi.people.badges.control}</Badge>}
+                {m.canDj && m.role !== 'ADMIN' && <Badge tone="plain">{vi.people.badges.dj}</Badge>}
               </div>
             </div>
-            {isAdmin && m.id !== me?.id && <MemberMenu m={m} onKick={setKick} />}
+            {isAdmin && m.id !== me?.id && (
+              <IconButton label={vi.people.menu(m.displayName)} onClick={() => setMenuFor(m)}>
+                <MoreHorizontal className="h-5 w-5" aria-hidden />
+              </IconButton>
+            )}
           </li>
         ))}
       </ul>
 
-      {kick && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" role="alertdialog" aria-modal="true" aria-labelledby="kick-title">
-          <div className="w-full max-w-sm glass-effect rounded-[2rem] p-6 space-y-4">
-            <p id="kick-title" className="text-lg font-bold">{vi.people.kickConfirm(kick.displayName)}</p>
-            <div className="flex gap-2">
-              <button type="button" className="btn-secondary flex-1" onClick={() => setKick(null)}>{vi.people.cancel}</button>
-              <button
-                type="button"
-                className="btn-primary flex-1 !bg-none !bg-red-500"
-                onClick={async () => {
-                  const target = kick;
-                  setKick(null);
-                  await act('member:kick', { memberId: target.id });
-                }}
-              >
-                {vi.people.kickYes}
-              </button>
-            </div>
+      {menuFor && (
+        <Dialog open onClose={() => setMenuFor(null)} title={vi.people.menu(menuFor.displayName)}>
+          <div className="-mx-2 space-y-0.5">
+            {!menuFor.isDevice && (
+              <>
+                <SheetAction onClick={() => setPerm(menuFor, { canControl: !menuFor.canControl })}>
+                  {menuFor.canControl ? vi.people.revokeControl : vi.people.grantControl}
+                </SheetAction>
+                <SheetAction onClick={() => setPerm(menuFor, { canDj: !menuFor.canDj })}>
+                  {menuFor.canDj ? vi.people.revokeDj : vi.people.grantDj}
+                </SheetAction>
+                {!menuFor.canPlay && <SheetAction onClick={() => setPerm(menuFor, { canPlay: true })}>{vi.people.makePlayer}</SheetAction>}
+                <SheetAction onClick={() => setPerm(menuFor, { role: menuFor.role === 'ADMIN' ? 'USER' : 'ADMIN' })}>
+                  {menuFor.role === 'ADMIN' ? vi.people.revokeAdmin : vi.people.grantAdmin}
+                </SheetAction>
+              </>
+            )}
+            <SheetAction
+              danger
+              onClick={() => {
+                setKick(menuFor);
+                setMenuFor(null);
+              }}
+            >
+              {vi.people.kick}
+            </SheetAction>
           </div>
-        </div>
+        </Dialog>
+      )}
+
+      {kick && (
+        <Dialog open onClose={() => setKick(null)} title={vi.people.kickConfirm(kick.displayName)}>
+          <p className="text-sage">{vi.people.kickNote}</p>
+          <div className="mt-5 flex gap-2">
+            <Button className="flex-1" onClick={() => setKick(null)}>
+              {vi.people.cancel}
+            </Button>
+            <Button
+              variant="danger"
+              className="flex-1"
+              onClick={async () => {
+                const target = kick;
+                setKick(null);
+                await act('member:kick', { memberId: target.id });
+              }}
+            >
+              {vi.people.kickYes}
+            </Button>
+          </div>
+        </Dialog>
       )}
 
       {claimOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+        <Dialog open onClose={() => setClaimOpen(false)} title={vi.people.claimTitle}>
           <form
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="claim-title"
-            className="w-full max-w-sm glass-effect rounded-[2rem] p-6 space-y-4"
+            className="space-y-4"
             onSubmit={async (e) => {
               e.preventDefault();
               const ok = await act('admin:claim', { pin });
@@ -172,25 +152,23 @@ export function PeoplePanel() {
               }
             }}
           >
-            <h2 id="claim-title" className="text-lg font-bold">{vi.people.claimTitle}</h2>
-            <input
+            <p className="text-sage">{vi.people.claimNote}</p>
+            <Field
+              label={vi.home.pin}
               value={pin}
               onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
               inputMode="numeric"
               type="password"
+              autoComplete="off"
               maxLength={8}
-              autoFocus
-              aria-label={vi.people.claimTitle}
-              className="w-full input-field text-center tracking-[0.5em] text-xl"
+              data-autofocus
+              className="type-display text-center text-[22px] tracking-[0.5em]"
             />
-            <div className="flex gap-2">
-              <button type="button" className="btn-secondary flex-1" onClick={() => setClaimOpen(false)}>{vi.people.cancel}</button>
-              <button type="submit" disabled={!PinSchema.safeParse(pin).success} className="btn-primary flex-1 disabled:opacity-50">
-                {vi.people.claimSubmit}
-              </button>
-            </div>
+            <Button type="submit" variant="primary" disabled={!isPin(pin)} className="w-full">
+              {vi.people.claimSubmit}
+            </Button>
           </form>
-        </div>
+        </Dialog>
       )}
     </section>
   );

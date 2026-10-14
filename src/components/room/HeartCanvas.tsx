@@ -1,126 +1,101 @@
 'use client';
 
-import React, { useRef, useEffect, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 
 interface Particle {
   x: number;
   y: number;
   size: number;
-  speedY: number;
-  speedX: number;
-  opacity: number;
-  rotation: number;
-  rotateSpeed: number;
-  color: string;
-  emoji?: string;
+  vy: number;
+  vx: number;
+  life: number;
+  rot: number;
+  vr: number;
+  emoji: string;
 }
 
-export const HeartCanvas: React.FC = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const particlesRef = useRef<Particle[]>([]);
-  const requestRef = useRef<number | null>(null);
+type Spawn = (x: number, y: number, emoji: string) => void;
+let spawn: Spawn | null = null;
+const MAX_PARTICLES = 120;
 
-  const createParticle = useCallback((x: number, y: number, emoji?: string) => {
-    const colors = ['#f43f5e', '#ec4899', '#d946ef', '#fb7185'];
-    return {
-      x,
-      y,
-      size: emoji ? Math.random() * 20 + 30 : Math.random() * 20 + 20,
-      speedY: Math.random() * 3 + 2,
-      speedX: (Math.random() - 0.5) * 4,
-      opacity: 1,
-      rotation: (Math.random() - 0.5) * 0.5,
-      rotateSpeed: (Math.random() - 0.5) * 0.1,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      emoji
-    };
-  }, []);
+/** Floats an emoji up from (x, y) on the shared canvas. No-op with reduced motion. */
+export function triggerReaction(x: number, y: number, emoji: string): void {
+  spawn?.(x, y, emoji);
+}
+
+/**
+ * Full-screen overlay for reactions. The animation loop runs only while particles
+ * exist and stops by itself, so an idle room costs no CPU.
+ */
+export function HeartCanvas() {
+  const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const handleAddReaction = (event: Event) => {
-      const { x, y, emoji } = (event as CustomEvent<{ x: number; y: number; emoji?: string }>).detail;
-      const count = emoji ? 1 : 5; // Hearts come in bursts, emojis single but bigger
-      for (let i = 0; i < count; i++) {
-        particlesRef.current.push(createParticle(x, y, emoji));
-      }
-    };
+    const canvas = ref.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    window.addEventListener('add-reaction', handleAddReaction);
-    return () => window.removeEventListener('add-reaction', handleAddReaction);
-  }, [createParticle]);
-
-  const drawParticle = (ctx: CanvasRenderingContext2D, p: Particle) => {
-    ctx.save();
-    ctx.translate(p.x, p.y);
-    ctx.rotate(p.rotation);
-    ctx.globalAlpha = p.opacity;
-    
-    if (p.emoji) {
-      ctx.font = `${p.size}px serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(p.emoji, 0, 0);
-    } else {
-      ctx.fillStyle = p.color;
-      const size = p.size;
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.bezierCurveTo(-size / 2, -size / 2, -size, size / 3, 0, size);
-      ctx.bezierCurveTo(size, size / 3, size / 2, -size / 2, 0, 0);
-      ctx.fill();
-    }
-    ctx.restore();
-  };
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    const particles: Particle[] = [];
+    let raf = 0;
+    let dpr = 1;
 
     const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    const frame = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particlesRef.current = particlesRef.current.filter((p) => {
-        p.y -= p.speedY;
-        p.x += p.speedX;
-        p.opacity -= 0.01;
-        p.rotation += p.rotateSpeed;
-        if (p.opacity > 0) {
-          drawParticle(ctx, p);
-          return true;
-        }
-        return false;
-      });
-      requestRef.current = requestAnimationFrame(frame);
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(window.innerWidth * dpr);
+      canvas.height = Math.round(window.innerHeight * dpr);
     };
 
-    window.addEventListener('resize', resize);
+    const frame = () => {
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y -= p.vy;
+        p.rot += p.vr;
+        p.life -= 0.012;
+        if (p.life <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, p.life * 1.6);
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.font = `${p.size}px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+        ctx.fillText(p.emoji, 0, 0);
+        ctx.restore();
+      }
+      raf = particles.length ? requestAnimationFrame(frame) : 0;
+    };
+
+    spawn = (x, y, emoji) => {
+      if (particles.length >= MAX_PARTICLES) particles.shift();
+      particles.push({
+        x,
+        y,
+        emoji,
+        size: 28 + Math.random() * 18,
+        vy: 2 + Math.random() * 2.2,
+        vx: (Math.random() - 0.5) * 2.4,
+        life: 1,
+        rot: (Math.random() - 0.5) * 0.4,
+        vr: (Math.random() - 0.5) * 0.04,
+      });
+      if (!raf) raf = requestAnimationFrame(frame);
+    };
+
     resize();
-    requestRef.current = requestAnimationFrame(frame);
+    window.addEventListener('resize', resize);
     return () => {
+      spawn = null;
+      cancelAnimationFrame(raf);
       window.removeEventListener('resize', resize);
-      if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
   }, []);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-[9999]"
-    />
-  );
-};
-
-export const triggerHearts = (x: number, y: number) => {
-  const event = new CustomEvent('add-reaction', { detail: { x, y } });
-  window.dispatchEvent(event);
-};
-
-export const triggerReaction = (x: number, y: number, emoji: string) => {
-  const event = new CustomEvent('add-reaction', { detail: { x, y, emoji } });
-  window.dispatchEvent(event);
-};
+  return <canvas ref={ref} className="pointer-events-none fixed inset-0 z-[60] h-full w-full" aria-hidden />;
+}

@@ -1,4 +1,4 @@
-import { CONTRACTS_VERSION } from '@/contracts';
+import { CONTRACTS_VERSION } from '@/contracts/version';
 
 /** R-44: the server speaks another contracts version → ask the user to reload. Unknown health → no banner. */
 export function isVersionMismatch(
