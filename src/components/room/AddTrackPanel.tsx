@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/Toast';
 import type { TrackSummary } from '@/contracts';
 import { useAct } from '@/hooks/useAct';
 import { vi } from '@/i18n/vi';
+import { parseYouTubeVideo } from '@/contracts/youtube';
 import { classifyInput } from '@/lib/add-input';
 import { formatDuration } from '@/lib/time';
 import { useMe, useRoom } from '@/state/hooks';
@@ -20,31 +21,52 @@ export function AddTrackPanel() {
   const [input, setInput] = useState('');
   const [results, setResults] = useState<TrackSummary[] | null>(null);
   const [busy, setBusy] = useState(false);
-  const [adding, setAdding] = useState<string | null>(null);
   const [added, setAdded] = useState<Set<string>>(() => new Set());
   const kind = classifyInput(input);
 
-  async function add(trackInput: string) {
-    setAdding(trackInput);
-    const r = await act('queue:add', { input: trackInput });
-    setAdding(null);
+  /**
+   * Optimistic add: the row appears in the queue at once ("Đang thêm…", with the video's
+   * thumbnail) while the server fetches the title. A refused add restores the input.
+   */
+  async function add(trackInput: string, known?: TrackSummary) {
+    const videoId = known?.externalId ?? parseYouTubeVideo(trackInput)?.videoId ?? null;
+    const fromBox = trackInput === input.trim();
+    if (fromBox) setInput('');
+    setAdded((s) => new Set(s).add(trackInput));
+    const r = await act(
+      'queue:add',
+      { input: trackInput },
+      {
+        optimistic: {
+          kind: 'add',
+          key: trackInput,
+          title: known?.title ?? null,
+          thumbnailUrl: known?.thumbnailUrl ?? (videoId ? `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg` : null),
+        },
+      },
+    );
     if (r) {
       toast(vi.add.added(r.title), 'success');
-      setAdded((s) => new Set(s).add(trackInput));
-      if (trackInput === input.trim()) setInput('');
+    } else {
+      setAdded((s) => {
+        const next = new Set(s);
+        next.delete(trackInput);
+        return next;
+      });
+      if (fromBox) setInput((cur) => cur || trackInput);
     }
   }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (busy || kind === 'empty') return;
-    setBusy(true);
     if (kind === 'link') {
-      await add(input.trim());
-    } else {
-      const r = await act('search:query', { q: input });
-      setResults(r ? r.results : null);
+      void add(input.trim()); // optimistic: no need to block the box
+      return;
     }
+    setBusy(true);
+    const r = await act('search:query', { q: input });
+    setResults(r ? r.results : null);
     setBusy(false);
   }
 
@@ -101,10 +123,8 @@ export function AddTrackPanel() {
                     {t.durationSec ? <span className="shrink-0 tabular-nums">{formatDuration(t.durationSec)}</span> : null}
                   </p>
                 </div>
-                <Button size="sm" disabled={adding !== null || done} onClick={() => add(t.id)} aria-label={`${vi.add.addResult} ${t.title}`}>
-                  {adding === t.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-                  ) : done ? (
+                <Button size="sm" disabled={done} onClick={() => add(t.id, t)} aria-label={`${vi.add.addResult} ${t.title}`}>
+                  {done ? (
                     <Check className="h-4 w-4 text-amber" aria-hidden />
                   ) : (
                     <Plus className="h-4 w-4" aria-hidden />

@@ -21,6 +21,7 @@ export const vi = {
     roomCodePlaceholder: 'K7M2QX',
     create: 'Tạo phòng',
     join: 'Vào phòng',
+    slow: 'Máy chủ đang khởi động, có thể mất khoảng 1 phút. Bạn cứ chờ, không cần bấm lại.',
     hintName: 'Tên dài 1–30 ký tự',
     hintRoomName: 'Tên phòng dài 1–50 ký tự',
     hintCode: 'Mã phòng gồm 6 ký tự',
@@ -89,6 +90,8 @@ export const vi = {
     empty: 'Chưa có bài nào trong hàng chờ.',
     addFirst: 'Thêm bài',
     pinnedGroup: 'Phát tiếp theo',
+    addingGroup: 'Đang thêm',
+    addingTitle: 'Bài từ link YouTube',
     round: (n: number) => `Lượt ${n}`,
     you: 'bạn',
     heart: 'Thả tim',
@@ -191,6 +194,10 @@ export const vi = {
     reactions: 'Thả cảm xúc lên màn hình của cả phòng',
     react: (emoji: string) => `Thả ${emoji}`,
     djToggle: 'Bàn DJ',
+    sending: 'Đang gửi…',
+    failed: 'Chưa gửi được.',
+    retry: 'Gửi lại',
+    discard: 'Xoá',
   },
 
   dj: {
@@ -231,6 +238,7 @@ export const vi = {
 
   banners: {
     reconnecting: 'Đang kết nối lại…',
+    waking: 'Đang kết nối tới máy chủ… Máy chủ miễn phí có thể cần khoảng 1 phút để khởi động.',
     newVersion: 'Có phiên bản mới. Hãy tải lại trang.',
     reload: 'Tải lại',
     playerOffline: 'Máy phát đang mất kết nối. Hàng chờ vẫn nhận bài mới.',

@@ -17,11 +17,15 @@ export function WishSheet({ item, onClose }: { item: QueueItemView; onClose: () 
   const textId = useId();
   const voiceId = useId();
 
-  async function save(message: string) {
+  /** Optimistic: the sheet closes at once and the queue row shows the wish; a refusal rolls it back. */
+  function save(message: string) {
     setBusy(true);
-    const ok = await act('queue:set-message', { queueItemId: item.id, wishMessage: message, voicePreset: voice });
-    setBusy(false);
-    if (ok) onClose();
+    onClose();
+    void act(
+      'queue:set-message',
+      { queueItemId: item.id, wishMessage: message, voicePreset: voice },
+      { optimistic: { kind: 'wish', itemId: item.id, message: message.trim() || null } },
+    );
   }
 
   return (

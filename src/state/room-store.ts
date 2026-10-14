@@ -3,6 +3,7 @@
 // The socket logic is unchanged from the v2 RoomContext.
 import type { Socket } from 'socket.io-client';
 import type {
+  ErrorParams,
   ActivityLogView,
   ChatMessageView,
   CommandName,
@@ -14,7 +15,9 @@ import type {
   RevokeReason,
   RoomSnapshot,
 } from '@/contracts';
+import type { ClientErrorCode } from '@/i18n/vi';
 import { applySnapshot } from '@/lib/room-store';
+import type { Pending, PendingOp } from './optimistic';
 import { clearToken, getToken, type SessionKind, setToken } from '@/lib/session-store';
 import {
   type ClientAck,
@@ -31,6 +34,16 @@ export type Connection = 'idle' | 'connecting' | 'connected' | 'reconnecting';
 export interface Health {
   searchEnabled: boolean;
   contractsVersion: string;
+}
+
+/** A chat message the server has not confirmed yet. */
+export interface PendingChat {
+  id: string;
+  content: string;
+  createdAt: string;
+  failed: boolean;
+  /** Why it failed (shown under the bubble instead of a toast). */
+  error?: { code: ClientErrorCode; params?: ErrorParams };
 }
 
 export interface RoomState {
@@ -51,6 +64,9 @@ export interface RoomState {
   health: Health | null;
   playerCommand: PlayerCommand | null;
   playerRevoked: PlayerRevokeReason | null;
+  /** Optimistic overlays, from click until the server's ack (see optimistic.ts). */
+  pending: Pending[];
+  chatPending: PendingChat[];
 }
 
 export const INITIAL_STATE: RoomState = {
@@ -68,6 +84,8 @@ export const INITIAL_STATE: RoomState = {
   health: null,
   playerCommand: null,
   playerRevoked: null,
+  pending: [],
+  chatPending: [],
 };
 
 type Listener<T> = (e: T) => void;
@@ -80,6 +98,8 @@ const ROOM_RESET: Partial<RoomState> = {
   logs: [],
   playerCommand: null,
   playerRevoked: null,
+  pending: [],
+  chatPending: [],
 };
 
 class RoomStore {
@@ -218,6 +238,42 @@ class RoomStore {
   };
 
   clearPlayerRevoked = (): void => this.set({ playerRevoked: null });
+
+  private opSeq = 0;
+
+  /**
+   * Shows `op` immediately and runs `request`. The overlay is removed when the ack
+   * arrives: on success the snapshot (broadcast before the ack) already shows the change;
+   * on failure removing it is the rollback.
+   */
+  withOptimistic = async <T>(op: PendingOp, request: () => Promise<T>): Promise<T> => {
+    const id = ++this.opSeq;
+    this.set((st) => ({ pending: [...st.pending, { ...op, id } as Pending] }));
+    try {
+      return await request();
+    } finally {
+      this.set((st) => ({ pending: st.pending.filter((p) => p.id !== id) }));
+    }
+  };
+
+  /** Chat with a local echo: "Đang gửi…" now, the real message (or "Gửi lại") later. */
+  sendChat = async (content: string, retryId?: string): Promise<ClientAck<CommandResult<'chat:send'>>> => {
+    const id = retryId ?? `local-${++this.opSeq}`;
+    const entry: PendingChat = { id, content, createdAt: new Date().toISOString(), failed: false };
+    this.set((st) => ({
+      chatPending: retryId ? st.chatPending.map((m) => (m.id === id ? entry : m)) : [...st.chatPending, entry],
+    }));
+    const r = await this.send('chat:send', { content });
+    this.set((st) => ({
+      // chat:receive (the real message) arrived before this ack, so the echo can go.
+      chatPending: r.ok
+        ? st.chatPending.filter((m) => m.id !== id)
+        : st.chatPending.map((m) => (m.id === id ? { ...m, failed: true, error: r.error } : m)),
+    }));
+    return r;
+  };
+
+  discardChat = (id: string): void => this.set((st) => ({ chatPending: st.chatPending.filter((m) => m.id !== id) }));
 
   markChatRead = (): void => {
     if (this.state.chatUnread) this.set({ chatUnread: 0 });

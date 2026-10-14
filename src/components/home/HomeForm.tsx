@@ -1,10 +1,12 @@
 'use client';
 
+import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { panelId, tabId, TabList } from '@/components/ui/Tabs';
+import { useSlow } from '@/hooks/useSlow';
 import { errorMessage, vi } from '@/i18n/vi';
 import { lastName, rememberName } from '@/lib/session-store';
 import { isDisplayName, isRoomCode, isRoomName } from '@/lib/validate';
@@ -21,6 +23,7 @@ export function HomeForm() {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const slow = useSlow(busy, 3000);
 
   // Prefill after hydration: the server render has no localStorage.
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -123,9 +126,15 @@ export function HomeForm() {
           </p>
         )}
 
-        <Button type="submit" variant="primary" disabled={!canSubmit} className="w-full">
+        <Button type="submit" variant="primary" disabled={!canSubmit} aria-busy={busy} className="w-full">
+          {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
           {mode === 'create' ? vi.home.create : vi.home.join}
         </Button>
+        {slow && (
+          <p role="status" className="text-center text-[13px] text-sage">
+            {vi.home.slow}
+          </p>
+        )}
       </form>
     </div>
   );

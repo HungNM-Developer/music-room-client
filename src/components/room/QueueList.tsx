@@ -1,8 +1,8 @@
 'use client';
 
-import { Heart, Mail, MoreHorizontal, Pin, PinOff, Plus, Trash2 } from 'lucide-react';
+import { Heart, Loader2, Mail, MoreHorizontal, Pin, PinOff, Plus, Trash2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { memo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { Button, IconButton } from '@/components/ui/Button';
 import { Dialog, SheetAction } from '@/components/ui/Dialog';
 import { Thumb } from '@/components/ui/Thumb';
@@ -11,6 +11,7 @@ import { useAct } from '@/hooks/useAct';
 import { vi } from '@/i18n/vi';
 import { formatDuration } from '@/lib/time';
 import { useMe, useRoom } from '@/state/hooks';
+import { type AddOp, applyQueue } from '@/state/optimistic';
 
 const WishSheet = dynamic(() => import('./WishSheet').then((m) => m.WishSheet));
 
@@ -37,10 +38,11 @@ function groupByRound(queue: QueueItemView[]): Group[] {
 
 export function QueueList({ onAdd }: { onAdd?: () => void }) {
   const queue = useRoom((s) => s.snapshot?.queue);
+  const pending = useRoom((s) => s.pending);
   const me = useMe();
   const [menuFor, setMenuFor] = useState<QueueItemView | null>(null);
   const [wishFor, setWishFor] = useState<QueueItemView | null>(null);
-  const items = queue ?? [];
+  const { items, adding } = useMemo(() => applyQueue(queue ?? [], pending, me?.id ?? null), [queue, pending, me?.id]);
 
   return (
     <section aria-labelledby="queue-title">
@@ -48,10 +50,10 @@ export function QueueList({ onAdd }: { onAdd?: () => void }) {
         <h2 id="queue-title" className="type-display text-[20px] font-bold">
           {vi.queue.title}
         </h2>
-        {items.length > 0 && <span className="text-[13px] text-sage tabular-nums">{items.length}</span>}
+        {items.length + adding.length > 0 && <span className="text-[13px] text-sage tabular-nums">{items.length + adding.length}</span>}
       </div>
 
-      {items.length === 0 ? (
+      {items.length === 0 && adding.length === 0 ? (
         <div className="rounded-panel border border-dashed border-line px-5 py-8 text-center">
           <p className="text-sage">{vi.queue.empty}</p>
           {onAdd && !me?.isDevice && (
@@ -73,6 +75,16 @@ export function QueueList({ onAdd }: { onAdd?: () => void }) {
               </ol>
             </div>
           ))}
+          {adding.length > 0 && (
+            <div>
+              <h3 className="mb-1 px-1 text-[13px] font-medium text-sage">{vi.queue.addingGroup}</h3>
+              <ol className="divide-y divide-line/70 rounded-panel bg-panel px-1">
+                {adding.map((a) => (
+                  <AddingRow key={a.id} op={a} />
+                ))}
+              </ol>
+            </div>
+          )}
         </div>
       )}
 
@@ -128,7 +140,7 @@ const QueueRow = memo(function QueueRow({
           type="button"
           aria-label={hearted ? vi.queue.unheart : vi.queue.heart}
           aria-pressed={hearted}
-          onClick={() => act('queue:heart', { queueItemId: item.id })}
+          onClick={() => act('queue:heart', { queueItemId: item.id }, { optimistic: { kind: 'heart', itemId: item.id, hearted: !hearted } })}
           className={`flex h-11 min-w-11 items-center justify-center gap-1 rounded-row px-2 text-[13px] tabular-nums transition-colors hover:bg-panel-hi ${
             hearted ? 'text-onair' : 'text-sage'
           }`}
@@ -147,6 +159,20 @@ const QueueRow = memo(function QueueRow({
     </li>
   );
 });
+
+/** A song the server is still fetching (title and duration come from YouTube). */
+function AddingRow({ op }: { op: AddOp }) {
+  return (
+    <li className="flex animate-rise items-center gap-3 py-2.5 pl-2.5 pr-3 opacity-80" aria-busy="true">
+      <Thumb url={op.thumbnailUrl} size={44} />
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-medium">{op.title ?? vi.queue.addingTitle}</p>
+        <p className="text-[13px] text-sage">{vi.add.adding}</p>
+      </div>
+      <Loader2 className="h-4 w-4 shrink-0 animate-spin text-amber" aria-hidden />
+    </li>
+  );
+}
 
 function ItemMenu({
   item,
@@ -174,7 +200,7 @@ function ItemMenu({
         {canPin && (
           <SheetAction
             icon={item.pinned ? <PinOff className="h-5 w-5" /> : <Pin className="h-5 w-5" />}
-            onClick={() => run(() => act('queue:pin-next', { queueItemId: item.id }))}
+            onClick={() => run(() => act('queue:pin-next', { queueItemId: item.id }, { optimistic: { kind: 'pin', itemId: item.id, pinned: !item.pinned } }))}
           >
             {item.pinned ? vi.queue.unpin : vi.queue.pin}
           </SheetAction>
@@ -185,7 +211,11 @@ function ItemMenu({
           </SheetAction>
         )}
         {(mine || isAdmin) && (
-          <SheetAction danger icon={<Trash2 className="h-5 w-5" />} onClick={() => run(() => act('queue:remove', { queueItemId: item.id }))}>
+          <SheetAction
+            danger
+            icon={<Trash2 className="h-5 w-5" />}
+            onClick={() => run(() => act('queue:remove', { queueItemId: item.id }, { optimistic: { kind: 'remove', itemId: item.id } }))}
+          >
             {vi.queue.remove}
           </SheetAction>
         )}

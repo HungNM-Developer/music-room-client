@@ -7,10 +7,11 @@ import { Button, IconButton } from '@/components/ui/Button';
 import type { ChatMessageView } from '@/contracts';
 import { LIMITS, REACTIONS } from '@/contracts/constants';
 import { useAct } from '@/hooks/useAct';
-import { vi } from '@/i18n/vi';
+import { triggerReaction } from './HeartCanvas';
+import { errorMessage, vi } from '@/i18n/vi';
 import { formatClock } from '@/lib/time';
 import { useMe, useRoom } from '@/state/hooks';
-import { room } from '@/state/room-store';
+import { type PendingChat, room } from '@/state/room-store';
 
 const DjPads = dynamic(() => import('./DjPads').then((m) => m.DjPads), { ssr: false });
 
@@ -20,6 +21,7 @@ const DjPads = dynamic(() => import('./DjPads').then((m) => m.DjPads), { ssr: fa
  */
 function ChatMessages({ className = '' }: { className?: string }) {
   const chat = useRoom((s) => s.chat);
+  const chatPending = useRoom((s) => s.chatPending);
   const meId = useRoom((s) => s.memberId);
   const ref = useRef<HTMLOListElement>(null);
   const atBottom = useRef(true);
@@ -27,7 +29,7 @@ function ChatMessages({ className = '' }: { className?: string }) {
   useEffect(() => {
     const el = ref.current;
     if (el && atBottom.current) el.scrollTop = el.scrollHeight;
-  }, [chat.length]);
+  }, [chat.length, chatPending.length]);
 
   return (
     <ol
@@ -39,9 +41,12 @@ function ChatMessages({ className = '' }: { className?: string }) {
       className={`space-y-2.5 overflow-y-auto overscroll-contain px-3 py-3 ${className}`}
       aria-live="polite"
     >
-      {chat.length === 0 && <li className="py-8 text-center text-sage">{vi.chat.empty}</li>}
+      {chat.length === 0 && chatPending.length === 0 && <li className="py-8 text-center text-sage">{vi.chat.empty}</li>}
       {chat.map((m) => (
         <Bubble key={m.id} m={m} mine={m.memberId === meId} />
+      ))}
+      {chatPending.map((m) => (
+        <PendingBubble key={m.id} m={m} />
       ))}
     </ol>
   );
@@ -62,7 +67,38 @@ function Bubble({ m, mine }: { m: ChatMessageView; mine: boolean }) {
   );
 }
 
-/** Quick reactions: float up on every screen in the room and on the speaker. */
+/** My message before the server confirmed it: dimmed while sending, "Gửi lại" if it failed. */
+function PendingBubble({ m }: { m: PendingChat }) {
+  return (
+    <li className="flex flex-col items-end" aria-busy={!m.failed}>
+      <p
+        className={`max-w-[85%] whitespace-pre-wrap rounded-[16px] rounded-br-[4px] px-3 py-2 [overflow-wrap:anywhere] ${
+          m.failed ? 'border border-onair/60 bg-onair/15' : 'bg-amber/70 text-amber-ink'
+        }`}
+      >
+        {m.content}
+      </p>
+      {m.failed ? (
+        <span className="mt-0.5 flex max-w-[85%] flex-wrap items-center justify-end gap-x-2 px-1 text-right text-[12px] text-alert">
+          {m.error ? errorMessage(m.error.code, m.error.params) : vi.chat.failed}
+          <button type="button" className="font-semibold text-amber hover:underline" onClick={() => void room.sendChat(m.content, m.id)}>
+            {vi.chat.retry}
+          </button>
+          <button type="button" className="text-sage hover:underline" onClick={() => room.discardChat(m.id)}>
+            {vi.chat.discard}
+          </button>
+        </span>
+      ) : (
+        <span className="mt-0.5 px-1 text-[12px] text-sage">{vi.chat.sending}</span>
+      )}
+    </li>
+  );
+}
+
+/**
+ * Quick reactions: float up on every screen in the room and on the speaker. Mine float
+ * at once (the server's echo of my own reaction is ignored by the room page).
+ */
 function ReactionRow() {
   const act = useAct();
   return (
@@ -72,7 +108,11 @@ function ReactionRow() {
           key={emoji}
           type="button"
           aria-label={vi.chat.react(emoji)}
-          onClick={() => act('room:reaction', { emoji }, { silent: true })}
+          onClick={(e) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            triggerReaction(r.left + r.width / 2, r.top, emoji);
+            void act('room:reaction', { emoji }, { silent: true });
+          }}
           className="flex h-9 w-9 items-center justify-center rounded-full text-[20px] transition-transform hover:scale-110 hover:bg-panel-hi active:scale-90"
         >
           {emoji}
@@ -83,16 +123,17 @@ function ReactionRow() {
 }
 
 function ChatComposer({ inputRef }: { inputRef: React.RefObject<HTMLInputElement | null> }) {
-  const act = useAct();
   const [text, setText] = useState('');
   const id = useId();
 
-  async function submit(e: React.FormEvent) {
+  /** Optimistic: the box clears and the message shows at once ("Đang gửi…"). */
+  function submit(e: React.FormEvent) {
     e.preventDefault();
     const content = text.trim();
     if (!content) return;
-    const ok = await act('chat:send', { content });
-    if (ok) setText('');
+    setText('');
+    // Failures (rate limit, network) are explained under the bubble, next to "Gửi lại".
+    void room.sendChat(content);
   }
 
   return (
