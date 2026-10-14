@@ -8,9 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "contracts:sync": "node scripts/sync-contracts.mjs",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:e2e": "playwright test"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "framer-motion": "^12.23.26",
@@ -24,7 +22,6 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@playwright/test": "1.64",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -32,7 +29,6 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "vitest": "^3.2.7"
+    "typescript": "^5"
   }
 }

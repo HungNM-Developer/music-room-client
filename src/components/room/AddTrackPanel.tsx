@@ -65,7 +65,7 @@ export function AddTrackPanel() {
           autoComplete="off"
           enterKeyHint={kind === 'link' ? 'go' : 'search'}
         />
-        <button type="submit" disabled={busy || kind === 'empty'} className="btn-primary !px-4 shrink-0 disabled:opacity-50" data-testid="add-submit">
+        <button type="submit" disabled={busy || kind === 'empty'} className="btn-primary !px-4 shrink-0 disabled:opacity-50">
           {kind === 'link' ? <Plus className="w-4 h-4" aria-hidden /> : <Search className="w-4 h-4" aria-hidden />}
           <span>{kind === 'link' ? vi.add.addLink : vi.add.search}</span>
         </button>
@@ -74,7 +74,7 @@ export function AddTrackPanel() {
 
       {results && results.length === 0 && <p className="text-sm text-slate-400">{vi.add.noResults}</p>}
       {results && results.length > 0 && (
-        <ul className="space-y-2" data-testid="search-results">
+        <ul className="space-y-2">
           {results.map((t) => (
             <li key={t.id} className="flex items-center gap-3 rounded-2xl p-2 bg-white/[0.03] border border-white/5">
               <div className="w-14 h-10 rounded-lg overflow-hidden bg-white/5 shrink-0">

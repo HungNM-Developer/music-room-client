@@ -26,7 +26,7 @@ export function QueueList() {
       {queue.length === 0 ? (
         <p className="text-slate-400 text-sm py-6 text-center">{vi.queue.empty}</p>
       ) : (
-        <ol className="space-y-2" data-testid="queue">
+        <ol className="space-y-2">
           <AnimatePresence initial={false}>
             {queue.map((item) => {
               const mine = item.addedBy?.id === me?.id;
@@ -38,7 +38,6 @@ export function QueueList() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  data-testid="queue-item"
                   className={`flex items-center gap-3 rounded-2xl p-3 border ${
                     item.pinned ? 'border-brand-primary/40 bg-brand-primary/10' : 'border-white/5 bg-white/[0.03]'
                   }`}

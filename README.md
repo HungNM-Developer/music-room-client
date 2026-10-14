@@ -14,8 +14,6 @@ NEXT_PUBLIC_SERVER_URL=http://localhost:3001 npm run dev
 
 | Lệnh | Việc |
 |---|---|
-| `npm test` | Unit test (Vitest) cho `src/lib`, `src/i18n` |
-| `npm run test:e2e` | Playwright E2E — server với `YOUTUBE_FAKE=1`, client với `NEXT_PUBLIC_E2E=1` (trình phát giả) |
 | `npm run lint` · `npm run typecheck` · `npm run build` | |
 
 - Mọi chữ hiển thị nằm trong [`src/i18n/vi.ts`](src/i18n/vi.ts).

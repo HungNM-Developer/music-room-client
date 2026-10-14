@@ -36,7 +36,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              data-testid="toast"
               className={`max-w-md w-full rounded-2xl px-4 py-3 text-sm font-medium shadow-2xl backdrop-blur-xl border ${
                 t.tone === 'error'
                   ? 'bg-red-500/15 border-red-500/30 text-red-100'

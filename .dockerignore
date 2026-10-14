@@ -1,7 +1,4 @@
 node_modules
 .next
-test-results
-playwright-report
-e2e
 .env*
 .git

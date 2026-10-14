@@ -32,7 +32,7 @@ export function ChatPanel() {
   return (
     <section aria-labelledby="chat-title" className="glass-effect rounded-[2rem] p-4 md:p-6 flex flex-col h-[420px]">
       <h2 id="chat-title" className="text-sm font-black uppercase tracking-widest text-slate-300 mb-3">{vi.chat.title}</h2>
-      <div className="flex-1 overflow-y-auto space-y-2 pr-1" data-testid="chat-log">
+      <div className="flex-1 overflow-y-auto space-y-2 pr-1">
         {chat.length === 0 && <p className="text-sm text-slate-500">{vi.chat.empty}</p>}
         {chat.map((m) => (
           <div key={m.id} className={`text-sm ${m.memberId === me?.id ? 'text-right' : ''}`}>

@@ -16,7 +16,7 @@ export function ActivityLogPopup({ onClose }: { onClose: () => void }) {
             <X className="w-5 h-5" aria-hidden />
           </button>
         </div>
-        <ol className="overflow-y-auto space-y-2 text-sm" data-testid="activity-log">
+        <ol className="overflow-y-auto space-y-2 text-sm">
           {logs.length === 0 && <li className="text-slate-500">{vi.log.empty}</li>}
           {logs.map((l) => (
             <li key={l.id} className="flex gap-3">
