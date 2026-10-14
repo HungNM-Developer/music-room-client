@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { addLink, closeExtraContexts, createRoomUI, joinAs, newCtx, openHost, yt } from './helpers';
+import { addLink, closeExtraContexts, createRoomUI, joinAs, openHost, yt } from './helpers';
 
 test.afterEach(closeExtraContexts);
 
