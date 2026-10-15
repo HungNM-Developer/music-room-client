@@ -1,4 +1,5 @@
 import { Radio } from 'lucide-react';
+import Link from 'next/link';
 import { AccountPanel } from '@/components/account/AccountPanel';
 import { HomeForm } from '@/components/home/HomeForm';
 import { HeroDial } from '@/components/room/TuningDial';
@@ -36,6 +37,14 @@ export default function HomePage() {
               </li>
             ))}
           </ol>
+          <p className="mt-10 flex gap-4 text-[13px] text-sage">
+            <Link href="/privacy" className="hover:text-paper">
+              Quyền riêng tư
+            </Link>
+            <Link href="/terms" className="hover:text-paper">
+              Điều khoản
+            </Link>
+          </p>
         </div>
       </div>
     </main>
