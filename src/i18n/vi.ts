@@ -160,6 +160,22 @@ export const vi = {
     loading: 'Đang tổng hợp…',
   },
 
+  account: {
+    signInNote: 'Đăng nhập để vào lại phòng ở mọi thiết bị, giữ bài yêu thích và quản lý phòng của bạn. Không bắt buộc.',
+    signedInAs: (name: string) => `Đã đăng nhập: ${name}`,
+    signOut: 'Đăng xuất',
+    signedOut: 'Đã đăng xuất',
+    welcome: (name: string) => `Chào ${name}!`,
+    myRooms: 'Phòng của tôi',
+    myRoomsEmpty: 'Bạn chưa có phòng nào. Tạo phòng hoặc vào phòng bằng mã nhé.',
+    owner: 'Chủ phòng',
+    online: (n: number) => `${n} đang online`,
+    playing: (title: string) => `Đang phát: ${title}`,
+    open: (name: string) => `Vào phòng ${name}`,
+    joining: (name: string) => `Đang vào phòng với tài khoản ${name}…`,
+    orGuest: 'Hoặc vào bằng tên như khách',
+  },
+
   playlist: {
     open: 'Mở playlist',
     openWhole: 'Mở cả playlist',
@@ -390,6 +406,8 @@ const ERRORS: Record<ClientErrorCode, (p: ErrorParams) => string> = {
   PLAYLIST_UNAVAILABLE: () =>
     'Máy chủ chưa bật YouTube API nên chưa đọc được playlist. Hãy dán link từng bài.',
   MESSAGE_BLOCKED: () => 'Lời chúc có từ ngữ không phù hợp để đọc to. Hãy viết lại nhé.',
+  SIGN_IN_FAILED: () => 'Không đăng nhập được bằng Google. Hãy thử lại.',
+  SIGN_IN_UNAVAILABLE: () => 'Máy chủ chưa bật đăng nhập Google.',
   AI_UNAVAILABLE: () => 'DJ đang bận hoặc hết lượt miễn phí hôm nay. Hãy thử lại sau ít phút.',
   PLAYLIST_EMPTY: () => 'Playlist này không có bài nào phát được (trống, riêng tư hoặc bị chặn nhúng).',
   QUEUE_LIMIT: (p) =>

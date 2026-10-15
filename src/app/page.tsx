@@ -1,4 +1,5 @@
 import { Radio } from 'lucide-react';
+import { AccountPanel } from '@/components/account/AccountPanel';
 import { HomeForm } from '@/components/home/HomeForm';
 import { HeroDial } from '@/components/room/TuningDial';
 import { vi } from '@/i18n/vi';
@@ -18,8 +19,9 @@ export default function HomePage() {
           <p className="mt-5 max-w-md text-[17px] text-sage">{vi.appTagline}</p>
         </div>
 
-        <div className="lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
+        <div className="min-w-0 space-y-4 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
           <HomeForm />
+          <AccountPanel />
         </div>
 
         <div className="min-w-0 lg:pt-10">

@@ -10,6 +10,7 @@ import type {
   CommandPayload,
   DjEvent,
   TrackSummary,
+  UserView,
   PlayerCommand,
   PlayerRevokeReason,
   ReactionEvent,
@@ -19,6 +20,7 @@ import type {
 import type { ClientErrorCode } from '@/i18n/vi';
 import { applySnapshot } from '@/lib/room-store';
 import type { Pending, PendingOp } from './optimistic';
+import { readAccount, writeAccount } from '@/lib/account-store';
 import { readLocalFavorites, writeLocalFavorite } from '@/lib/local-favorites';
 import { clearToken, getToken, type SessionKind, setToken } from '@/lib/session-store';
 import {
@@ -28,6 +30,7 @@ import {
   healthUrl,
   send,
   setSocketAuth,
+  setSocketUser,
 } from '@/lib/socket';
 import { clockOffset } from '@/lib/time';
 
@@ -36,6 +39,8 @@ export type Connection = 'idle' | 'connecting' | 'connected' | 'reconnecting';
 export interface Health {
   searchEnabled: boolean;
   contractsVersion: string;
+  /** L1: Google sign-in is offered when the server has a client id. */
+  googleClientId?: string | null;
 }
 
 /** A chat message the server has not confirmed yet. */
@@ -73,6 +78,8 @@ export interface RoomState {
   favoriteIds: string[];
   /** Video ids saved on this device in any room (local-favorites.ts). */
   localFavorites: string[];
+  /** L1: the signed-in Google account, if any. */
+  user: UserView | null;
 }
 
 export const INITIAL_STATE: RoomState = {
@@ -94,6 +101,7 @@ export const INITIAL_STATE: RoomState = {
   chatPending: [],
   favoriteIds: [],
   localFavorites: [],
+  user: null,
 };
 
 type Listener<T> = (e: T) => void;
@@ -136,9 +144,19 @@ class RoomStore {
     if (this.socket || typeof window === 'undefined') return;
     const s = createSocket();
     this.socket = s;
-    this.set({ localFavorites: readLocalFavorites().map((f) => f.videoId) });
+    const account = readAccount();
+    if (account) setSocketUser(s, account.token);
+    this.set({ localFavorites: readLocalFavorites().map((f) => f.videoId), user: account?.user ?? null });
 
-    s.on('connect', () => this.set((st) => ({ connection: 'connected', connectCount: st.connectCount + 1 })));
+    s.on('connect', () => {
+      this.set((st) => ({ connection: 'connected', connectCount: st.connectCount + 1 }));
+      // A token the server no longer accepts (expired, revoked) signs this device out.
+      if (readAccount())
+        void send(s, 'auth:me', {}).then((r) => {
+          if (r.ok && !r.data.user) this.forgetAccount();
+          else if (r.ok && r.data.user) this.set({ user: r.data.user });
+        });
+    });
     s.on('disconnect', (reason) => {
       if (reason === 'io server disconnect') {
         // Kicked / left elsewhere: Socket.IO will not reconnect by itself. Come back
@@ -282,6 +300,34 @@ class RoomStore {
         : st.chatPending.map((m) => (m.id === id ? { ...m, failed: true, error: r.error } : m)),
     }));
     return r;
+  };
+
+  /** L1: Google ID token → account on this device; device favourites join the account. */
+  signInWithGoogle = async (credential: string): Promise<ClientAck<CommandResult<'auth:google'>>> => {
+    const r = await this.send('auth:google', { credential });
+    if (!r.ok) return r;
+    writeAccount({ token: r.data.token, user: r.data.user });
+    if (this.socket) setSocketUser(this.socket, r.data.token);
+    this.set({ user: r.data.user });
+    const local = readLocalFavorites().map((f) => f.videoId);
+    if (local.length) void this.send('me:favorites-import', { videoIds: local.slice(0, 300) });
+    return r;
+  };
+
+  private forgetAccount(): void {
+    writeAccount(null);
+    if (this.socket) setSocketUser(this.socket, null);
+    this.set({ user: null });
+  }
+
+  /** L1: forget the account here; reconnect so the server forgets it on this socket too. */
+  signOut = (): void => {
+    this.forgetAccount();
+    const s = this.socket;
+    if (s?.connected) {
+      s.disconnect();
+      s.connect();
+    }
   };
 
   /**
