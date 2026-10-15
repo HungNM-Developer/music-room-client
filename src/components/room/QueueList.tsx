@@ -19,22 +19,18 @@ const WishSheet = dynamic(() => import('./WishSheet').then((m) => m.WishSheet));
 
 interface Group {
   key: string;
-  title: string;
+  /** null: no heading (the queue has nothing pinned). */
+  title: string | null;
   items: QueueItemView[];
 }
 
-/** Pinned items first, then one group per fair-queue round (the queue is already in play order). */
-function groupByRound(queue: QueueItemView[]): Group[] {
+/** Pinned items first, then the rest (the queue is already in play order: hearts, then who added first). */
+function groupQueue(queue: QueueItemView[]): Group[] {
+  const pinned = queue.filter((q) => q.pinned);
+  const rest = queue.filter((q) => !q.pinned);
   const groups: Group[] = [];
-  for (const item of queue) {
-    const key = item.pinned ? 'pinned' : `round-${Math.max(1, item.round)}`;
-    let g = groups[groups.length - 1];
-    if (!g || g.key !== key) {
-      g = { key, title: item.pinned ? vi.queue.pinnedGroup : vi.queue.round(Math.max(1, item.round)), items: [] };
-      groups.push(g);
-    }
-    g.items.push(item);
-  }
+  if (pinned.length) groups.push({ key: 'pinned', title: vi.queue.pinnedGroup, items: pinned });
+  if (rest.length) groups.push({ key: 'rest', title: pinned.length ? vi.queue.restGroup : null, items: rest });
   return groups;
 }
 
@@ -67,9 +63,9 @@ export function QueueList({ onAdd }: { onAdd?: () => void }) {
         </div>
       ) : (
         <div className="space-y-4">
-          {groupByRound(items).map((g) => (
+          {groupQueue(items).map((g) => (
             <div key={g.key}>
-              <h3 className="mb-1 px-1 text-[13px] font-medium text-sage">{g.title}</h3>
+              {g.title && <h3 className="mb-1 px-1 text-[13px] font-medium text-sage">{g.title}</h3>}
               <ol className="divide-y divide-line/70 rounded-panel bg-panel px-1">
                 {g.items.map((item) => (
                   <QueueRow key={item.id} item={item} me={me} onMenu={setMenuFor} />
