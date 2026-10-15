@@ -25,6 +25,11 @@ export const vi = {
     hintName: 'Tên dài 1–30 ký tự',
     hintRoomName: 'Tên phòng dài 1–50 ký tự',
     hintCode: 'Mã phòng gồm 6 ký tự',
+    adminPin: 'Mã PIN quản trị',
+    adminPinNote: 'Dùng để lấy lại quyền quản trị khi cần. Hãy ghi nhớ mã này.',
+    hintPin: 'Mã PIN gồm 4–8 chữ số',
+    rejoinNote: 'Từng vào phòng này? Nhập đúng tên cũ để quay lại.',
+    pinNeeded: 'Tên này thuộc quản trị viên của phòng. Nhập mã PIN quản trị để vào lại.',
     steps: [
       'Tạo phòng, mở trang máy phát trên máy tính nối loa',
       'Mọi người quét mã QR trên màn hình để vào phòng',
@@ -162,6 +167,10 @@ export const vi = {
     kick: 'Mời ra khỏi phòng',
     kickConfirm: (name: string) => `Mời ${name} ra khỏi phòng?`,
     kickNote: 'Người này có thể vào lại bằng mã phòng.',
+    claimAdmin: 'Nhận quyền quản trị',
+    claimNote: 'Nhập mã PIN quản trị của phòng. Người tạo phòng đặt mã này lúc tạo phòng.',
+    claimSubmit: 'Nhận quyền',
+    claimed: 'Bạn đã là quản trị viên của phòng',
     kickYes: 'Mời ra',
     cancel: 'Hủy',
   },
@@ -180,6 +189,12 @@ export const vi = {
     errQueued: 'Nhập số nguyên từ 1 đến 20',
     errDuration: 'Nhập 0 hoặc số phút nguyên từ 1 đến 120',
     errFallback: 'Cần link dạng youtube.com/playlist?list=…',
+    pinTitle: 'Mã PIN quản trị',
+    pinHint: 'Ai biết mã này đều nhận được quyền quản trị, và quản trị viên mất phiên dùng nó để vào lại.',
+    pinMissing: 'Phòng chưa có mã PIN. Hãy đặt mã để có thể lấy lại quyền quản trị khi cần.',
+    pinNew: 'Mã PIN mới',
+    pinSave: 'Lưu mã PIN',
+    pinSaved: 'Đã đổi mã PIN quản trị',
   },
 
   chat: {
@@ -255,7 +270,12 @@ const ERRORS: Record<ClientErrorCode, (p: ErrorParams) => string> = {
   FORBIDDEN: () => 'Bạn không có quyền làm việc này. Hãy nhờ quản trị viên cấp quyền.',
   VALIDATION: () => 'Dữ liệu chưa hợp lệ. Hãy kiểm tra lại rồi thử lại.',
   ROOM_NOT_FOUND: () => 'Không tìm thấy phòng. Hãy kiểm tra lại mã phòng.',
-  NAME_TAKEN: () => 'Tên này đã có người dùng trong phòng. Hãy chọn tên khác.',
+  NAME_TAKEN: () => 'Tên này đang có người dùng trong phòng. Hãy chọn tên khác.',
+  PIN_REQUIRED: () => 'Tên này thuộc quản trị viên của phòng. Nhập mã PIN quản trị để vào lại.',
+  PIN_INVALID: (p) => `Mã PIN không đúng. Bạn còn ${p.remaining} lần thử.`,
+  PIN_LOCKED: (p) => `Nhập sai mã PIN quá nhiều lần. Hãy thử lại sau ${p.minutes} phút.`,
+  PIN_NOT_SET: () =>
+    'Phòng này chưa đặt mã PIN quản trị. Hãy nhờ một quản trị viên đặt mã trong Cài đặt phòng.',
   QUEUE_LIMIT: (p) =>
     `Bạn đã có ${p.max} bài đang chờ. Hãy đợi bài của bạn phát rồi thêm tiếp.`,
   TRACK_TOO_LONG: (p) =>

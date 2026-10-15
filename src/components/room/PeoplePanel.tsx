@@ -1,13 +1,16 @@
 'use client';
 
-import { MoreHorizontal } from 'lucide-react';
+import { KeyRound, MoreHorizontal } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button, IconButton } from '@/components/ui/Button';
 import { Dialog, SheetAction } from '@/components/ui/Dialog';
+import { PinField } from '@/components/ui/PinField';
+import { useToast } from '@/components/ui/Toast';
 import type { MemberView } from '@/contracts';
 import { useAct } from '@/hooks/useAct';
 import { vi } from '@/i18n/vi';
+import { isPin } from '@/lib/validate';
 import { useMe, useRoom } from '@/state/hooks';
 import { applyMembers } from '@/state/optimistic';
 
@@ -28,6 +31,8 @@ export function PeoplePanel() {
   const act = useAct();
   const [menuFor, setMenuFor] = useState<MemberView | null>(null);
   const [kick, setKick] = useState<MemberView | null>(null);
+  const hasPin = useRoom((s) => s.snapshot?.room.hasPin ?? false);
+  const [claiming, setClaiming] = useState(false);
   const sorted = useMemo(
     () =>
       [...applyMembers(members ?? [], pending)].sort(
@@ -51,6 +56,11 @@ export function PeoplePanel() {
         </h2>
         <p className="text-[13px] text-sage">{vi.people.online(online)}</p>
       </div>
+      {me && !isAdmin && !me.isDevice && hasPin && (
+        <Button size="sm" className="mb-3 w-full" onClick={() => setClaiming(true)}>
+          <KeyRound className="h-4 w-4" aria-hidden /> {vi.people.claimAdmin}
+        </Button>
+      )}
 
       <ul className="divide-y divide-line/70 rounded-panel bg-panel px-1">
         {sorted.map((m) => (
@@ -128,6 +138,44 @@ export function PeoplePanel() {
           </div>
         </Dialog>
       )}
+      {claiming && <ClaimAdminDialog onClose={() => setClaiming(false)} />}
     </section>
+  );
+}
+
+/** Any member who knows the room PIN becomes admin (admin:claim). */
+function ClaimAdminDialog({ onClose }: { onClose: () => void }) {
+  const act = useAct();
+  const toast = useToast();
+  const [pin, setPin] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!isPin(pin) || busy) return;
+    setBusy(true);
+    // Wrong PIN / lockout messages come back as toasts; the dialog stays open to retry.
+    const ok = await act('admin:claim', { pin });
+    setBusy(false);
+    if (!ok) return;
+    toast(vi.people.claimed, 'success');
+    onClose();
+  }
+
+  return (
+    <Dialog open onClose={onClose} title={vi.people.claimAdmin}>
+      <form onSubmit={submit} className="space-y-4" noValidate>
+        <p className="text-sage">{vi.people.claimNote}</p>
+        <PinField value={pin} onChange={setPin} />
+        <div className="flex gap-2">
+          <Button className="flex-1" onClick={onClose}>
+            {vi.people.cancel}
+          </Button>
+          <Button type="submit" variant="primary" className="flex-1" disabled={!isPin(pin) || busy} aria-busy={busy}>
+            {vi.people.claimSubmit}
+          </Button>
+        </div>
+      </form>
+    </Dialog>
   );
 }

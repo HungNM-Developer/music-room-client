@@ -46,17 +46,24 @@ export function clearToken(code: string, kind: SessionKind = 'member'): void {
   }
 }
 
-/** Remembered display name to prefill the join form. */
-export function lastName(): string {
+/**
+ * Remembered display name to prefill the forms. With a room code, the name used in that
+ * room comes first: typing the same name again is how someone whose token was lost
+ * comes back as the same member.
+ */
+export function lastName(code?: string): string {
   try {
-    return storage()?.getItem(`${PREFIX}name`) ?? '';
+    const s = storage();
+    return (code ? s?.getItem(`${PREFIX}name:${code}`) : null) ?? s?.getItem(`${PREFIX}name`) ?? '';
   } catch {
     return '';
   }
 }
-export function rememberName(name: string): void {
+export function rememberName(name: string, code?: string): void {
   try {
-    storage()?.setItem(`${PREFIX}name`, name);
+    const s = storage();
+    s?.setItem(`${PREFIX}name`, name);
+    if (code) s?.setItem(`${PREFIX}name:${code}`, name);
   } catch {
     // ignore
   }
