@@ -218,6 +218,23 @@ export const vi = {
     tracksLabel: 'Bài trong playlist',
   },
 
+  ytImport: {
+    open: 'Nhập từ YouTube',
+    title: 'Nhập từ YouTube',
+    note: 'Music Room chỉ đọc playlist và video đã thích của bạn, không lưu quyền truy cập. Quyền tự hết hạn sau khi đóng hộp này.',
+    connecting: 'Đang kết nối YouTube…',
+    musicOnly: 'Chỉ lấy bài nhạc',
+    liked: 'Video đã thích',
+    count: (n: number) => `${n} video`,
+    import: 'Nhập',
+    update: 'Cập nhật',
+    done: (name: string, n: number, skipped: number) =>
+      skipped ? `Đã nhập ${n} bài vào "${name}" (bỏ qua ${skipped} video)` : `Đã nhập ${n} bài vào "${name}"`,
+    empty: 'Tài khoản YouTube này chưa có playlist nào.',
+    cancelled: 'Chưa cấp quyền YouTube.',
+    listLabel: 'Nguồn trên YouTube',
+  },
+
   playlist: {
     open: 'Mở playlist',
     openWhole: 'Mở cả playlist',
@@ -455,6 +472,8 @@ const ERRORS: Record<ClientErrorCode, (p: ErrorParams) => string> = {
   PLAYLIST_NOT_FOUND: () => 'Không tìm thấy playlist. Có thể chủ playlist đã tắt chia sẻ hoặc xoá nó.',
   PLAYLIST_LIMIT: (p) => `Bạn đã có ${p.max} playlist. Hãy xoá bớt playlist cũ để tạo mới.`,
   PLAYLIST_FULL: (p) => `Playlist đã đủ ${p.max} bài.`,
+  YOUTUBE_ACCESS_DENIED: () =>
+    'YouTube không cho đọc dữ liệu. Hãy cấp quyền lại; nếu vẫn lỗi, nhờ quản trị thêm email của bạn vào danh sách người dùng thử của app.',
   AI_UNAVAILABLE: () => 'DJ đang bận hoặc hết lượt miễn phí hôm nay. Hãy thử lại sau ít phút.',
   PLAYLIST_EMPTY: () => 'Playlist này không có bài nào phát được (trống, riêng tư hoặc bị chặn nhúng).',
   QUEUE_LIMIT: (p) =>
