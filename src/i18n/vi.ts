@@ -100,7 +100,7 @@ export const vi = {
     pinnedGroup: 'Phát tiếp theo',
     addingGroup: 'Đang thêm',
     addingTitle: 'Bài từ link YouTube',
-    round: (n: number) => `Lượt ${n}`,
+    restGroup: 'Sau đó',
     you: 'bạn',
     heart: 'Thả tim',
     unheart: 'Bỏ tim',
