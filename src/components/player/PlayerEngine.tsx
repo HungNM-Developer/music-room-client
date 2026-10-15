@@ -165,7 +165,10 @@ export function PlayerEngine({ volume = 100 }: { volume?: number }) {
         return;
       }
       const autoplay = playerCommand.status === 'PLAYING';
-      const wish = playerCommand.wish;
+      // A wish first; otherwise the MC's line (AI3), read in the radio voice.
+      const wish =
+        playerCommand.wish ??
+        (playerCommand.intro ? { message: playerCommand.intro, voicePreset: 'radio' as const } : null);
       a.load(playerCommand.videoId, expected, autoplay);
       if (wish && autoplay && expected < 3) {
         const restore = () => {

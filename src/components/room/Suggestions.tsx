@@ -48,27 +48,7 @@ export function Suggestions() {
       {items.length === 0 ? (
         <p className="px-1 text-[14px] text-sage">{vi.suggest.empty}</p>
       ) : (
-        <ul aria-label={vi.suggest.listLabel} className="divide-y divide-line/70 rounded-panel bg-panel px-1">
-          {shown.map((s) =>
-            s.kind === 'track' ? (
-              <TrackRow
-                key={s.track.id}
-                track={s.track}
-                done={added.has(s.track.id)}
-                onAdd={() => void add(s.track.id, s.track)}
-                meta={
-                  <p className="flex gap-2">
-                    <span className="shrink-0 text-amber/90">{vi.suggest.reasons[s.reason]}</span>
-                    {(s.track.artist ?? s.track.channel) && <span className="truncate">{s.track.artist ?? s.track.channel}</span>}
-                    {s.track.durationSec ? <span className="shrink-0 tabular-nums">{formatDuration(s.track.durationSec)}</span> : null}
-                  </p>
-                }
-              />
-            ) : (
-              <SearchRow key={`${s.artist}|${s.song}`} artist={s.artist} song={s.song} add={add} />
-            ),
-          )}
-        </ul>
+        <SuggestionList items={shown} label={vi.suggest.listLabel} add={add} added={added} />
       )}
       {items.length > COLLAPSED && (
         <Button size="sm" variant="ghost" className="w-full" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
@@ -79,14 +59,53 @@ export function Suggestions() {
   );
 }
 
-/** A Last.fm pick with no video on the server yet: search, then add the first result. */
+/** Suggestion rows (A3, AI2): known songs add in one tap, the rest run a search. */
+export function SuggestionList({
+  items,
+  label,
+  add,
+  added,
+}: {
+  items: SuggestionView[];
+  label: string;
+  add: ReturnType<typeof useAddTrack>['add'];
+  added: Set<string>;
+}) {
+  return (
+    <ul aria-label={label} className="divide-y divide-line/70 rounded-panel bg-panel px-1">
+      {items.map((s) =>
+        s.kind === 'track' ? (
+          <TrackRow
+            key={s.track.id}
+            track={s.track}
+            done={added.has(s.track.id)}
+            onAdd={() => void add(s.track.id, s.track)}
+            meta={
+              <p className="flex gap-2">
+                <span className="shrink-0 text-amber/90">{vi.suggest.reasons[s.reason]}</span>
+                {(s.track.artist ?? s.track.channel) && <span className="truncate">{s.track.artist ?? s.track.channel}</span>}
+                {s.track.durationSec ? <span className="shrink-0 tabular-nums">{formatDuration(s.track.durationSec)}</span> : null}
+              </p>
+            }
+          />
+        ) : (
+          <SearchRow key={`${s.artist}|${s.song}`} artist={s.artist} song={s.song} reason={s.reason} add={add} />
+        ),
+      )}
+    </ul>
+  );
+}
+
+/** A suggested song with no video on the server yet: search, then add the first result. */
 function SearchRow({
   artist,
   song,
+  reason,
   add,
 }: {
   artist: string;
   song: string;
+  reason: 'similar' | 'dj';
   add: ReturnType<typeof useAddTrack>['add'];
 }) {
   const toast = useToast();
@@ -116,7 +135,7 @@ function SearchRow({
         <p className="line-clamp-2 text-[14px] font-medium leading-snug">{song}</p>
         <p className="mt-0.5 flex gap-2 text-[12px] text-sage">
           <span className="truncate">{artist}</span>
-          <span className="shrink-0">{vi.suggest.fromLastfm}</span>
+          <span className="shrink-0">{reason === 'dj' ? vi.suggest.reasons.dj : vi.suggest.fromLastfm}</span>
         </p>
       </div>
       <Button size="sm" disabled={busy || done} aria-busy={busy} onClick={findAndAdd} aria-label={vi.suggest.findAndAddLabel(song, artist)}>

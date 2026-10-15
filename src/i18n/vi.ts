@@ -131,6 +131,35 @@ export const vi = {
     results: 'Kết quả tìm kiếm',
   },
 
+  djAsk: {
+    tab: 'Hỏi DJ',
+    label: 'Bạn muốn nghe gì?',
+    placeholder: 'Nhạc chill chiều thứ 6, ballad Việt 2010s…',
+    ask: 'Hỏi DJ',
+    asking: 'DJ đang chọn bài…',
+    examples: ['Nhạc chill để tập trung', 'Ballad Việt nhẹ nhàng', 'Nhạc sôi động cuối tuần', 'Lofi không lời'],
+    note: 'DJ dùng AI miễn phí nên mỗi người hỏi được 3 lần mỗi giờ.',
+    empty: 'DJ chưa tìm được bài phù hợp. Thử mô tả khác nhé.',
+    listLabel: 'Bài DJ gợi ý',
+  },
+
+  recap: {
+    title: 'Tổng kết',
+    today: 'Hôm nay',
+    week: '7 ngày',
+    periodLabel: 'Khoảng thời gian',
+    plays: 'bài đã phát',
+    minutes: 'phút nghe nhạc',
+    skipped: 'bài bị bỏ qua',
+    topSongs: 'Bài được nghe nhiều',
+    topPickers: 'Người chọn bài hay',
+    pickerLine: (songs: number, hearts: number) => `${songs} bài, ${hearts} tim`,
+    songLine: (plays: number, hearts: number) => (hearts ? `${plays} lần phát, ${hearts} tim` : `${plays} lần phát`),
+    busiest: (hour: number) => `Giờ sôi động nhất: ${hour}:00–${hour + 1}:00`,
+    empty: 'Chưa có bài nào được phát trong khoảng này.',
+    loading: 'Đang tổng hợp…',
+  },
+
   playlist: {
     open: 'Mở playlist',
     openWhole: 'Mở cả playlist',
@@ -162,6 +191,7 @@ export const vi = {
       room: 'Phòng hay nghe tiếp',
       artist: 'Cùng nghệ sĩ',
       popular: 'Phòng thích',
+      dj: 'DJ gợi ý',
     },
     fromLastfm: 'Gợi ý từ Last.fm, chưa có trên máy chủ',
     findAndAdd: 'Tìm & thêm',
@@ -253,6 +283,8 @@ export const vi = {
     fallback: 'Playlist dự phòng (link YouTube)',
     fallbackHint: 'Phát khi hàng chờ trống. Cần máy chủ có YOUTUBE_API_KEY.',
     allowGuestDj: 'Cho thành viên mới dùng DJ',
+    mcIntro: 'MC giới thiệu bài trước khi phát',
+    mcIntroHint: 'Loa đọc một câu dẫn ngắn do AI viết trước mỗi bài thành viên chọn. Bài có lời chúc thì đọc lời chúc.',
     autoRadio: 'Radio tự động khi hàng chờ trống',
     autoRadioHint:
       'Phát tiếp những bài giống bài vừa nghe, chỉ chọn trong các bài máy chủ đã biết nên không tốn lượt tìm YouTube. Có playlist dự phòng thì Radio được ưu tiên trước.',
@@ -357,6 +389,8 @@ const ERRORS: Record<ClientErrorCode, (p: ErrorParams) => string> = {
     `Bài này vừa phát ${p.minutes} phút trước. Phòng chỉ cho thêm lại sau ${p.gap} phút.`,
   PLAYLIST_UNAVAILABLE: () =>
     'Máy chủ chưa bật YouTube API nên chưa đọc được playlist. Hãy dán link từng bài.',
+  MESSAGE_BLOCKED: () => 'Lời chúc có từ ngữ không phù hợp để đọc to. Hãy viết lại nhé.',
+  AI_UNAVAILABLE: () => 'DJ đang bận hoặc hết lượt miễn phí hôm nay. Hãy thử lại sau ít phút.',
   PLAYLIST_EMPTY: () => 'Playlist này không có bài nào phát được (trống, riêng tư hoặc bị chặn nhúng).',
   QUEUE_LIMIT: (p) =>
     `Bạn đã có ${p.max} bài đang chờ. Hãy đợi bài của bạn phát rồi thêm tiếp.`,

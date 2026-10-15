@@ -11,15 +11,17 @@ import { vi } from '@/i18n/vi';
 import { classifyInput, playlistIn } from '@/lib/add-input';
 import { formatDuration } from '@/lib/time';
 import { useMe, useRoom } from '@/state/hooks';
+import { DjAsk } from './DjAsk';
 import { PlayedList, SavedList } from './LibraryLists';
 import { PlaylistPicker } from './PlaylistPicker';
 import { TrackRow } from './TrackRow';
 
-type Source = 'search' | 'played' | 'saved';
+type Source = 'search' | 'played' | 'saved' | 'dj';
 
 export function AddTrackPanel() {
   const me = useMe();
   const [source, setSource] = useState<Source>('search');
+  const aiEnabled = useRoom((s) => s.snapshot?.aiEnabled ?? false);
   const { add, added } = useAddTrack();
 
   if (me?.isDevice) return null;
@@ -37,6 +39,7 @@ export function AddTrackPanel() {
           { key: 'search', label: vi.library.tabSearch },
           { key: 'played', label: vi.library.tabPlayed },
           { key: 'saved', label: vi.library.tabSaved },
+          ...(aiEnabled ? [{ key: 'dj' as const, label: vi.djAsk.tab }] : []),
         ]}
         value={source}
         onChange={setSource}
@@ -45,6 +48,7 @@ export function AddTrackPanel() {
         {source === 'search' && <SearchPanel add={add} added={added} />}
         {source === 'played' && <PlayedList add={add} added={added} />}
         {source === 'saved' && <SavedList add={add} added={added} />}
+        {source === 'dj' && <DjAsk add={add} added={added} />}
       </div>
     </section>
   );

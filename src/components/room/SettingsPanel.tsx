@@ -14,6 +14,7 @@ import { useMe, useRoom } from '@/state/hooks';
 
 export function SettingsPanel() {
   const settings = useRoom((s) => s.snapshot?.room.settings);
+  const aiEnabled = useRoom((s) => s.snapshot?.aiEnabled ?? false);
   const me = useMe();
   const act = useAct();
   const toast = useToast();
@@ -56,6 +57,15 @@ export function SettingsPanel() {
           <Field label={vi.settings.fallback} value={form.fallbackUrl} placeholder="https://www.youtube.com/playlist?list=…" onChange={(e) => set({ fallbackUrl: e.target.value })} hint={vi.settings.errFallback} invalid={errors.fallbackUrl} />
           <p className="text-[13px] text-sage">{vi.settings.fallbackHint}</p>
         </div>
+        {aiEnabled && (
+          <div className="space-y-1">
+            <label className="flex min-h-11 items-center gap-3">
+              <input type="checkbox" checked={form.mcIntro} onChange={(e) => set({ mcIntro: e.target.checked })} className="h-5 w-5 accent-amber" />
+              {vi.settings.mcIntro}
+            </label>
+            <p className="pl-8 text-[13px] text-sage">{vi.settings.mcIntroHint}</p>
+          </div>
+        )}
         <div className="space-y-1">
           <label className="flex min-h-11 items-center gap-3">
             <input type="checkbox" checked={form.autoRadio} onChange={(e) => set({ autoRadio: e.target.checked })} className="h-5 w-5 accent-amber" />
