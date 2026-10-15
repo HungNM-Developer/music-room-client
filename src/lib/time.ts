@@ -42,3 +42,15 @@ export function formatClock(iso: string, timeZone?: string): string {
     ...(timeZone ? { timeZone } : {}),
   }).format(new Date(iso));
 }
+
+/** "vừa xong", "5 phút trước", "3 giờ trước", "2 ngày trước", then the date. */
+export function formatAgo(iso: string, now = Date.now()): string {
+  const min = Math.floor((now - new Date(iso).getTime()) / 60_000);
+  if (min < 1) return 'vừa xong';
+  if (min < 60) return `${min} phút trước`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `${h} giờ trước`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d} ngày trước`;
+  return new Intl.DateTimeFormat('vi-VN', { day: 'numeric', month: 'numeric' }).format(new Date(iso));
+}

@@ -9,6 +9,7 @@ import type {
   CommandName,
   CommandPayload,
   DjEvent,
+  TrackSummary,
   PlayerCommand,
   PlayerRevokeReason,
   ReactionEvent,
@@ -18,6 +19,7 @@ import type {
 import type { ClientErrorCode } from '@/i18n/vi';
 import { applySnapshot } from '@/lib/room-store';
 import type { Pending, PendingOp } from './optimistic';
+import { readLocalFavorites, writeLocalFavorite } from '@/lib/local-favorites';
 import { clearToken, getToken, type SessionKind, setToken } from '@/lib/session-store';
 import {
   type ClientAck,
@@ -67,6 +69,10 @@ export interface RoomState {
   /** Optimistic overlays, from click until the server's ack (see optimistic.ts). */
   pending: Pending[];
   chatPending: PendingChat[];
+  /** Track ids this member saved in this room ("Lưu", A2), pushed by the server. */
+  favoriteIds: string[];
+  /** Video ids saved on this device in any room (local-favorites.ts). */
+  localFavorites: string[];
 }
 
 export const INITIAL_STATE: RoomState = {
@@ -86,6 +92,8 @@ export const INITIAL_STATE: RoomState = {
   playerRevoked: null,
   pending: [],
   chatPending: [],
+  favoriteIds: [],
+  localFavorites: [],
 };
 
 type Listener<T> = (e: T) => void;
@@ -100,6 +108,7 @@ const ROOM_RESET: Partial<RoomState> = {
   playerRevoked: null,
   pending: [],
   chatPending: [],
+  favoriteIds: [],
 };
 
 class RoomStore {
@@ -127,6 +136,7 @@ class RoomStore {
     if (this.socket || typeof window === 'undefined') return;
     const s = createSocket();
     this.socket = s;
+    this.set({ localFavorites: readLocalFavorites().map((f) => f.videoId) });
 
     s.on('connect', () => this.set((st) => ({ connection: 'connected', connectCount: st.connectCount + 1 })));
     s.on('disconnect', (reason) => {
@@ -170,6 +180,7 @@ class RoomStore {
     s.on('activity:history', (logs: ActivityLogView[]) => this.set({ logs }));
     s.on('activity:new', (l: ActivityLogView) => this.set((st) => ({ logs: [l, ...st.logs].slice(0, 200) })));
     s.on('player:command', (c: PlayerCommand) => this.set({ playerCommand: c, playerRevoked: null }));
+    s.on('favorite:ids', (d: { trackIds: string[] }) => this.set({ favoriteIds: d.trackIds }));
     s.on('player:revoked', (d: { reason: PlayerRevokeReason }) =>
       this.set({ playerRevoked: d.reason, playerCommand: null }),
     );
@@ -270,6 +281,25 @@ class RoomStore {
         ? st.chatPending.filter((m) => m.id !== id)
         : st.chatPending.map((m) => (m.id === id ? { ...m, failed: true, error: r.error } : m)),
     }));
+    return r;
+  };
+
+  /**
+   * Save / unsave a song ("Lưu"): in this room for this member (server) and on this
+   * device for every room. Shown at once; rolled back if the server refuses.
+   */
+  setFavorite = async (track: TrackSummary, saved: boolean): Promise<ClientAck<CommandResult<'favorite:set'>>> => {
+    const before = { favoriteIds: this.state.favoriteIds, localFavorites: this.state.localFavorites };
+    const local = writeLocalFavorite(track.externalId, saved).map((f) => f.videoId);
+    this.set((st) => ({
+      favoriteIds: saved ? [...new Set([...st.favoriteIds, track.id])] : st.favoriteIds.filter((id) => id !== track.id),
+      localFavorites: local,
+    }));
+    const r = await this.send('favorite:set', { trackId: track.id, saved });
+    if (!r.ok) {
+      writeLocalFavorite(track.externalId, !saved);
+      this.set(before);
+    }
     return r;
   };
 

@@ -9,6 +9,7 @@ import { useAct } from '@/hooks/useAct';
 import { vi } from '@/i18n/vi';
 import { estimatePosition } from '@/lib/time';
 import { useMe, useNowPlaying, useRoom } from '@/state/hooks';
+import { SaveButton } from './SaveButton';
 import { LiveDial } from './TuningDial';
 
 /** The song on air: cover, who picked it, their wish, the dial and the controls. */
@@ -50,6 +51,9 @@ export function NowPlayingCard() {
             {picker ? vi.nowPlaying.pickedBy(picker) : vi.nowPlaying.fallback}
           </p>
           {t.channel && <p className="truncate text-[13px] text-sage/80">{t.channel}</p>}
+        </div>
+        <div className="-mr-2 -mt-2 shrink-0">
+          <SaveButton track={t} />
         </div>
       </div>
 
