@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { GoogleButton } from '@/components/account/GoogleButton';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
 import { Field } from '@/components/ui/Field';
@@ -10,6 +11,7 @@ import { PinField } from '@/components/ui/PinField';
 import { errorMessage, vi } from '@/i18n/vi';
 import { lastName, rememberName } from '@/lib/session-store';
 import { isDisplayName, isPin } from '@/lib/validate';
+import { useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 
 /** Shown on /r/CODE when there is no valid session (TC-015, TC-021). Cannot be dismissed. */
@@ -41,6 +43,23 @@ export function JoinDialog({ code, notice }: { code: string; notice?: string | n
     };
   }, [code]);
 
+  // L1: signed in → straight in as the account's member (no name needed). Not after a
+  // kick or a "left" notice: then the person decides.
+  const user = useRoom((s) => s.user);
+  const [auto, setAuto] = useState<'idle' | 'joining' | 'failed'>('idle');
+  const tried = useRef(false);
+  useEffect(() => {
+    if (!user || notice || tried.current) return;
+    tried.current = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one automatic attempt per dialog
+    setAuto('joining');
+    void room.send('room:join', { code }).then((r) => {
+      if (r.ok) return;
+      setAuto('failed');
+      setError(errorMessage(r.error.code, r.error.params));
+    });
+  }, [user, notice, code]);
+
   const valid = isDisplayName(name) && (!needPin || isPin(pin));
 
   async function submit(e: React.FormEvent) {
@@ -56,6 +75,16 @@ export function JoinDialog({ code, notice }: { code: string; notice?: string | n
       rememberName(name.trim(), r.data.code);
       if (r.data.rightsReset) toast(vi.home.rightsReset, 'info');
     }
+  }
+
+  if (user && auto === 'joining') {
+    return (
+      <Dialog open dismissable={false} onClose={() => undefined} title={roomName ? vi.joinDialog.title(roomName) : vi.joinDialog.loading}>
+        <p role="status" className="text-sage">
+          {vi.account.joining(user.name)}
+        </p>
+      </Dialog>
+    );
   }
 
   return (
@@ -82,6 +111,11 @@ export function JoinDialog({ code, notice }: { code: string; notice?: string | n
         <Button type="submit" variant="primary" disabled={!valid || busy || !roomName} className="w-full">
           {vi.joinDialog.submit}
         </Button>
+        {!user && (
+          <div className="flex flex-col items-center gap-2 border-t border-line/70 pt-4">
+            <GoogleButton width={260} />
+          </div>
+        )}
         <Link href="/" className="block py-2 text-center text-[14px] text-sage hover:text-paper">
           {vi.joinDialog.backHome}
         </Link>

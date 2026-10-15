@@ -12,6 +12,7 @@ import { useSlow } from '@/hooks/useSlow';
 import { errorMessage, vi } from '@/i18n/vi';
 import { lastName, rememberName } from '@/lib/session-store';
 import { isDisplayName, isPin, isRoomCode, isRoomName } from '@/lib/validate';
+import { useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 
 type Mode = 'create' | 'join';
@@ -31,9 +32,10 @@ export function HomeForm() {
   const [error, setError] = useState<string | null>(null);
   const slow = useSlow(busy, 3000);
 
-  // Prefill after hydration: the server render has no localStorage.
+  const user = useRoom((s) => s.user);
+  // Prefill after hydration: the server render has no localStorage. Signed in → Google name.
   // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => setName((n) => n || lastName()), []);
+  useEffect(() => setName((n) => n || lastName() || user?.name.slice(0, 30) || ''), [user]);
 
   const ok = {
     name: isDisplayName(name),

@@ -28,9 +28,18 @@ export function createSocket(): Socket {
   });
 }
 
-/** Token sent on the next (re)connection handshake. */
+/**
+ * Tokens sent on the next (re)connection handshake: the room member token, plus the
+ * account token when signed in (L1). Changing one keeps the other.
+ */
 export function setSocketAuth(socket: Socket, token: string | null): void {
-  socket.auth = token ? { token } : {};
+  const userToken = (socket.auth as { userToken?: string } | undefined)?.userToken;
+  socket.auth = { ...(token ? { token } : {}), ...(userToken ? { userToken } : {}) };
+}
+
+export function setSocketUser(socket: Socket, userToken: string | null): void {
+  const token = (socket.auth as { token?: string } | undefined)?.token;
+  socket.auth = { ...(token ? { token } : {}), ...(userToken ? { userToken } : {}) };
 }
 
 export interface AckEmitter {
