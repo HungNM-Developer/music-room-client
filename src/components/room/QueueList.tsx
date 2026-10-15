@@ -4,6 +4,7 @@ import { Heart, Loader2, Mail, MoreHorizontal, Pin, PinOff, Plus, Trash2 } from 
 import dynamic from 'next/dynamic';
 import { memo, useMemo, useState } from 'react';
 import { Button, IconButton } from '@/components/ui/Button';
+import { SaveButton } from './SaveButton';
 import { Dialog, SheetAction } from '@/components/ui/Dialog';
 import { Thumb } from '@/components/ui/Thumb';
 import type { MemberView, QueueItemView } from '@/contracts';
@@ -135,6 +136,7 @@ const QueueRow = memo(function QueueRow({
           {item.wishMessage && <Mail className="h-3.5 w-3.5 shrink-0 text-amber" aria-label={vi.queue.hasWish} />}
         </p>
       </div>
+      <SaveButton track={item.track} />
       {me && !me.isDevice ? (
         <button
           type="button"
