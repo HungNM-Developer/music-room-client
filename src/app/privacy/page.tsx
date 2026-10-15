@@ -65,6 +65,18 @@ export default function PrivacyPage() {
         </li>
       </ul>
 
+      <h2>Cam kết sử dụng giới hạn dữ liệu Google</h2>
+      <p>
+        Việc Music Room sử dụng và chuyển giao thông tin nhận được từ Google API tuân theo{' '}
+        <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer">
+          Chính sách dữ liệu người dùng của Google API Services
+        </a>
+        , bao gồm các yêu cầu Sử dụng giới hạn (Limited Use). Dữ liệu từ tài khoản Google / YouTube của bạn chỉ dùng để cung cấp
+        các tính năng bạn thấy trong ứng dụng; không dùng để quảng cáo, không bán, không cho người khác đọc và không dùng để phát
+        triển, cải thiện hay huấn luyện mô hình AI. Khi chuẩn hoá tên bài, chỉ tiêu đề video công khai (không kèm thông tin nào về
+        bạn) được gửi tới nhà cung cấp AI.
+      </p>
+
       <h2>Chúng tôi dùng dữ liệu để làm gì</h2>
       <ul>
         <li>Vận hành phòng nhạc: hàng chờ công bằng, quyền quản trị, trò chuyện, máy phát.</li>
@@ -85,7 +97,8 @@ export default function PrivacyPage() {
         </li>
         <li>
           <strong>Nhà cung cấp AI (Google Gemini, Groq, OpenRouter):</strong> tiêu đề bài hát, yêu cầu gửi cho “Hỏi DJ”, lời chúc
-          (để kiểm tra trước khi đọc to) và số liệu tổng kết của phòng. Không gửi email hay thông tin tài khoản.
+          (để kiểm tra trước khi đọc to) và số liệu tổng kết của phòng. Không gửi email, thông tin tài khoản hay tên của bất kỳ ai:
+          tên người chọn bài được thay bằng ký hiệu, máy chủ tự điền lại tên sau khi AI trả lời.
         </li>
         <li>
           <strong>Hạ tầng:</strong> Vercel (giao diện web), Render (máy chủ) và Neon (cơ sở dữ liệu, đặt tại Singapore).
@@ -127,8 +140,16 @@ export default function PrivacyPage() {
           myaccount.google.com/permissions
         </a>
         . YouTube data is refreshed or deleted within 30 days. Song titles and artist names are sent to Last.fm, LRCLIB and AI
-        providers to suggest songs, fetch lyrics and moderate wishes; data is never sold or used for ads. To delete your account
-        and its data, email <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
+        providers to suggest songs, fetch lyrics and moderate wishes; people’s names are never sent to AI providers (they are
+        replaced by placeholders and filled back in on our server). Music Room’s use and transfer to any other app of information
+        received from Google APIs will adhere to the{' '}
+        <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer">
+          Google API Services User Data Policy
+        </a>
+        , including the Limited Use requirements. Google user data is never used for advertising, never sold, never read by
+        people, and never used to develop, improve or train AI or machine-learning models; only public YouTube video titles, never
+        linked to you, are sent to AI providers to normalise song names. To delete your account and its data, email{' '}
+        <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
       </p>
     </LegalPage>
   );
