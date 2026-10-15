@@ -14,6 +14,7 @@ import { useMe, useRoom } from '@/state/hooks';
 import { DjAsk } from './DjAsk';
 import { PlayedList, SavedList } from './LibraryLists';
 import { MyPlaylists } from './MyPlaylists';
+import { TasteCard } from './TasteCard';
 import { type PickerSource, PlaylistPicker } from './PlaylistPicker';
 import { TrackRow } from './TrackRow';
 
@@ -189,10 +190,15 @@ function SearchPanel({ add, added }: { add: (input: string, known?: TrackSummary
 function MineTab({ add, added }: { add: (input: string, known?: TrackSummary) => Promise<boolean>; added: Set<string> }) {
   const user = useRoom((s) => s.user);
   const canSignIn = useRoom((s) => Boolean(s.health?.googleClientId));
+  // Saving "Dành cho bạn" adds or updates a playlist: reload the list.
+  const [listKey, setListKey] = useState(0);
   return (
     <div className="space-y-6">
       {user ? (
-        <MyPlaylists add={add} added={added} />
+        <>
+          <TasteCard onSaved={() => setListKey((k) => k + 1)} />
+          <MyPlaylists key={listKey} add={add} added={added} />
+        </>
       ) : (
         canSignIn && <p className="px-1 text-[13px] text-sage">{vi.playlists.signInHint}</p>
       )}
