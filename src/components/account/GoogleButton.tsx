@@ -16,14 +16,23 @@ interface GoogleId {
   }): void;
   renderButton(el: HTMLElement, o: Record<string, unknown>): void;
 }
+interface GoogleOAuth2 {
+  initTokenClient(o: {
+    client_id: string;
+    scope: string;
+    callback: (r: { access_token?: string; error?: string }) => void;
+    error_callback?: (e: { type?: string }) => void;
+  }): { requestAccessToken(o?: { prompt?: string }): void };
+  revoke(token: string, done?: () => void): void;
+}
 declare global {
   interface Window {
-    google?: { accounts?: { id?: GoogleId } };
+    google?: { accounts?: { id?: GoogleId; oauth2?: GoogleOAuth2 } };
   }
 }
 
 let loading: Promise<GoogleId> | null = null;
-/** Google Identity Services, loaded once and only when a sign-in button is shown. */
+/** Google Identity Services, loaded once and only when a Google feature is used. */
 function loadGis(): Promise<GoogleId> {
   const ready = window.google?.accounts?.id;
   if (ready) return Promise.resolve(ready);
@@ -76,4 +85,36 @@ export function GoogleButton({ width = 280 }: { width?: number }) {
 
   if (!clientId) return null;
   return <div ref={box} className="min-h-11" />;
+}
+
+const YOUTUBE_SCOPE = 'https://www.googleapis.com/auth/youtube.readonly';
+
+/** L3: load Google's script ahead of time, so the permission popup can open on the click itself. */
+export function preloadGis(): void {
+  void loadGis().catch(() => undefined);
+}
+
+/**
+ * L3: a short-lived, read-only YouTube access token from a Google popup (null when the
+ * person closes it or says no). Call it straight from a click: browsers block popups
+ * that open after an await, so the script must already be loaded (preloadGis).
+ */
+export function requestYouTubeToken(clientId: string): Promise<string | null> {
+  const oauth2 = window.google?.accounts?.oauth2;
+  if (!oauth2) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    oauth2
+      .initTokenClient({
+        client_id: clientId,
+        scope: YOUTUBE_SCOPE,
+        callback: (r) => resolve(r.access_token ?? null),
+        error_callback: () => resolve(null),
+      })
+      .requestAccessToken({ prompt: '' });
+  });
+}
+
+/** Gives the YouTube permission back as soon as the import is done. */
+export function revokeYouTubeToken(token: string): void {
+  window.google?.accounts?.oauth2?.revoke(token);
 }

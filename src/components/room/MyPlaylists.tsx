@@ -13,6 +13,7 @@ import { errorMessage, vi } from '@/i18n/vi';
 import { formatDuration } from '@/lib/time';
 import { useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
+import { YouTubeImport } from './YouTubeImport';
 
 type Add = ReturnType<typeof useAddTrack>['add'];
 
@@ -20,6 +21,7 @@ type Add = ReturnType<typeof useAddTrack>['add'];
 export function MyPlaylists({ add, added }: { add: Add; added: Set<string> }) {
   const [lists, setLists] = useState<PlaylistSummaryView[] | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [version, setVersion] = useState(0);
 
   const load = useCallback(async () => {
     const r = await room.send('playlist:mine', {});
@@ -28,16 +30,19 @@ export function MyPlaylists({ add, added }: { add: Add; added: Set<string> }) {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- async load, state is set after the reply
     void load();
-  }, [load, openId]);
+  }, [load, openId, version]);
 
   if (openId)
     return <PlaylistDetail id={openId} add={add} added={added} onBack={() => setOpenId(null)} />;
 
   return (
     <section aria-labelledby="pl-title" className="space-y-2">
-      <h3 id="pl-title" className="px-1 text-[15px] font-semibold">
-        {vi.playlists.title}
-      </h3>
+      <div className="flex items-center justify-between gap-2 px-1">
+        <h3 id="pl-title" className="text-[15px] font-semibold">
+          {vi.playlists.title}
+        </h3>
+        <YouTubeImport onImported={() => setVersion((v) => v + 1)} />
+      </div>
       {!lists && <Loader2 className="mx-auto h-5 w-5 animate-spin text-sage" aria-hidden />}
       {lists?.length === 0 && <p className="px-1 text-[14px] text-sage">{vi.playlists.empty}</p>}
       {lists && lists.length > 0 && (
