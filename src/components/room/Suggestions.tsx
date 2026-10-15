@@ -22,19 +22,26 @@ const COLLAPSED = 4;
 export function Suggestions() {
   const me = useMe();
   const onAir = useRoom((s) => s.snapshot?.nowPlaying?.item.id ?? null);
+  const user = useRoom((s) => s.user);
   const [items, setItems] = useState<SuggestionView[] | null>(null);
   const [open, setOpen] = useState(false);
+  // L5: signed in, the list can follow the person's own taste instead of the room's.
+  const [mode, setMode] = useState<'room' | 'me'>('room');
+  const forMe = mode === 'me' && Boolean(user);
   const { add, added } = useAddTrack();
 
   useEffect(() => {
     let alive = true;
-    void room.send('suggest:next', {}).then((r) => {
-      if (alive) setItems(r.ok ? r.data.items : []);
+    const load = forMe
+      ? room.send('taste:for-me', {}).then((r) => (r.ok ? r.data.items : []))
+      : room.send('suggest:next', {}).then((r) => (r.ok ? r.data.items : []));
+    void load.then((list) => {
+      if (alive) setItems(list);
     });
     return () => {
       alive = false;
     };
-  }, [onAir]);
+  }, [onAir, forMe]);
 
   if (!me || me.isDevice || !items) return null;
   const shown = open ? items : items.slice(0, COLLAPSED);
@@ -42,11 +49,28 @@ export function Suggestions() {
 
   return (
     <section aria-labelledby="suggest-title" className="space-y-2">
-      <h2 id="suggest-title" className="type-display px-1 text-[20px] font-bold">
-        {vi.suggest.title}
-      </h2>
+      <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+        <h2 id="suggest-title" className="type-display text-[20px] font-bold">
+          {vi.suggest.title}
+        </h2>
+        {user && (
+          <div role="group" aria-label={vi.suggest.modeLabel} className="flex gap-1 rounded-full bg-dial-deep p-1">
+            {(['room', 'me'] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                aria-pressed={mode === m}
+                onClick={() => setMode(m)}
+                className={`min-h-8 rounded-full px-3 text-[13px] font-medium transition-colors ${mode === m ? 'bg-panel-hi text-paper' : 'text-sage hover:text-paper'}`}
+              >
+                {m === 'room' ? vi.suggest.forRoom : vi.suggest.forMe}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
       {items.length === 0 ? (
-        <p className="px-1 text-[14px] text-sage">{vi.suggest.empty}</p>
+        <p className="px-1 text-[14px] text-sage">{forMe ? vi.suggest.emptyMe : vi.suggest.empty}</p>
       ) : (
         <SuggestionList items={shown} label={vi.suggest.listLabel} add={add} added={added} />
       )}
@@ -57,6 +81,13 @@ export function Suggestions() {
       )}
     </section>
   );
+}
+
+/** Why a song is suggested, with the artist for the personal reasons (L5). */
+function reasonText(reason: SuggestionView['reason'], because?: string): string {
+  if (reason === 'taste' && because) return vi.suggest.because(because);
+  if (reason === 'taste-similar' && because) return vi.suggest.likeTaste(because);
+  return vi.suggest.reasons[reason];
 }
 
 /** Suggestion rows (A3, AI2): known songs add in one tap, the rest run a search. */
@@ -82,8 +113,9 @@ export function SuggestionList({
             onAdd={() => void add(s.track.id, s.track)}
             meta={
               <p className="flex gap-2">
-                <span className="shrink-0 text-amber/90">{vi.suggest.reasons[s.reason]}</span>
-                {(s.track.artist ?? s.track.channel) && <span className="truncate">{s.track.artist ?? s.track.channel}</span>}
+                <span className="min-w-0 truncate text-amber/90">{reasonText(s.reason, s.because)}</span>
+                {/* "Vì bạn hay nghe X" already names the artist. */}
+                {!s.because && (s.track.artist ?? s.track.channel) && <span className="truncate">{s.track.artist ?? s.track.channel}</span>}
                 {s.track.durationSec ? <span className="shrink-0 tabular-nums">{formatDuration(s.track.durationSec)}</span> : null}
               </p>
             }

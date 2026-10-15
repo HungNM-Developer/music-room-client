@@ -218,6 +218,16 @@ export const vi = {
     tracksLabel: 'Bài trong playlist',
   },
 
+  taste: {
+    title: 'Gu của bạn',
+    note: 'Tính từ bài bạn lưu, thả tim, thêm vào phòng và playlist của bạn, ở mọi phòng.',
+    artists: 'Nghệ sĩ bạn hay nghe',
+    none: 'Chưa đủ dữ liệu. Hãy lưu hoặc thả tim vài bài.',
+    saveMix: 'Lưu thành playlist "Dành cho bạn"',
+    saved: (n: number) => `Đã cập nhật playlist "Dành cho bạn" (${n} bài)`,
+    nothing: 'Chưa có gợi ý nào để lưu.',
+  },
+
   ytImport: {
     open: 'Nhập từ YouTube',
     title: 'Nhập từ YouTube',
@@ -267,7 +277,16 @@ export const vi = {
       artist: 'Cùng nghệ sĩ',
       popular: 'Phòng thích',
       dj: 'DJ gợi ý',
+      taste: 'Hợp gu bạn',
+      'taste-similar': 'Giống gu bạn',
+      peers: 'Người cùng gu cũng thích',
     },
+    because: (artist: string) => `Vì bạn hay nghe ${artist}`,
+    likeTaste: (artist: string) => `Giống gu ${artist}`,
+    modeLabel: 'Gợi ý cho',
+    forRoom: 'Cho phòng',
+    forMe: 'Cho bạn',
+    emptyMe: 'Chưa đủ dữ liệu về gu của bạn. Hãy lưu, thả tim hoặc thêm vài bài, gợi ý sẽ sát hơn.',
     fromLastfm: 'Gợi ý từ Last.fm, chưa có trên máy chủ',
     findAndAdd: 'Tìm & thêm',
     findAndAddLabel: (song: string, artist: string) => `Tìm "${song}" của ${artist} và thêm vào hàng chờ`,
