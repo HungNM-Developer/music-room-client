@@ -244,6 +244,7 @@ export const vi = {
     newVersion: 'Có phiên bản mới. Hãy tải lại trang.',
     reload: 'Tải lại',
     playerOffline: 'Máy phát đang mất kết nối. Hàng chờ vẫn nhận bài mới.',
+    playerWaiting: 'Máy phát đang mở nhưng chưa phát. Hãy bấm “Bắt đầu phát” trên máy phát.',
     noPlayer: (url: string) => `Chưa có máy phát. Mở trang máy phát trên máy nối loa: ${url}`,
     kicked: 'Bạn đã được mời ra khỏi phòng.',
   },

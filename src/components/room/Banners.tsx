@@ -12,6 +12,12 @@ export function Banners() {
   const kind = useRoom((s) => s.kind);
   const code = useRoom((s) => s.code);
   const player = useRoom((s) => s.snapshot?.player ?? null);
+  // The player's page is still connected but holds no lease: it was reloaded (or the
+  // browser discarded the tab) and waits for someone to press "Bắt đầu phát".
+  const playerPageOpen = useRoom((s) => {
+    const id = s.snapshot?.player.memberId;
+    return Boolean(id && s.snapshot?.members.some((m) => m.id === id && m.online));
+  });
   const versionMismatch = useVersionMismatch();
   const origin = useOrigin();
   // A first connection that takes this long usually means a free-tier server waking up.
@@ -40,7 +46,11 @@ export function Banners() {
     items.push({
       key: 'player',
       icon: <Speaker className="h-4 w-4" aria-hidden />,
-      text: player.memberId ? vi.banners.playerOffline : vi.banners.noPlayer(`${origin}/r/${code}/host`),
+      text: !player.memberId
+        ? vi.banners.noPlayer(`${origin}/r/${code}/host`)
+        : playerPageOpen
+          ? vi.banners.playerWaiting
+          : vi.banners.playerOffline,
     });
   }
   if (!items.length) return null;

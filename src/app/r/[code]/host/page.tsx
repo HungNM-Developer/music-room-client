@@ -15,6 +15,7 @@ import { OnAirLamp } from '@/components/ui/OnAirLamp';
 import { Thumb } from '@/components/ui/Thumb';
 import { normalizeRoomCode } from '@/contracts/text';
 import { useOrigin } from '@/hooks/useOrigin';
+import { getToken } from '@/lib/session-store';
 import { useRoomMood } from '@/hooks/useRoomMood';
 import { errorMessage, vi } from '@/i18n/vi';
 import { useRoom } from '@/state/hooks';
@@ -31,6 +32,7 @@ export default function HostPage() {
   const code = normalizeRoomCode(params.code ?? '');
   const memberId = useRoom((s) => s.memberId);
   const connection = useRoom((s) => s.connection);
+  const revoked = useRoom((s) => s.revoked);
   // No PIN: any browser with the room code becomes the speaker. Registration runs
   // automatically; a failure (network, unknown room) shows the reason and a retry.
   const [failure, setFailure] = useState<string | null>(null);
@@ -45,11 +47,16 @@ export default function HostPage() {
 
   useEffect(() => {
     if (!needsLogin) return;
+    // A saved device token resumes the same speaker: session:ready follows the connect
+    // event a moment later. Registering in that gap made every reload a new device while
+    // the room's player stayed the old, offline one. Register only without a token or
+    // after the server rejected it (session:revoked clears it and sets `revoked`).
+    if (getToken(code, 'host') && !revoked) return;
     void (async () => {
       const r = await room.send('host:register', { code });
       if (!r.ok) setFailure(errorMessage(r.error.code, r.error.params));
     })();
-  }, [needsLogin, code, attempt]);
+  }, [needsLogin, code, attempt, revoked]);
 
   if (needsLogin && failure) {
     return (
