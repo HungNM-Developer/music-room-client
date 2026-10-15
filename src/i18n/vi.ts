@@ -245,6 +245,40 @@ export const vi = {
     listLabel: 'Nguồn trên YouTube',
   },
 
+  songList: {
+    open: 'Dán danh sách bài',
+    hint: 'Có danh sách bài từ Spotify, Apple Music hay ở đâu đó? Dán vào, mỗi dòng một bài.',
+    title: 'Dán danh sách bài',
+    label: 'Danh sách bài',
+    placeholder: 'Lạc Trôi - Sơn Tùng M-TP\nShape of You - Ed Sheeran\nhttps://youtu.be/…',
+    note: 'Mỗi dòng một bài: tên bài và ca sĩ, hoặc link video YouTube. Số thứ tự và thời lượng được bỏ tự động.',
+    lines: (n: number) => `${n} bài`,
+    dropped: (n: number) => `Chỉ lấy 50 bài đầu (bỏ ${n} dòng).`,
+    find: 'Tìm bài',
+    finding: 'Đang tìm bài…',
+    edit: 'Sửa danh sách',
+    found: (n: number, total: number) => `Tìm được ${n}/${total} bài. Bỏ chọn bài nào khớp sai.`,
+    line: (text: string) => `Bạn dán: ${text}`,
+    notFound: 'Không tìm thấy bài phát được',
+    later: 'Chưa tìm',
+    unsupported: 'Không đọc được link này. Hãy dán tên bài.',
+    choose: (title: string) => `Chọn "${title}"`,
+    more: (n: number) => `Tìm tiếp ${n} bài`,
+    stopped: {
+      RATE_LIMITED: (n: number, minutes: number | null) =>
+        minutes ? `Đã dùng hết lượt tìm YouTube trong giờ này. Còn ${n} bài, thử lại sau ${minutes} phút.` : `Đã dùng hết lượt tìm YouTube trong giờ này. Còn ${n} bài chưa tìm.`,
+      QUOTA_EXCEEDED: (n: number) => `Hôm nay YouTube đã hết lượt tìm. Còn ${n} bài chưa tìm, hãy thử lại vào ngày mai.`,
+      SEARCH_UNAVAILABLE: (n: number) => `Máy chủ chưa bật tìm trên YouTube. Còn ${n} bài chưa tìm.`,
+      TIME: (n: number) => `Còn ${n} bài chưa tìm, bấm Tìm tiếp.`,
+    },
+    queue: (n: number, slots: number) =>
+      n > 0 ? `Thêm ${n} bài vào hàng chờ` : slots > 0 ? 'Không còn bài nào để thêm' : 'Hết suất trong hàng chờ',
+    name: 'Tên playlist',
+    defaultName: 'Danh sách đã dán',
+    save: (n: number) => `Lưu ${n} bài thành playlist`,
+    listLabel: 'Kết quả tìm bài',
+  },
+
   playlist: {
     open: 'Mở playlist',
     openWhole: 'Mở cả playlist',
