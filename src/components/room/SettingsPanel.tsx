@@ -52,6 +52,13 @@ export function SettingsPanel() {
           <Field label={vi.settings.fallback} value={form.fallbackUrl} placeholder="https://www.youtube.com/playlist?list=…" onChange={(e) => set({ fallbackUrl: e.target.value })} hint={vi.settings.errFallback} invalid={errors.fallbackUrl} />
           <p className="text-[13px] text-sage">{vi.settings.fallbackHint}</p>
         </div>
+        <div className="space-y-1">
+          <label className="flex min-h-11 items-center gap-3">
+            <input type="checkbox" checked={form.autoRadio} onChange={(e) => set({ autoRadio: e.target.checked })} className="h-5 w-5 accent-amber" />
+            {vi.settings.autoRadio}
+          </label>
+          <p className="pl-8 text-[13px] text-sage">{vi.settings.autoRadioHint}</p>
+        </div>
         <label className="flex min-h-11 items-center gap-3">
           <input type="checkbox" checked={form.allowGuestDj} onChange={(e) => set({ allowGuestDj: e.target.checked })} className="h-5 w-5 accent-amber" />
           {vi.settings.allowGuestDj}

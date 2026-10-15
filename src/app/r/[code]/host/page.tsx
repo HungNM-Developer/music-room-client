@@ -15,6 +15,7 @@ import { OnAirLamp } from '@/components/ui/OnAirLamp';
 import { Thumb } from '@/components/ui/Thumb';
 import { normalizeRoomCode } from '@/contracts/text';
 import { useOrigin } from '@/hooks/useOrigin';
+import { addedByLabel } from '@/lib/added-by';
 import { getToken } from '@/lib/session-store';
 import { useRoomMood } from '@/hooks/useRoomMood';
 import { errorMessage, vi } from '@/i18n/vi';
@@ -127,7 +128,7 @@ function HostScreen({ code }: { code: string }) {
               {np ? np.item.track.title : vi.host.idle}
             </h1>
             {np && (
-              <p className="mt-2 text-[18px] text-sage">{picker ? vi.nowPlaying.pickedBy(picker) : vi.nowPlaying.fallback}</p>
+              <p className="mt-2 text-[18px] text-sage">{picker ? vi.nowPlaying.pickedBy(picker) : addedByLabel(np.item)}</p>
             )}
           </div>
 
@@ -174,7 +175,7 @@ function HostScreen({ code }: { code: string }) {
                     <Thumb url={q.track.thumbnailUrl} size={52} />
                     <div className="min-w-0">
                       <p className="truncate text-[16px] font-medium [unicode-bidi:plaintext]">{q.track.title}</p>
-                      <p className="truncate text-[14px] text-sage">{q.addedBy?.displayName ?? vi.nowPlaying.fallback}</p>
+                      <p className="truncate text-[14px] text-sage">{addedByLabel(q)}</p>
                     </div>
                   </li>
                 ))}
