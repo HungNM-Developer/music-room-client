@@ -112,6 +112,7 @@ export function PlayedList({ add, added }: { add: Add; added: Set<string> }) {
  * so a mis-tap can be undone in place.
  */
 export function SavedList({ add, added }: { add: Add; added: Set<string> }) {
+  const signedIn = useRoom((s) => Boolean(s.user));
   const [tracks, setTracks] = useState<TrackSummary[] | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -143,7 +144,7 @@ export function SavedList({ add, added }: { add: Add; added: Set<string> }) {
 
   return (
     <div className="space-y-3">
-      <p className="px-1 text-[13px] text-sage">{vi.library.savedNote}</p>
+      <p className="px-1 text-[13px] text-sage">{signedIn ? vi.library.savedNoteAccount : vi.library.savedNote}</p>
       <Status
         loading={tracks === null && !failed}
         failed={failed}

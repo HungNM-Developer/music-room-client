@@ -1,6 +1,6 @@
 'use client';
 
-import { Loader2, X } from 'lucide-react';
+import { ListPlus, Loader2, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button, IconButton } from '@/components/ui/Button';
 import { Thumb } from '@/components/ui/Thumb';
@@ -12,11 +12,17 @@ import { formatDuration } from '@/lib/time';
 import { useMe, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 
+export type PickerSource = { kind: 'youtube'; url: string } | { kind: 'shared'; code: string };
+
 /**
- * A5: the songs of a YouTube playlist, to pick and add in one go. Choices stop at the
- * member's free queue slots; the server skips (and says why) what the room refuses.
+ * A5 / L2: the songs of a YouTube playlist or a shared Music Room playlist, to pick and
+ * add in one go. Choices stop at the member's free queue slots; the server skips (and
+ * says why) what the room refuses. Signed in, the list can be kept as one's own playlist.
  */
-export function PlaylistPicker({ url, onClose }: { url: string; onClose: () => void }) {
+export function PlaylistPicker({ source, onClose }: { source: PickerSource; onClose: () => void }) {
+  const user = useRoom((s) => s.user);
+  const [title, setTitle] = useState<string | null>(null);
+  const [kept, setKept] = useState(false);
   const me = useMe();
   const toast = useToast();
   const max = useRoom((s) => s.snapshot?.room.settings.maxQueuedPerMember ?? 0);
@@ -34,15 +40,38 @@ export function PlaylistPicker({ url, onClose }: { url: string; onClose: () => v
 
   useEffect(() => {
     let alive = true;
-    void room.send('playlist:open', { url }).then((r) => {
+    const load =
+      source.kind === 'youtube'
+        ? room.send('playlist:open', { url: source.url }).then((r) => (r.ok ? { ok: true as const, tracks: r.data.tracks, title: null } : r))
+        : room
+            .send('playlist:get', { shareCode: source.code })
+            .then((r) => (r.ok ? { ok: true as const, tracks: r.data.tracks, title: `${vi.playlists.by(r.data.owner.name)}: ${r.data.name}` } : r));
+    void load.then((r) => {
       if (!alive) return;
-      if (r.ok) setTracks(r.data.tracks);
-      else setError(errorMessage(r.error.code, r.error.params));
+      if (r.ok) {
+        setTracks(r.tracks);
+        setTitle(r.title);
+      } else setError(errorMessage(r.error.code, r.error.params));
     });
     return () => {
       alive = false;
     };
-  }, [url]);
+  }, [source]);
+
+  /** L2: keep this list as one's own playlist (YouTube) or copy the shared one. */
+  async function keep() {
+    if (!tracks) return;
+    const r =
+      source.kind === 'youtube'
+        ? await room.send('playlist:create', { name: vi.playlists.youtubeName, trackIds: tracks.map((t) => t.id).slice(0, 200) })
+        : await room.send('playlist:copy', { shareCode: source.code });
+    if (!r.ok) {
+      toast(errorMessage(r.error.code, r.error.params), 'error');
+      return;
+    }
+    setKept(true);
+    toast(source.kind === 'youtube' ? vi.playlists.created(vi.playlists.youtubeName) : vi.playlists.copied, 'success');
+  }
 
   const slots = Math.max(0, Math.min(max - mine, ADD_MANY_MAX));
   const inQueue = new Set(queued.split('|'));
@@ -69,9 +98,16 @@ export function PlaylistPicker({ url, onClose }: { url: string; onClose: () => v
   return (
     <div className="space-y-3 rounded-panel bg-panel p-3">
       <div className="flex items-center gap-2 pl-1">
-        <p className="flex-1 text-[14px] font-medium">
+        <p className="min-w-0 flex-1 text-[14px] font-medium">
+          {title && <span className="block truncate">{title}</span>}
           {tracks ? vi.playlist.count(tracks.length) : error ? null : vi.playlist.opening}
         </p>
+        {user && tracks && (
+          <Button size="sm" variant="ghost" disabled={kept} onClick={keep}>
+            <ListPlus className="h-4 w-4" aria-hidden />
+            {source.kind === 'youtube' ? vi.playlists.saveYoutube : vi.playlists.copy}
+          </Button>
+        )}
         <IconButton label={vi.playlist.close} onClick={onClose}>
           <X className="h-5 w-5" aria-hidden />
         </IconButton>

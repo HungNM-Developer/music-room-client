@@ -1,0 +1,266 @@
+'use client';
+
+import { ArrowLeft, ChevronRight, Copy, ListMusic, Loader2, MoreHorizontal, Pencil, Plus, Share2, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Button, IconButton } from '@/components/ui/Button';
+import { Dialog, SheetAction } from '@/components/ui/Dialog';
+import { Thumb } from '@/components/ui/Thumb';
+import { useToast } from '@/components/ui/Toast';
+import type { PlaylistSummaryView, PlaylistView, TrackSummary } from '@/contracts';
+import { ADD_MANY_MAX, LIMITS } from '@/contracts/constants';
+import type { useAddTrack } from '@/hooks/useAddTrack';
+import { errorMessage, vi } from '@/i18n/vi';
+import { formatDuration } from '@/lib/time';
+import { useRoom } from '@/state/hooks';
+import { room } from '@/state/room-store';
+
+type Add = ReturnType<typeof useAddTrack>['add'];
+
+/** L2: the account's playlists inside "Của tôi"; a tap opens one. */
+export function MyPlaylists({ add, added }: { add: Add; added: Set<string> }) {
+  const [lists, setLists] = useState<PlaylistSummaryView[] | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    const r = await room.send('playlist:mine', {});
+    setLists(r.ok ? r.data.playlists : []);
+  }, []);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- async load, state is set after the reply
+    void load();
+  }, [load, openId]);
+
+  if (openId)
+    return <PlaylistDetail id={openId} add={add} added={added} onBack={() => setOpenId(null)} />;
+
+  return (
+    <section aria-labelledby="pl-title" className="space-y-2">
+      <h3 id="pl-title" className="px-1 text-[15px] font-semibold">
+        {vi.playlists.title}
+      </h3>
+      {!lists && <Loader2 className="mx-auto h-5 w-5 animate-spin text-sage" aria-hidden />}
+      {lists?.length === 0 && <p className="px-1 text-[14px] text-sage">{vi.playlists.empty}</p>}
+      {lists && lists.length > 0 && (
+        <ul aria-label={vi.playlists.listLabel} className="divide-y divide-line/70 rounded-panel bg-panel px-1">
+          {lists.map((p) => (
+            <li key={p.id}>
+              <button type="button" onClick={() => setOpenId(p.id)} className="flex w-full items-center gap-3 py-2.5 pl-2.5 pr-2 text-left hover:text-amber">
+                {p.coverUrl ? (
+                  <Thumb url={p.coverUrl} size={48} />
+                ) : (
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-row bg-dial-deep text-sage">
+                    <ListMusic className="h-5 w-5" aria-hidden />
+                  </span>
+                )}
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-medium">{p.name}</span>
+                  <span className="flex gap-2 text-[12px] text-sage">
+                    <span>{vi.playlists.count(p.trackCount)}</span>
+                    {p.shared && <span>{vi.playlists.shared}</span>}
+                  </span>
+                </span>
+                <ChevronRight className="h-5 w-5 shrink-0 text-sage" aria-hidden />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+/** One playlist: rename, share, delete, reorder, and add its songs to the queue. */
+function PlaylistDetail({ id, add, added, onBack }: { id: string; add: Add; added: Set<string>; onBack: () => void }) {
+  const toast = useToast();
+  const [pl, setPl] = useState<PlaylistView | null>(null);
+  const [renaming, setRenaming] = useState<string | null>(null);
+  const [menuFor, setMenuFor] = useState<TrackSummary | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const max = useRoom((s) => s.snapshot?.room.settings.maxQueuedPerMember ?? 0);
+  const mine = useRoom((s) => (s.snapshot?.queue ?? []).filter((q) => q.addedBy?.id === s.memberId).length);
+  const waiting = useRoom((s) => {
+    const ids = (s.snapshot?.queue ?? []).map((q) => q.track.id);
+    const np = s.snapshot?.nowPlaying?.item.track.id;
+    return (np ? [...ids, np] : ids).join('|');
+  });
+
+  const load = useCallback(async () => {
+    const r = await room.send('playlist:get', { id });
+    if (r.ok) setPl(r.data);
+    else {
+      toast(errorMessage(r.error.code, r.error.params), 'error');
+      onBack();
+    }
+  }, [id, onBack, toast]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- async load, state is set after the reply
+    void load();
+  }, [load]);
+
+  const call = async (r: Promise<{ ok: boolean; error?: { code: Parameters<typeof errorMessage>[0]; params?: Parameters<typeof errorMessage>[1] } }>) => {
+    const res = await r;
+    if (!res.ok && res.error) toast(errorMessage(res.error.code, res.error.params), 'error');
+    await load();
+    return res.ok;
+  };
+
+  if (!pl) return <Loader2 className="mx-auto h-5 w-5 animate-spin text-sage" aria-hidden />;
+
+  const inQueue = new Set(waiting.split('|'));
+  const slots = Math.max(0, Math.min(max - mine, ADD_MANY_MAX));
+  const toQueue = pl.tracks.filter((t) => !inQueue.has(t.id)).slice(0, slots);
+  const link = pl.shareCode ? `${window.location.origin}/p/${pl.shareCode}` : null;
+
+  async function queueAll() {
+    if (!toQueue.length) return;
+    setBusy(true);
+    const r = await room.send('queue:add-many', { trackIds: toQueue.map((t) => t.id) });
+    setBusy(false);
+    if (!r.ok) return toast(errorMessage(r.error.code, r.error.params), 'error');
+    const why = r.data.skipped.length ? `. ${vi.playlist.skipped(r.data.skipped.length)}: ${errorMessage(r.data.skipped[0].reason)}` : '';
+    toast(`${vi.playlist.added(r.data.added)}${why}`, r.data.added ? 'success' : 'error');
+  }
+
+  const move = (t: TrackSummary, delta: number) => {
+    const at = pl.tracks.findIndex((x) => x.id === t.id);
+    setMenuFor(null);
+    void call(room.send('playlist:move', { id, trackId: t.id, to: at + delta }));
+  };
+
+  return (
+    <section aria-labelledby="pl-detail" className="space-y-3">
+      <Button size="sm" variant="ghost" onClick={onBack}>
+        <ArrowLeft className="h-4 w-4" aria-hidden /> {vi.playlists.back}
+      </Button>
+
+      {renaming !== null ? (
+        <form
+          className="flex gap-2 px-1"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (!renaming.trim()) return;
+            if (await call(room.send('playlist:update', { id, name: renaming.trim() }))) setRenaming(null);
+          }}
+        >
+          <label htmlFor="pl-name" className="sr-only">
+            {vi.playlists.newName}
+          </label>
+          <input id="pl-name" value={renaming} onChange={(e) => setRenaming(e.target.value)} maxLength={LIMITS.playlistName} className="field min-w-0 flex-1" data-autofocus />
+          <Button type="submit" variant="primary">
+            {vi.playlists.save}
+          </Button>
+        </form>
+      ) : (
+        <div className="flex items-center gap-2 px-1">
+          <h3 id="pl-detail" className="type-display min-w-0 flex-1 truncate text-[20px] font-bold">
+            {pl.name}
+          </h3>
+          <IconButton label={vi.playlists.rename} onClick={() => setRenaming(pl.name)}>
+            <Pencil className="h-4 w-4" aria-hidden />
+          </IconButton>
+          <IconButton label={vi.playlists.delete} tone="danger" onClick={() => setConfirmDelete(true)}>
+            <Trash2 className="h-4 w-4" aria-hidden />
+          </IconButton>
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-2 px-1">
+        <Button variant="primary" size="sm" disabled={busy || !toQueue.length} aria-busy={busy} onClick={queueAll}>
+          {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
+          {vi.playlists.queueAll(toQueue.length)}
+        </Button>
+        <Button size="sm" onClick={() => void call(room.send('playlist:share', { id, enabled: !pl.shareCode }))}>
+          <Share2 className="h-4 w-4" aria-hidden /> {pl.shareCode ? vi.playlists.shareOff : vi.playlists.shareOn}
+        </Button>
+      </div>
+      {link && (
+        <div className="space-y-1.5 rounded-row border border-line/70 p-3">
+          <p className="text-[13px] text-sage">{vi.playlists.shareNote}</p>
+          <div className="flex items-center gap-2">
+            <code className="min-w-0 flex-1 truncate text-[13px]">{link}</code>
+            <Button
+              size="sm"
+              onClick={async () => {
+                await navigator.clipboard?.writeText(link).catch(() => undefined);
+                toast(vi.playlists.linkCopied, 'success');
+              }}
+            >
+              <Copy className="h-4 w-4" aria-hidden /> {vi.playlists.copyLink}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {pl.tracks.length === 0 ? (
+        <p className="px-1 text-[14px] text-sage">{vi.playlists.emptyList}</p>
+      ) : (
+        <ol aria-label={vi.playlists.tracksLabel} className="divide-y divide-line/70 rounded-panel bg-panel px-1">
+          {pl.tracks.map((t) => {
+            const taken = inQueue.has(t.id) || added.has(t.id);
+            return (
+              <li key={t.id} className="flex items-center gap-3 py-2.5 pl-2.5 pr-1">
+                <Thumb url={t.thumbnailUrl} size={56} ratio="wide" />
+                <div className="min-w-0 flex-1">
+                  <p className="line-clamp-2 text-[14px] font-medium leading-snug [unicode-bidi:plaintext]">{t.title}</p>
+                  <p className="mt-0.5 flex gap-2 text-[12px] text-sage">
+                    {taken ? <span>{vi.library.inQueue}</span> : (t.artist ?? t.channel) && <span className="truncate">{t.artist ?? t.channel}</span>}
+                    {t.durationSec ? <span className="shrink-0 tabular-nums">{formatDuration(t.durationSec)}</span> : null}
+                  </p>
+                </div>
+                <Button size="sm" disabled={taken} onClick={() => void add(t.id, t)} aria-label={vi.library.addTrack(t.title)}>
+                  <Plus className="h-4 w-4" aria-hidden />
+                </Button>
+                <IconButton label={vi.queue.actions(t.title)} onClick={() => setMenuFor(t)}>
+                  <MoreHorizontal className="h-5 w-5" aria-hidden />
+                </IconButton>
+              </li>
+            );
+          })}
+        </ol>
+      )}
+
+      {menuFor && (
+        <Dialog open onClose={() => setMenuFor(null)} title={menuFor.title}>
+          <div className="-mx-2 space-y-0.5">
+            <SheetAction onClick={() => move(menuFor, -1)}>{vi.playlists.moveUp(menuFor.title)}</SheetAction>
+            <SheetAction onClick={() => move(menuFor, 1)}>{vi.playlists.moveDown(menuFor.title)}</SheetAction>
+            <SheetAction
+              danger
+              onClick={() => {
+                const t = menuFor;
+                setMenuFor(null);
+                void call(room.send('playlist:set-track', { id, trackId: t.id, saved: false }));
+              }}
+            >
+              {vi.playlists.remove(menuFor.title)}
+            </SheetAction>
+          </div>
+        </Dialog>
+      )}
+
+      {confirmDelete && (
+        <Dialog open onClose={() => setConfirmDelete(false)} title={vi.playlists.deleteConfirm(pl.name)}>
+          <p className="text-sage">{vi.playlists.deleteNote}</p>
+          <div className="mt-5 flex gap-2">
+            <Button className="flex-1" onClick={() => setConfirmDelete(false)}>
+              {vi.people.cancel}
+            </Button>
+            <Button
+              variant="danger"
+              className="flex-1"
+              onClick={async () => {
+                const r = await room.send('playlist:delete', { id });
+                if (!r.ok) return toast(errorMessage(r.error.code, r.error.params), 'error');
+                toast(vi.playlists.deleted, 'success');
+                onBack();
+              }}
+            >
+              {vi.playlists.delete}
+            </Button>
+          </div>
+        </Dialog>
+      )}
+    </section>
+  );
+}
