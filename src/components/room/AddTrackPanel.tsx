@@ -16,6 +16,7 @@ import { PlayedList, SavedList } from './LibraryLists';
 import { MyPlaylists } from './MyPlaylists';
 import { TasteCard } from './TasteCard';
 import { type PickerSource, PlaylistPicker } from './PlaylistPicker';
+import { SongListImport } from './SongListImport';
 import { TrackRow } from './TrackRow';
 
 type Source = 'search' | 'played' | 'saved' | 'dj';
@@ -186,7 +187,7 @@ function SearchPanel({ add, added }: { add: (input: string, known?: TrackSummary
   );
 }
 
-/** "Của tôi": the account's playlists (L2, signed in) and Yêu thích (A2). */
+/** "Của tôi": the account's playlists (L2, signed in), a pasted song list (L4) and Yêu thích (A2). */
 function MineTab({ add, added }: { add: (input: string, known?: TrackSummary) => Promise<boolean>; added: Set<string> }) {
   const user = useRoom((s) => s.user);
   const canSignIn = useRoom((s) => Boolean(s.health?.googleClientId));
@@ -202,6 +203,7 @@ function MineTab({ add, added }: { add: (input: string, known?: TrackSummary) =>
       ) : (
         canSignIn && <p className="px-1 text-[13px] text-sage">{vi.playlists.signInHint}</p>
       )}
+      <SongListImport onSaved={() => setListKey((k) => k + 1)} />
       <section className="space-y-2">
         <h3 className="px-1 text-[15px] font-semibold">{vi.library.favorites}</h3>
         <SavedList add={add} added={added} />
