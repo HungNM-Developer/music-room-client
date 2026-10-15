@@ -12,6 +12,7 @@ import { HeartCanvas, triggerReaction } from '@/components/room/HeartCanvas';
 import { NowPlayingCard } from '@/components/room/NowPlayingCard';
 import { PeoplePanel } from '@/components/room/PeoplePanel';
 import { QueueList } from '@/components/room/QueueList';
+import { RecapCard } from '@/components/room/RecapCard';
 import { RoomHeader } from '@/components/room/RoomHeader';
 import { RoomSkeleton } from '@/components/room/RoomSkeleton';
 import { Suggestions } from '@/components/room/Suggestions';
@@ -122,6 +123,7 @@ export default function RoomPage() {
           </div>
           <div {...panel('people')} className={`space-y-6 ${tab === 'people' ? '' : 'hidden'}`}>
             <PeoplePanel />
+            <RecapCard />
             <SettingsPanel />
           </div>
         </div>

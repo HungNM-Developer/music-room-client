@@ -9,6 +9,7 @@ export interface SettingsForm {
   allowGuestDj: boolean;
   autoRadio: boolean;
   repeatGap: string;
+  mcIntro: boolean;
 }
 
 export type SettingsErrors = Partial<Record<keyof SettingsForm, true>>;
@@ -22,6 +23,7 @@ export function toForm(s: RoomSettings): SettingsForm {
     allowGuestDj: s.allowGuestDj,
     autoRadio: s.autoRadio,
     repeatGap: String(s.repeatGapMinutes),
+    mcIntro: s.mcIntro,
   };
 }
 
@@ -51,6 +53,7 @@ export function fromForm(f: SettingsForm): { settings?: RoomSettings; errors: Se
       allowGuestDj: f.allowGuestDj,
       autoRadio: f.autoRadio,
       repeatGapMinutes: gap,
+      mcIntro: f.mcIntro,
     },
   };
 }

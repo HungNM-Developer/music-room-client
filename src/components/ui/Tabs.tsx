@@ -78,7 +78,7 @@ export function TabList<K extends string>({
                 ? `flex min-h-14 flex-col items-center justify-center gap-0.5 text-[12px] font-medium transition-colors ${
                     selected ? 'text-amber' : 'text-sage hover:text-paper'
                   }`
-                : `flex min-h-10 flex-1 items-center justify-center gap-2 rounded-[10px] px-3 text-[14px] font-semibold transition-colors ${
+                : `flex min-h-10 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] px-2 text-[13px] font-semibold transition-colors sm:px-3 sm:text-[14px] ${
                     selected ? 'bg-panel-hi text-paper' : 'text-sage hover:text-paper'
                   }`
             }
