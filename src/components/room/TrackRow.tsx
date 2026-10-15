@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/Button';
 import { Thumb } from '@/components/ui/Thumb';
 import type { TrackSummary } from '@/contracts';
 import { vi } from '@/i18n/vi';
+import { useRoom } from '@/state/hooks';
 import { SaveButton } from './SaveButton';
 
 /** A song in search results, "Đã phát" or "Yêu thích": artwork, title, details, Lưu and Thêm. */
@@ -21,6 +22,12 @@ export function TrackRow({
   addLabel?: string;
   onAdd: () => void;
 }) {
+  // A6: a song already waiting or on air cannot be added again.
+  const inQueue = useRoom(
+    (s) =>
+      s.snapshot?.nowPlaying?.item.track.id === track.id ||
+      Boolean(s.snapshot?.queue.some((q) => q.track.id === track.id)),
+  );
   return (
     <li className="flex items-center gap-3 py-2.5 pl-2.5 pr-1">
       <Thumb url={track.thumbnailUrl} size={72} ratio="wide" />
@@ -31,9 +38,15 @@ export function TrackRow({
         <div className="mt-0.5 text-[12px] text-sage">{meta}</div>
       </div>
       <SaveButton track={track} />
-      <Button size="sm" disabled={done} onClick={onAdd} aria-label={vi.library.addTrack(track.title)}>
-        {done ? <Check className="h-4 w-4 text-amber" aria-hidden /> : <Plus className="h-4 w-4" aria-hidden />}
-        <span className="hidden sm:inline">{addLabel}</span>
+      <Button
+        size="sm"
+        disabled={done || inQueue}
+        onClick={onAdd}
+        aria-label={inQueue ? `${vi.library.inQueue}: ${track.title}` : vi.library.addTrack(track.title)}
+        title={inQueue ? vi.library.inQueue : undefined}
+      >
+        {done || inQueue ? <Check className="h-4 w-4 text-amber" aria-hidden /> : <Plus className="h-4 w-4" aria-hidden />}
+        <span className="hidden sm:inline">{inQueue ? vi.library.inQueue : addLabel}</span>
       </Button>
     </li>
   );

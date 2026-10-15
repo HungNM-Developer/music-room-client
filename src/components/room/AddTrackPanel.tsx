@@ -1,6 +1,6 @@
 'use client';
 
-import { Loader2, Plus, Search } from 'lucide-react';
+import { ListMusic, Loader2, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { panelId, tabId, TabList } from '@/components/ui/Tabs';
@@ -8,10 +8,11 @@ import type { TrackSummary } from '@/contracts';
 import { useAct } from '@/hooks/useAct';
 import { useAddTrack } from '@/hooks/useAddTrack';
 import { vi } from '@/i18n/vi';
-import { classifyInput } from '@/lib/add-input';
+import { classifyInput, playlistIn } from '@/lib/add-input';
 import { formatDuration } from '@/lib/time';
 import { useMe, useRoom } from '@/state/hooks';
 import { PlayedList, SavedList } from './LibraryLists';
+import { PlaylistPicker } from './PlaylistPicker';
 import { TrackRow } from './TrackRow';
 
 type Source = 'search' | 'played' | 'saved';
@@ -57,7 +58,16 @@ function SearchPanel({ add, added }: { add: (input: string, known?: TrackSummary
   // Where the results came from: the server's own library costs no YouTube quota.
   const [source, setSource] = useState<'library' | 'cache' | 'youtube' | null>(null);
   const [busy, setBusy] = useState(false);
+  // A5: the playlist link being browsed, if any.
+  const [playlistUrl, setPlaylistUrl] = useState<string | null>(null);
   const kind = classifyInput(input);
+  const alsoPlaylist = kind === 'link' && playlistIn(input) !== null;
+
+  function openPlaylist() {
+    setResults(null);
+    setSource(null);
+    setPlaylistUrl(input.trim());
+  }
 
   /** A link is added at once (optimistic); a refused add puts it back in the box. */
   async function addLink(link: string) {
@@ -70,6 +80,10 @@ function SearchPanel({ add, added }: { add: (input: string, known?: TrackSummary
     if (busy || kind === 'empty') return;
     if (kind === 'link') {
       void addLink(input.trim()); // optimistic: no need to block the box
+      return;
+    }
+    if (kind === 'playlist') {
+      openPlaylist();
       return;
     }
     await search(false);
@@ -100,6 +114,7 @@ function SearchPanel({ add, added }: { add: (input: string, known?: TrackSummary
                 setInput(e.target.value);
                 setResults(null);
                 setSource(null);
+                setPlaylistUrl(null);
               }}
               maxLength={2048}
               placeholder={vi.add.placeholder}
@@ -109,12 +124,26 @@ function SearchPanel({ add, added }: { add: (input: string, known?: TrackSummary
             />
           </div>
           <Button type="submit" variant="primary" disabled={busy || kind === 'empty'} className="shrink-0">
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : kind === 'link' ? <Plus className="h-4 w-4" aria-hidden /> : null}
-            {kind === 'link' ? vi.add.addLink : vi.add.search}
+            {busy ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+            ) : kind === 'link' ? (
+              <Plus className="h-4 w-4" aria-hidden />
+            ) : kind === 'playlist' ? (
+              <ListMusic className="h-4 w-4" aria-hidden />
+            ) : null}
+            {kind === 'link' ? vi.add.addLink : kind === 'playlist' ? vi.playlist.open : vi.add.search}
           </Button>
         </div>
         <p className="px-1 text-[13px] text-sage">{searchEnabled ? vi.add.tip : vi.add.searchOff}</p>
+        {alsoPlaylist && !playlistUrl && (
+          <Button size="sm" variant="ghost" onClick={openPlaylist}>
+            <ListMusic className="h-4 w-4" aria-hidden />
+            {vi.playlist.openWhole}
+          </Button>
+        )}
       </form>
+
+      {playlistUrl && <PlaylistPicker url={playlistUrl} onClose={() => setPlaylistUrl(null)} />}
 
       {results && results.length === 0 && <p className="px-1 text-sage">{vi.add.noResults}</p>}
       {results && results.length > 0 && source === 'library' && (

@@ -49,6 +49,10 @@ export function SettingsPanel() {
         <Field label={vi.settings.maxQueued} inputMode="numeric" value={form.maxQueued} onChange={(e) => set({ maxQueued: e.target.value })} hint={vi.settings.errQueued} invalid={errors.maxQueued} />
         <Field label={vi.settings.maxDuration} inputMode="numeric" value={form.maxMinutes} onChange={(e) => set({ maxMinutes: e.target.value })} hint={vi.settings.errDuration} invalid={errors.maxMinutes} />
         <div className="space-y-1.5">
+          <Field label={vi.settings.repeatGap} inputMode="numeric" value={form.repeatGap} onChange={(e) => set({ repeatGap: e.target.value })} hint={vi.settings.errRepeatGap} invalid={errors.repeatGap} />
+          <p className="text-[13px] text-sage">{vi.settings.repeatGapHint}</p>
+        </div>
+        <div className="space-y-1.5">
           <Field label={vi.settings.fallback} value={form.fallbackUrl} placeholder="https://www.youtube.com/playlist?list=…" onChange={(e) => set({ fallbackUrl: e.target.value })} hint={vi.settings.errFallback} invalid={errors.fallbackUrl} />
           <p className="text-[13px] text-sage">{vi.settings.fallbackHint}</p>
         </div>

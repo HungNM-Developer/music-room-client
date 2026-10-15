@@ -131,6 +131,30 @@ export const vi = {
     results: 'Kết quả tìm kiếm',
   },
 
+  playlist: {
+    open: 'Mở playlist',
+    openWhole: 'Mở cả playlist',
+    opening: 'Đang đọc playlist…',
+    count: (n: number) => `${n} bài trong playlist`,
+    slots: (n: number) => (n > 0 ? `Bạn còn ${n} suất trong hàng chờ` : 'Bạn đã hết suất trong hàng chờ'),
+    choose: (title: string) => `Chọn "${title}"`,
+    addSelected: (n: number) => (n > 0 ? `Thêm ${n} bài đã chọn` : 'Chọn bài để thêm'),
+    added: (n: number) => `Đã thêm ${n} bài vào hàng chờ`,
+    skipped: (n: number) => `${n} bài bỏ qua`,
+    close: 'Đóng playlist',
+    listLabel: 'Bài trong playlist',
+  },
+
+  lyrics: {
+    button: 'Lời bài hát',
+    title: 'Lời bài hát',
+    loading: 'Đang tìm lời…',
+    none: 'Chưa tìm thấy lời cho bài này.',
+    source: 'Lời: LRCLIB',
+    show: 'Hiện lời',
+    hide: 'Ẩn lời',
+  },
+
   suggest: {
     title: 'Gợi ý tiếp theo',
     reasons: {
@@ -162,6 +186,7 @@ export const vi = {
     addAgain: 'Thêm lại',
     add: 'Thêm',
     addTrack: (title: string) => `Thêm "${title}" vào hàng chờ`,
+    inQueue: 'Đã có trong hàng chờ',
     save: 'Lưu vào Yêu thích',
     loading: 'Đang tải…',
     loadFailed: 'Không tải được danh sách.',
@@ -236,6 +261,9 @@ export const vi = {
     errThreshold: 'Nhập từ 10 đến 100',
     errQueued: 'Nhập số nguyên từ 1 đến 20',
     errDuration: 'Nhập 0 hoặc số phút nguyên từ 1 đến 120',
+    repeatGap: 'Không cho thêm lại bài vừa phát trong (phút, 0 = tắt)',
+    repeatGapHint: 'Bài đang chờ hoặc đang phát thì luôn không thêm trùng được. Quản trị viên được bỏ qua giới hạn này.',
+    errRepeatGap: 'Nhập số phút nguyên từ 0 đến 1440',
     errFallback: 'Cần link dạng youtube.com/playlist?list=…',
     pinTitle: 'Mã PIN quản trị',
     pinHint: 'Ai biết mã này đều nhận được quyền quản trị, và quản trị viên mất phiên dùng nó để vào lại.',
@@ -324,6 +352,12 @@ const ERRORS: Record<ClientErrorCode, (p: ErrorParams) => string> = {
   PIN_LOCKED: (p) => `Nhập sai mã PIN quá nhiều lần. Hãy thử lại sau ${p.minutes} phút.`,
   PIN_NOT_SET: () =>
     'Phòng này chưa đặt mã PIN quản trị. Hãy nhờ một quản trị viên đặt mã trong Cài đặt phòng.',
+  ALREADY_QUEUED: () => 'Bài này đã có trong hàng chờ hoặc đang phát.',
+  PLAYED_RECENTLY: (p) =>
+    `Bài này vừa phát ${p.minutes} phút trước. Phòng chỉ cho thêm lại sau ${p.gap} phút.`,
+  PLAYLIST_UNAVAILABLE: () =>
+    'Máy chủ chưa bật YouTube API nên chưa đọc được playlist. Hãy dán link từng bài.',
+  PLAYLIST_EMPTY: () => 'Playlist này không có bài nào phát được (trống, riêng tư hoặc bị chặn nhúng).',
   QUEUE_LIMIT: (p) =>
     `Bạn đã có ${p.max} bài đang chờ. Hãy đợi bài của bạn phát rồi thêm tiếp.`,
   TRACK_TOO_LONG: (p) =>

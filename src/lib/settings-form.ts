@@ -8,6 +8,7 @@ export interface SettingsForm {
   fallbackUrl: string;
   allowGuestDj: boolean;
   autoRadio: boolean;
+  repeatGap: string;
 }
 
 export type SettingsErrors = Partial<Record<keyof SettingsForm, true>>;
@@ -20,6 +21,7 @@ export function toForm(s: RoomSettings): SettingsForm {
     fallbackUrl: s.fallbackPlaylistUrl ?? '',
     allowGuestDj: s.allowGuestDj,
     autoRadio: s.autoRadio,
+    repeatGap: String(s.repeatGapMinutes),
   };
 }
 
@@ -34,6 +36,8 @@ export function fromForm(f: SettingsForm): { settings?: RoomSettings; errors: Se
   if (!INT.test(f.maxQueued.trim()) || q < 1 || q > 20) errors.maxQueued = true;
   const min = Number(f.maxMinutes.trim());
   if (!INT.test(f.maxMinutes.trim()) || min > 120) errors.maxMinutes = true;
+  const gap = Number(f.repeatGap.trim());
+  if (!INT.test(f.repeatGap.trim()) || gap > 1440) errors.repeatGap = true;
   const url = f.fallbackUrl.trim();
   if (url && !parseYouTubePlaylist(url)) errors.fallbackUrl = true;
   if (Object.keys(errors).length) return { errors };
@@ -46,6 +50,7 @@ export function fromForm(f: SettingsForm): { settings?: RoomSettings; errors: Se
       fallbackPlaylistUrl: url || null,
       allowGuestDj: f.allowGuestDj,
       autoRadio: f.autoRadio,
+      repeatGapMinutes: gap,
     },
   };
 }

@@ -10,6 +10,7 @@ import { vi } from '@/i18n/vi';
 import { addedByLabel } from '@/lib/added-by';
 import { estimatePosition } from '@/lib/time';
 import { useMe, useNowPlaying, useRoom } from '@/state/hooks';
+import { LyricsButton } from './Lyrics';
 import { SaveButton } from './SaveButton';
 import { LiveDial } from './TuningDial';
 
@@ -52,6 +53,7 @@ export function NowPlayingCard() {
             {picker ? vi.nowPlaying.pickedBy(picker) : addedByLabel(np.item)}
           </p>
           {t.channel && <p className="truncate text-[13px] text-sage/80">{t.channel}</p>}
+          <LyricsButton trackId={t.id} />
         </div>
         <div className="-mr-2 -mt-2 shrink-0">
           <SaveButton track={t} />

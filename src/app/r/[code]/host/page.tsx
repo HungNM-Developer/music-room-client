@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { Backdrop } from '@/components/room/Backdrop';
 import { Banners } from '@/components/room/Banners';
 import { HostChat } from '@/components/room/Chat';
+import { HostLyrics } from '@/components/room/Lyrics';
 import { HeartCanvas, triggerReaction } from '@/components/room/HeartCanvas';
 import { LiveDial } from '@/components/room/TuningDial';
 import { Button } from '@/components/ui/Button';
@@ -131,6 +132,8 @@ function HostScreen({ code }: { code: string }) {
               <p className="mt-2 text-[18px] text-sage">{picker ? vi.nowPlaying.pickedBy(picker) : addedByLabel(np.item)}</p>
             )}
           </div>
+
+          {np && <HostLyrics trackId={np.item.track.id} />}
 
           {np?.item.wishMessage && picker && (
             <figure className="max-w-3xl border-l-[3px] border-amber pl-4">
