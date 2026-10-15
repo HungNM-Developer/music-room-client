@@ -7,6 +7,7 @@ export interface SettingsForm {
   maxMinutes: string;
   fallbackUrl: string;
   allowGuestDj: boolean;
+  autoRadio: boolean;
 }
 
 export type SettingsErrors = Partial<Record<keyof SettingsForm, true>>;
@@ -18,6 +19,7 @@ export function toForm(s: RoomSettings): SettingsForm {
     maxMinutes: String(s.maxTrackDurationSec / 60),
     fallbackUrl: s.fallbackPlaylistUrl ?? '',
     allowGuestDj: s.allowGuestDj,
+    autoRadio: s.autoRadio,
   };
 }
 
@@ -43,6 +45,7 @@ export function fromForm(f: SettingsForm): { settings?: RoomSettings; errors: Se
       maxTrackDurationSec: min * 60,
       fallbackPlaylistUrl: url || null,
       allowGuestDj: f.allowGuestDj,
+      autoRadio: f.autoRadio,
     },
   };
 }

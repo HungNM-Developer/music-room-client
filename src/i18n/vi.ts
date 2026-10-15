@@ -83,6 +83,7 @@ export const vi = {
     idle: 'Thêm bài đầu tiên, loa sẽ phát ngay.',
     pickedBy: (name: string) => `${name} chọn`,
     fallback: 'Playlist dự phòng',
+    radio: 'Radio tự động',
     unknownDuration: 'Không rõ thời lượng',
     wishFrom: (name: string) => `Lời chúc từ ${name}`,
     voteSkip: (votes: number, required: number) => `Bỏ qua ${votes}/${required}`,
@@ -128,6 +129,24 @@ export const vi = {
     searchYouTube: 'Tìm trên YouTube',
     tip: 'Gõ tên bài để tìm, hoặc dán link YouTube để thêm ngay.',
     results: 'Kết quả tìm kiếm',
+  },
+
+  suggest: {
+    title: 'Gợi ý tiếp theo',
+    reasons: {
+      similar: 'Giống bài đang phát',
+      room: 'Phòng hay nghe tiếp',
+      artist: 'Cùng nghệ sĩ',
+      popular: 'Phòng thích',
+    },
+    fromLastfm: 'Gợi ý từ Last.fm, chưa có trên máy chủ',
+    findAndAdd: 'Tìm & thêm',
+    findAndAddLabel: (song: string, artist: string) => `Tìm "${song}" của ${artist} và thêm vào hàng chờ`,
+    notFound: 'Không tìm thấy bài này. Hãy thử tìm bằng tên khác.',
+    empty: 'Chưa có gợi ý. Phòng nghe càng nhiều, gợi ý càng sát gu.',
+    more: (n: number) => `Xem thêm ${n} bài`,
+    less: 'Thu gọn',
+    listLabel: 'Bài gợi ý',
   },
 
   library: {
@@ -209,6 +228,9 @@ export const vi = {
     fallback: 'Playlist dự phòng (link YouTube)',
     fallbackHint: 'Phát khi hàng chờ trống. Cần máy chủ có YOUTUBE_API_KEY.',
     allowGuestDj: 'Cho thành viên mới dùng DJ',
+    autoRadio: 'Radio tự động khi hàng chờ trống',
+    autoRadioHint:
+      'Phát tiếp những bài giống bài vừa nghe, chỉ chọn trong các bài máy chủ đã biết nên không tốn lượt tìm YouTube. Có playlist dự phòng thì Radio được ưu tiên trước.',
     save: 'Lưu cài đặt',
     saved: 'Đã lưu cài đặt phòng',
     errThreshold: 'Nhập từ 10 đến 100',

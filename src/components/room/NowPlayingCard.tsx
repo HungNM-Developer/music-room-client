@@ -7,6 +7,7 @@ import { OnAirLamp } from '@/components/ui/OnAirLamp';
 import { Thumb } from '@/components/ui/Thumb';
 import { useAct } from '@/hooks/useAct';
 import { vi } from '@/i18n/vi';
+import { addedByLabel } from '@/lib/added-by';
 import { estimatePosition } from '@/lib/time';
 import { useMe, useNowPlaying, useRoom } from '@/state/hooks';
 import { SaveButton } from './SaveButton';
@@ -48,7 +49,7 @@ export function NowPlayingCard() {
             {t.title}
           </h2>
           <p className="mt-1 truncate text-[14px] text-sage">
-            {picker ? vi.nowPlaying.pickedBy(picker) : vi.nowPlaying.fallback}
+            {picker ? vi.nowPlaying.pickedBy(picker) : addedByLabel(np.item)}
           </p>
           {t.channel && <p className="truncate text-[13px] text-sage/80">{t.channel}</p>}
         </div>

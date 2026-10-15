@@ -14,6 +14,7 @@ import { PeoplePanel } from '@/components/room/PeoplePanel';
 import { QueueList } from '@/components/room/QueueList';
 import { RoomHeader } from '@/components/room/RoomHeader';
 import { RoomSkeleton } from '@/components/room/RoomSkeleton';
+import { Suggestions } from '@/components/room/Suggestions';
 import { panelId, tabId, TabList, type TabDef } from '@/components/ui/Tabs';
 import { normalizeRoomCode } from '@/contracts/text';
 import { useRoomMood } from '@/hooks/useRoomMood';
@@ -97,6 +98,7 @@ export default function RoomPage() {
           {hasSnapshot ? (
             <>
               <NowPlayingCard />
+              <Suggestions />
               <QueueList onAdd={() => setTab('add')} />
             </>
           ) : (

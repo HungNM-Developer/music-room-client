@@ -4,6 +4,7 @@ import { Heart, Loader2, Mail, MoreHorizontal, Pin, PinOff, Plus, Trash2 } from 
 import dynamic from 'next/dynamic';
 import { memo, useMemo, useState } from 'react';
 import { Button, IconButton } from '@/components/ui/Button';
+import { addedByLabel } from '@/lib/added-by';
 import { SaveButton } from './SaveButton';
 import { Dialog, SheetAction } from '@/components/ui/Dialog';
 import { Thumb } from '@/components/ui/Thumb';
@@ -129,7 +130,7 @@ const QueueRow = memo(function QueueRow({
         </p>
         <p className="flex items-center gap-2 text-[13px] text-sage">
           <span className="truncate">
-            {item.addedBy ? item.addedBy.displayName : vi.nowPlaying.fallback}
+            {addedByLabel(item)}
             {mine && ` (${vi.queue.you})`}
           </span>
           {item.track.durationSec ? <span className="shrink-0 tabular-nums">{formatDuration(item.track.durationSec)}</span> : null}
