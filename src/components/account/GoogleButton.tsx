@@ -84,7 +84,9 @@ export function GoogleButton({ width = 280 }: { width?: number }) {
   }, [clientId, toast, width]);
 
   if (!clientId) return null;
-  return <div ref={box} className="min-h-11" />;
+  // Google draws the button in an iframe with a light color scheme. Under our dark page
+  // Chrome would paint an opaque white box behind it; matching the scheme here keeps it clear.
+  return <div ref={box} className="min-h-11" style={{ colorScheme: 'light' }} />;
 }
 
 const YOUTUBE_SCOPE = 'https://www.googleapis.com/auth/youtube.readonly';
