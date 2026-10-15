@@ -30,6 +30,8 @@ export const vi = {
     hintPin: 'Mã PIN gồm 4–8 chữ số',
     rejoinNote: 'Từng vào phòng này? Nhập đúng tên cũ để quay lại.',
     pinNeeded: 'Tên này thuộc quản trị viên của phòng. Nhập mã PIN quản trị để vào lại.',
+    rightsReset:
+      'Chào mừng quay lại. Quyền điều khiển, DJ và máy phát của bạn cần được quản trị viên cấp lại.',
     steps: [
       'Tạo phòng, mở trang máy phát trên máy tính nối loa',
       'Mọi người quét mã QR trên màn hình để vào phòng',
