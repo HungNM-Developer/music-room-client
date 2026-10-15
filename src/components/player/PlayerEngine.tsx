@@ -207,6 +207,33 @@ export function PlayerEngine({ volume = 100 }: { volume?: number }) {
     return () => clearInterval(t);
   }, [started, report, send]);
 
+  // ---------------------------------------------------------------- keep the screen on
+  // A sleeping screen lets the browser freeze or discard this tab, and a reloaded tab
+  // cannot play until someone presses start again. The lock drops whenever the page is
+  // hidden, so it is taken again on every return. Needs HTTPS; silently skipped otherwise.
+  useEffect(() => {
+    if (!started || !('wakeLock' in navigator)) return;
+    let lock: WakeLockSentinel | null = null;
+    let alive = true;
+    const take = async () => {
+      if (document.visibilityState !== 'visible' || (lock && !lock.released)) return;
+      try {
+        const next = await navigator.wakeLock.request('screen');
+        if (alive) lock = next;
+        else void next.release();
+      } catch {
+        // Denied (battery saver, insecure origin): the player still works, it may just sleep.
+      }
+    };
+    void take();
+    document.addEventListener('visibilitychange', take);
+    return () => {
+      alive = false;
+      document.removeEventListener('visibilitychange', take);
+      void lock?.release().catch(() => undefined);
+    };
+  }, [started]);
+
   // ---------------------------------------------------------------- DJ sounds play here only (R-34)
   useEffect(() => {
     if (!started) return;
