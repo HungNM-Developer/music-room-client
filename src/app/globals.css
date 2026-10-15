@@ -134,22 +134,32 @@ html {
   }
 }
 
-/* Tuning dial: the needle position is --p (0…1) on .dial-track; 100cqw = track width. */
+/* Tuning dial: the needle position is --p (0…1) on .dial-track; 100cqw = track width.
+   .dial-fill is the lit part of the baseline (0 → needle), the played portion at a glance. */
 .dial-track {
   container-type: inline-size;
 }
 
 .dial-needle {
   transform: translateX(calc(var(--p, 0) * 100cqw));
+}
+
+.dial-fill {
+  transform: scaleX(var(--p, 0));
+  transform-origin: left;
+}
+
+.dial-needle,
+.dial-fill {
   transition: transform 250ms linear;
   will-change: transform;
 }
 
-.dial-track[data-mode='sweep'] .dial-needle {
+.dial-track[data-mode='sweep'] :is(.dial-needle, .dial-fill) {
   transition: transform 900ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.dial-track[data-mode='none'] .dial-needle {
+.dial-track[data-mode='none'] :is(.dial-needle, .dial-fill) {
   transition: none;
 }
 
@@ -157,9 +167,19 @@ html {
   animation: needle-in 1.6s cubic-bezier(0.2, 0.8, 0.2, 1) 250ms both;
 }
 
+.dial-hero .dial-fill {
+  animation: fill-in 1.6s cubic-bezier(0.2, 0.8, 0.2, 1) 250ms both;
+}
+
 @keyframes needle-in {
   from {
     transform: translateX(0);
+  }
+}
+
+@keyframes fill-in {
+  from {
+    transform: scaleX(0);
   }
 }
 

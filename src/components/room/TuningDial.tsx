@@ -19,8 +19,9 @@ function scaleFor(durationSec: number): { minor: number; major: number } {
 const label = (sec: number, major: number) => (major < 60 ? formatDuration(sec) : String(Math.round(sec / 60)));
 
 /**
- * The radio tuning scale: ticks, minute numbers and the amber needle. The needle's
- * position is the CSS variable --p (0…1) on the track, so moving it never re-renders React.
+ * The radio tuning scale: minute numbers printed above the ticks (as on a real dial), the
+ * amber needle and the lit baseline behind it. Both read the CSS variable --p (0…1) on the
+ * track, so moving them never re-renders React.
  */
 function DialScale({
   durationSec,
@@ -37,7 +38,7 @@ function DialScale({
   className?: string;
 }) {
   const large = size === 'large';
-  const h = large ? 44 : 26;
+  const h = large ? 52 : 34;
   const ticks: { x: number; major: boolean }[] = [];
   const labels: { x: number; text: string }[] = [];
   const { minor, major } = scaleFor(durationSec);
@@ -58,26 +59,30 @@ function DialScale({
               x1={t.x * 1000}
               x2={t.x * 1000}
               y1={h}
-              y2={t.major ? h * 0.25 : h * 0.62}
+              y2={t.major ? h * 0.4 : h * 0.7}
               className={t.major ? 'stroke-sage/70' : 'stroke-line'}
               vectorEffect="non-scaling-stroke"
               strokeWidth={t.major && large ? 1.5 : 1}
             />
           ))}
         </svg>
+        {labels.map((l) => (
+          <span
+            key={l.x}
+            className={`type-display absolute top-0 -translate-x-1/2 leading-none text-sage/70 tabular-nums ${large ? 'text-[13px]' : 'text-[10px]'}`}
+            style={{ left: `${l.x * 100}%` }}
+            aria-hidden
+          >
+            {l.text}
+          </span>
+        ))}
         {needle && (
-          <div className={`dial-needle absolute bottom-0 left-0 rounded-full bg-amber ${large ? 'w-[3px]' : 'w-[2px]'}`} style={{ height: h + (large ? 10 : 6) }} aria-hidden />
+          <>
+            <div className={`dial-fill absolute bottom-0 left-0 w-full bg-amber ${large ? 'h-[3px]' : 'h-[2px]'}`} aria-hidden />
+            <div className={`dial-needle absolute bottom-0 left-0 rounded-full bg-amber ${large ? 'w-[3px]' : 'w-[2px]'}`} style={{ height: h * 0.72 }} aria-hidden />
+          </>
         )}
       </div>
-      {labels.length > 0 && (
-        <div className={`type-display relative mt-1 text-sage tabular-nums ${large ? 'h-5 text-[14px]' : 'h-4 text-[11px]'}`} aria-hidden>
-          {labels.map((l) => (
-            <span key={l.x} className="absolute -translate-x-1/2" style={{ left: `${l.x * 100}%` }}>
-              {l.text}
-            </span>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -138,7 +143,7 @@ export function LiveDial({ size = 'compact' }: { size?: Size }) {
   return (
     <div className="dial">
       <DialScale durationSec={dur || UNKNOWN_SCALE_SEC} size={size} trackRef={trackRef} />
-      <div className={`type-display mt-1.5 flex items-baseline justify-between tabular-nums ${large ? 'text-[18px]' : 'text-[13px]'}`}>
+      <div className={`type-display mt-1.5 flex items-baseline justify-between leading-none tabular-nums ${large ? 'text-[16px]' : 'text-[12px]'}`}>
         <span ref={timeRef} className="text-paper">
           0:00
         </span>
