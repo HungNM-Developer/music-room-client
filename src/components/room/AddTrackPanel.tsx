@@ -8,12 +8,13 @@ import type { TrackSummary } from '@/contracts';
 import { useAct } from '@/hooks/useAct';
 import { useAddTrack } from '@/hooks/useAddTrack';
 import { vi } from '@/i18n/vi';
-import { classifyInput, playlistIn } from '@/lib/add-input';
+import { classifyInput, playlistIn, sharedPlaylistIn } from '@/lib/add-input';
 import { formatDuration } from '@/lib/time';
 import { useMe, useRoom } from '@/state/hooks';
 import { DjAsk } from './DjAsk';
 import { PlayedList, SavedList } from './LibraryLists';
-import { PlaylistPicker } from './PlaylistPicker';
+import { MyPlaylists } from './MyPlaylists';
+import { type PickerSource, PlaylistPicker } from './PlaylistPicker';
 import { TrackRow } from './TrackRow';
 
 type Source = 'search' | 'played' | 'saved' | 'dj';
@@ -47,7 +48,7 @@ export function AddTrackPanel() {
       <div id={panelId('add', source)} role="tabpanel" aria-labelledby={tabId('add', source)}>
         {source === 'search' && <SearchPanel add={add} added={added} />}
         {source === 'played' && <PlayedList add={add} added={added} />}
-        {source === 'saved' && <SavedList add={add} added={added} />}
+        {source === 'saved' && <MineTab add={add} added={added} />}
         {source === 'dj' && <DjAsk add={add} added={added} />}
       </div>
     </section>
@@ -63,14 +64,15 @@ function SearchPanel({ add, added }: { add: (input: string, known?: TrackSummary
   const [source, setSource] = useState<'library' | 'cache' | 'youtube' | null>(null);
   const [busy, setBusy] = useState(false);
   // A5: the playlist link being browsed, if any.
-  const [playlistUrl, setPlaylistUrl] = useState<string | null>(null);
+  const [picker, setPicker] = useState<PickerSource | null>(null);
   const kind = classifyInput(input);
   const alsoPlaylist = kind === 'link' && playlistIn(input) !== null;
 
   function openPlaylist() {
     setResults(null);
     setSource(null);
-    setPlaylistUrl(input.trim());
+    const code = sharedPlaylistIn(input);
+    setPicker(code ? { kind: 'shared', code } : { kind: 'youtube', url: input.trim() });
   }
 
   /** A link is added at once (optimistic); a refused add puts it back in the box. */
@@ -86,7 +88,7 @@ function SearchPanel({ add, added }: { add: (input: string, known?: TrackSummary
       void addLink(input.trim()); // optimistic: no need to block the box
       return;
     }
-    if (kind === 'playlist') {
+    if (kind === 'playlist' || kind === 'shared') {
       openPlaylist();
       return;
     }
@@ -118,7 +120,7 @@ function SearchPanel({ add, added }: { add: (input: string, known?: TrackSummary
                 setInput(e.target.value);
                 setResults(null);
                 setSource(null);
-                setPlaylistUrl(null);
+                setPicker(null);
               }}
               maxLength={2048}
               placeholder={vi.add.placeholder}
@@ -132,14 +134,14 @@ function SearchPanel({ add, added }: { add: (input: string, known?: TrackSummary
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
             ) : kind === 'link' ? (
               <Plus className="h-4 w-4" aria-hidden />
-            ) : kind === 'playlist' ? (
+            ) : kind === 'playlist' || kind === 'shared' ? (
               <ListMusic className="h-4 w-4" aria-hidden />
             ) : null}
-            {kind === 'link' ? vi.add.addLink : kind === 'playlist' ? vi.playlist.open : vi.add.search}
+            {kind === 'link' ? vi.add.addLink : kind === 'playlist' || kind === 'shared' ? vi.playlist.open : vi.add.search}
           </Button>
         </div>
         <p className="px-1 text-[13px] text-sage">{searchEnabled ? vi.add.tip : vi.add.searchOff}</p>
-        {alsoPlaylist && !playlistUrl && (
+        {alsoPlaylist && !picker && (
           <Button size="sm" variant="ghost" onClick={openPlaylist}>
             <ListMusic className="h-4 w-4" aria-hidden />
             {vi.playlist.openWhole}
@@ -147,7 +149,7 @@ function SearchPanel({ add, added }: { add: (input: string, known?: TrackSummary
         )}
       </form>
 
-      {playlistUrl && <PlaylistPicker url={playlistUrl} onClose={() => setPlaylistUrl(null)} />}
+      {picker && <PlaylistPicker source={picker} onClose={() => setPicker(null)} />}
 
       {results && results.length === 0 && <p className="px-1 text-sage">{vi.add.noResults}</p>}
       {results && results.length > 0 && source === 'library' && (
@@ -179,6 +181,25 @@ function SearchPanel({ add, added }: { add: (input: string, known?: TrackSummary
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+/** "Của tôi": the account's playlists (L2, signed in) and Yêu thích (A2). */
+function MineTab({ add, added }: { add: (input: string, known?: TrackSummary) => Promise<boolean>; added: Set<string> }) {
+  const user = useRoom((s) => s.user);
+  const canSignIn = useRoom((s) => Boolean(s.health?.googleClientId));
+  return (
+    <div className="space-y-6">
+      {user ? (
+        <MyPlaylists add={add} added={added} />
+      ) : (
+        canSignIn && <p className="px-1 text-[13px] text-sage">{vi.playlists.signInHint}</p>
+      )}
+      <section className="space-y-2">
+        <h3 className="px-1 text-[15px] font-semibold">{vi.library.favorites}</h3>
+        <SavedList add={add} added={added} />
+      </section>
     </div>
   );
 }
