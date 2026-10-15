@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
+import { useToast } from '@/components/ui/Toast';
 import { PinField } from '@/components/ui/PinField';
 import { panelId, tabId, TabList } from '@/components/ui/Tabs';
 import { useSlow } from '@/hooks/useSlow';
@@ -17,6 +18,7 @@ type Mode = 'create' | 'join';
 
 export function HomeForm() {
   const router = useRouter();
+  const toast = useToast();
   const [mode, setMode] = useState<Mode>('create');
   const [name, setName] = useState('');
   const [roomName, setRoomName] = useState('');
@@ -63,6 +65,7 @@ export function HomeForm() {
       return;
     }
     rememberName(name.trim(), r.data.code);
+    if ('rightsReset' in r.data && r.data.rightsReset) toast(vi.home.rightsReset, 'info');
     router.push(`/r/${r.data.code}`);
   }
 

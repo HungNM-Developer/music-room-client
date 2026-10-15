@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
 import { Field } from '@/components/ui/Field';
+import { useToast } from '@/components/ui/Toast';
 import { PinField } from '@/components/ui/PinField';
 import { errorMessage, vi } from '@/i18n/vi';
 import { lastName, rememberName } from '@/lib/session-store';
@@ -17,6 +18,7 @@ export function JoinDialog({ code, notice }: { code: string; notice?: string | n
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(notice ?? null);
   const [busy, setBusy] = useState(false);
+  const toast = useToast();
   const [pin, setPin] = useState('');
   // The name belongs to an offline admin: the server asks for the PIN (PIN_REQUIRED).
   const [needPin, setNeedPin] = useState(false);
@@ -50,7 +52,10 @@ export function JoinDialog({ code, notice }: { code: string; notice?: string | n
     if (!r.ok) {
       if (r.error.code === 'PIN_REQUIRED') setNeedPin(true);
       setError(errorMessage(r.error.code, r.error.params));
-    } else rememberName(name.trim(), r.data.code);
+    } else {
+      rememberName(name.trim(), r.data.code);
+      if (r.data.rightsReset) toast(vi.home.rightsReset, 'info');
+    }
   }
 
   return (
