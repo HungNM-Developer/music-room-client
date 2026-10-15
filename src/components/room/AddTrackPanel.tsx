@@ -20,6 +20,8 @@ export function AddTrackPanel() {
   const toast = useToast();
   const [input, setInput] = useState('');
   const [results, setResults] = useState<TrackSummary[] | null>(null);
+  // Where the results came from: the server's own library costs no YouTube quota.
+  const [source, setSource] = useState<'library' | 'cache' | 'youtube' | null>(null);
   const [busy, setBusy] = useState(false);
   const [added, setAdded] = useState<Set<string>>(() => new Set());
   const kind = classifyInput(input);
@@ -64,9 +66,15 @@ export function AddTrackPanel() {
       void add(input.trim()); // optimistic: no need to block the box
       return;
     }
+    await search(false);
+  }
+
+  /** `remote`: skip the server library and ask YouTube (uses the daily search quota). */
+  async function search(remote: boolean) {
     setBusy(true);
-    const r = await act('search:query', { q: input });
+    const r = await act('search:query', remote ? { q: input, remote } : { q: input });
     setResults(r ? r.results : null);
+    setSource(r ? r.source : null);
     setBusy(false);
   }
 
@@ -90,6 +98,7 @@ export function AddTrackPanel() {
               onChange={(e) => {
                 setInput(e.target.value);
                 setResults(null);
+                setSource(null);
               }}
               maxLength={2048}
               placeholder={vi.add.placeholder}
@@ -107,6 +116,17 @@ export function AddTrackPanel() {
       </form>
 
       {results && results.length === 0 && <p className="px-1 text-sage">{vi.add.noResults}</p>}
+      {results && results.length > 0 && source === 'library' && (
+        <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-[13px] text-sage">
+          <span>{vi.add.fromLibrary}</span>
+          {searchEnabled && (
+            <Button size="sm" variant="ghost" disabled={busy} onClick={() => search(true)}>
+              <Search className="h-4 w-4" aria-hidden />
+              {vi.add.searchYouTube}
+            </Button>
+          )}
+        </div>
+      )}
       {results && results.length > 0 && (
         <ul aria-label={vi.add.results} className="divide-y divide-line/70 rounded-panel bg-panel px-1">
           {results.map((t) => {
