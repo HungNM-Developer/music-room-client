@@ -1,13 +1,15 @@
 'use client';
 
-import { ChevronDown, Settings2 } from 'lucide-react';
+import { ChevronDown, KeyRound, Settings2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
+import { PinField } from '@/components/ui/PinField';
 import { useToast } from '@/components/ui/Toast';
 import { useAct } from '@/hooks/useAct';
 import { vi } from '@/i18n/vi';
 import { fromForm, type SettingsErrors, type SettingsForm, toForm } from '@/lib/settings-form';
+import { isPin } from '@/lib/validate';
 import { useMe, useRoom } from '@/state/hooks';
 
 export function SettingsPanel() {
@@ -58,6 +60,45 @@ export function SettingsPanel() {
           {vi.settings.save}
         </Button>
       </form>
+      <PinSettings />
     </details>
+  );
+}
+
+/** Set (rooms from before PINs) or change the admin PIN. Separate form: forms cannot nest. */
+function PinSettings() {
+  const hasPin = useRoom((s) => s.snapshot?.room.hasPin ?? false);
+  const act = useAct();
+  const toast = useToast();
+  const [pin, setPin] = useState('');
+  const [touched, setTouched] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    setTouched(true);
+    if (!isPin(pin) || busy) return;
+    setBusy(true);
+    const ok = await act('room:set-pin', { pin });
+    setBusy(false);
+    if (!ok) return;
+    toast(vi.settings.pinSaved, 'success');
+    setPin('');
+    setTouched(false);
+  }
+
+  return (
+    <form onSubmit={save} className="space-y-3 border-t border-line/70 px-4 py-4" noValidate>
+      <h3 className="flex items-center gap-2 font-semibold">
+        <KeyRound className="h-4 w-4 text-sage" aria-hidden /> {vi.settings.pinTitle}
+      </h3>
+      <p className={`text-[13px] ${hasPin ? 'text-sage' : 'rounded-row border border-amber/35 bg-amber/10 p-3 text-paper'}`}>
+        {hasPin ? vi.settings.pinHint : vi.settings.pinMissing}
+      </p>
+      <PinField label={vi.settings.pinNew} value={pin} onChange={setPin} autoComplete="new-password" invalid={touched && !isPin(pin)} />
+      <Button type="submit" disabled={busy} aria-busy={busy} className="w-full">
+        {vi.settings.pinSave}
+      </Button>
+    </form>
   );
 }
