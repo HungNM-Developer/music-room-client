@@ -59,7 +59,7 @@ export function MyPlaylists({ add, added }: { add: Add; added: Set<string> }) {
                 )}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{p.name}</span>
-                  <span className="flex gap-2 text-[12px] text-sage">
+                  <span className="flex gap-2 text-[13px] sm:text-[12px] text-sage">
                     <span>{vi.playlists.count(p.trackCount)}</span>
                     {p.shared && <span>{vi.playlists.shared}</span>}
                   </span>
@@ -211,7 +211,7 @@ function PlaylistDetail({ id, add, added, onBack }: { id: string; add: Add; adde
                 <Thumb url={t.thumbnailUrl} size={56} ratio="wide" />
                 <div className="min-w-0 flex-1">
                   <p className="line-clamp-2 text-[14px] font-medium leading-snug [unicode-bidi:plaintext]">{t.title}</p>
-                  <p className="mt-0.5 flex gap-2 text-[12px] text-sage">
+                  <p className="mt-0.5 flex gap-2 text-[13px] sm:text-[12px] text-sage">
                     {isBlocked ? (
                       <span className="text-alert">{vi.block.label}</span>
                     ) : taken ? (

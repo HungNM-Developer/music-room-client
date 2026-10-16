@@ -1,0 +1,305 @@
+/* A · Tủ hi-fi gỗ óc chó: a walnut hi-fi cabinet — the record spins with the cover on
+   its label, a VU needle shows the time, brass buttons. Warm, classy, office-friendly. */
+html[data-theme='walnut'] {
+  --color-dial: #2f1d12;
+  --color-dial-deep: #120b06;
+  --color-panel: #1a110a;
+  --color-panel-hi: #2a1b10;
+  --color-line: #4a3322;
+  --color-paper: #ece3cf;
+  --color-sage: #cdbf9f;
+  --color-amber: #e8c674;
+  --color-amber-hi: #f2d68e;
+  --color-amber-ink: #2a1a0a;
+  --color-onair: #d0453f;
+  --color-onair-deep: #a3262a;
+  --color-alert: #ff9a8e;
+  --color-online: #9fd9a8;
+  --radius-panel: 12px;
+  --radius-row: 8px;
+  --font-display-face: var(--font-fraunces);
+}
+
+@layer components {
+  html[data-theme='walnut'] body {
+    background: repeating-linear-gradient(92deg, #3a2415 0 3px, #2f1d12 3px 9px, #36210f 9px 14px);
+  }
+  html[data-theme='walnut'] .room-header {
+    background: linear-gradient(#20140bee, #160d07ee);
+    border-bottom: 2px solid #c99a3c;
+  }
+  html[data-theme='walnut'] .room-name {
+    color: #e8c674;
+    font-weight: 800;
+  }
+  html[data-theme='walnut'] .room-code {
+    color: #2a1a0a;
+    background: #c99a3c;
+    padding: 0 8px;
+    border-radius: 4px;
+    font: 600 14px var(--font-body);
+    letter-spacing: 0.18em;
+  }
+  /* Header buttons as brass knobs. */
+  html[data-theme='walnut'] .room-header button[aria-label] {
+    border-radius: 50% !important;
+    width: 38px !important;
+    height: 38px !important;
+    margin: 0 3px;
+    background: radial-gradient(circle at 35% 30%, #f6e7bf, #b38a39 60%, #6e521d);
+    color: #2a1a0a;
+    box-shadow: 0 2px 0 #0008;
+  }
+
+  html[data-theme='walnut'] .stage {
+    --stage-btn-radius: 8px;
+    --stage-card-radius: 10px;
+    --stage-title-font: 800 32px/1.05 var(--font-fraunces), serif;
+    --stage-title-phone: 24px;
+    --stage-h3-font: 800 20px/1.2 var(--font-fraunces), serif;
+    --stage-wish-font: italic 500 16px/1.4 var(--font-fraunces), serif;
+    --stage-lyric: #a8987a;
+    --stage-live: #d0453f;
+  }
+  html[data-theme='walnut'] .stage-h3 {
+    color: #e8c674;
+  }
+  .wal-deck {
+    background: linear-gradient(#1c120a, #120b06);
+    border-radius: 14px;
+    padding: 18px;
+    border: 1px solid #ffffff14;
+    box-shadow: inset 0 2px 0 #ffffff10;
+  }
+  .wal-tt {
+    display: grid;
+    grid-template-columns: 250px minmax(0, 1fr);
+    gap: 22px;
+    align-items: center;
+  }
+  .wal-turntable {
+    position: relative;
+    width: 250px;
+    height: 250px;
+  }
+  .wal-turntable .platter {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: repeating-radial-gradient(circle, #111 0 2px, #1c1c1c 2px 4px);
+    box-shadow: 0 10px 30px #000a;
+    animation: wal-spin 6s linear infinite;
+    animation-play-state: paused;
+  }
+  .wal-turntable .platter[data-playing='true'] {
+    animation-play-state: running;
+  }
+  .wal-turntable .label {
+    position: absolute;
+    inset: 31%;
+    width: auto !important;
+    height: auto !important;
+    border-radius: 50%;
+    box-shadow: 0 0 0 4px #c99a3c;
+  }
+  .wal-turntable .arm {
+    position: absolute;
+    left: 91%;
+    top: 2%;
+    width: 10px;
+    height: 60%;
+    border-radius: 6px;
+    background: linear-gradient(#e8e2d4, #9a9488);
+    box-shadow: 2px 2px 4px #0008;
+    transform-origin: top center;
+    transform: rotate(10deg);
+    transition: transform 900ms ease;
+  }
+  .wal-turntable .arm[data-playing='true'] {
+    transform: rotate(24deg);
+  }
+  @keyframes wal-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .wal-who {
+    margin: 6px 0 0;
+    color: #e8c674;
+  }
+  html[data-theme='walnut'] .stage-wish.wal-wish {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: #ffffff0d;
+    border-left: 3px solid #c99a3c;
+  }
+  .wal-vu {
+    margin-top: 14px;
+    background: #d6e8c8;
+    border-radius: 10px;
+    padding: 10px 12px 8px;
+    color: #1d140c;
+    box-shadow: inset 0 2px 6px #0005;
+  }
+  .wal-vu .scale {
+    position: relative;
+    height: 34px;
+    overflow: hidden;
+    background: repeating-linear-gradient(90deg, #1d140c 0 1px, #0000 1px 14px);
+    border-bottom: 2px solid #1d140c;
+  }
+  .wal-vu[data-large] .scale {
+    height: 70px;
+  }
+  .wal-vu .needle {
+    position: absolute;
+    left: calc(var(--p, 0) * 100%);
+    bottom: 0;
+    width: 2px;
+    height: 130%;
+    background: #a3262a;
+    transform-origin: bottom center;
+    transform: rotate(calc(-14deg + var(--p, 0) * 28deg));
+    transition:
+      left 250ms linear,
+      transform 250ms linear;
+  }
+  .wal-vu[data-mode='sweep'] .needle {
+    transition-duration: 900ms;
+  }
+  .wal-vu .t {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .wal-vu[data-large] .t {
+    font-size: 20px;
+  }
+  /* Brass buttons. */
+  html[data-theme='walnut'] .stage-controls[data-variant='brass'] {
+    gap: 8px;
+  }
+  html[data-theme='walnut'] .stage-controls[data-variant='brass'] > button {
+    border: 0;
+    background: linear-gradient(#3b2a1c, #24180f);
+    color: #ece3cf;
+    box-shadow: 0 3px 0 #0a0603;
+    font-weight: 700;
+  }
+  html[data-theme='walnut'] .stage-controls[data-variant='brass'] > button[data-primary],
+  html[data-theme='walnut'] .stage-vote .stage-btn[data-primary] {
+    background: linear-gradient(#e8c674, #b38a39);
+    color: #2a1a0a;
+    box-shadow: 0 3px 0 #6e521d;
+  }
+  html[data-theme='walnut'] .stage-vote {
+    background: #a3262a33;
+    border-color: #a3262a88;
+  }
+  html[data-theme='walnut'] .stage-vote-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: #ffffff22;
+  }
+  /* The crate: sleeves side by side, scrolling sideways. */
+  .wal-crate {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    padding: 2px 2px 10px;
+    margin: 0;
+    list-style: none;
+    scroll-snap-type: x proximity;
+  }
+  .wal-crate .sleeve {
+    width: 140px;
+    flex: none;
+    scroll-snap-align: start;
+  }
+  .wal-crate .c {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 3px 3px 0 #0008;
+  }
+  .wal-crate .c .stage-cover-img {
+    width: 100%;
+    height: 100%;
+  }
+  .wal-crate .tag {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    max-width: calc(100% - 12px);
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: #000b;
+    color: #ece3cf;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .wal-crate b {
+    display: block;
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .wal-crate .who {
+    display: block;
+    font-size: 12px;
+    color: #cdbf9f;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .wal-crate .acts {
+    display: flex;
+    align-items: center;
+    margin-left: -8px;
+    color: #cdbf9f;
+  }
+  .wal-crate .suggest .c {
+    opacity: 0.85;
+  }
+  .wal-crate .suggest .acts {
+    margin: 6px 0 0;
+  }
+  html[data-theme='walnut'] .chat-inline,
+  html[data-theme='walnut'] .chat-window {
+    background: #1a110a;
+    border-color: #ffffff17;
+  }
+  html[data-theme='walnut'] .chat-inline h2 {
+    color: #e8c674;
+  }
+  @media (max-width: 1023px) {
+    .wal-tt {
+      grid-template-columns: 1fr;
+      justify-items: center;
+    }
+    .wal-tt > .min-w-0 {
+      justify-self: stretch;
+    }
+    .wal-turntable {
+      width: 200px;
+      height: 200px;
+    }
+    .wal-crate .sleeve,
+    .wal-crate .c {
+      width: 110px;
+    }
+    .wal-crate .c {
+      height: 110px;
+    }
+  }
+}

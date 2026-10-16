@@ -1,0 +1,111 @@
+/* Chiêm tinh: an indigo night sprinkled with stars, a thin serif, gold. The cover sits in
+   a ring of the twelve houses; the gold arc running round it is the song's time; the
+   vote countdown is a waning moon. */
+html[data-theme='astro'] {
+  --color-dial: #12142f;
+  --color-dial-deep: #0d0f26;
+  --color-panel: #171a3a;
+  --color-panel-hi: #22264d;
+  --color-line: #2b2e5a;
+  --color-paper: #ece6d6;
+  --color-sage: #a6a8cf;
+  --color-amber: #d6b25e;
+  --color-amber-hi: #e6c676;
+  --color-amber-ink: #17142a;
+  --color-onair: #d6b25e;
+  --color-onair-deep: #8a6a24;
+  --color-alert: #ff9a8e;
+  --color-online: #9fe0c0;
+  --radius-panel: 18px;
+  --radius-row: 999px;
+  --font-display-face: var(--font-cormorant);
+}
+
+@layer components {
+  .astro-sky {
+    position: fixed;
+    inset: 0;
+    z-index: -10;
+    pointer-events: none;
+    background:
+      radial-gradient(1px 1px at 10% 20%, #fff9 50%, #0000),
+      radial-gradient(1px 1px at 30% 70%, #fff7 50%, #0000),
+      radial-gradient(1.5px 1.5px at 70% 15%, #fffa 50%, #0000),
+      radial-gradient(1px 1px at 85% 60%, #fff8 50%, #0000),
+      radial-gradient(1px 1px at 55% 40%, #fff6 50%, #0000),
+      radial-gradient(1px 1px at 20% 90%, #fff7 50%, #0000),
+      radial-gradient(1px 1px at 92% 85%, #fff6 50%, #0000),
+      radial-gradient(1.5px 1.5px at 42% 8%, #fff8 50%, #0000),
+      radial-gradient(1px 1px at 64% 92%, #fff7 50%, #0000);
+  }
+  html[data-theme='astro'] .room-name {
+    font-weight: 600;
+  }
+
+  html[data-theme='astro'] .stage {
+    --stage-cover: 260px;
+    --stage-cover-phone: 210px;
+    --stage-card-radius: 18px;
+    --stage-thumb-radius: 50%;
+    --stage-title-font: 500 48px/1 var(--font-cormorant), serif;
+    --stage-title-phone: 34px;
+    --stage-h3-font: 600 22px/1.2 var(--font-cormorant), serif;
+    --stage-wish-font: italic 500 21px/1.35 var(--font-cormorant), serif;
+    --stage-lyric: #6e70a0;
+    --stage-live: var(--color-amber);
+  }
+  .astro-wheel .ring {
+    fill: none;
+    stroke: #2b2e5a;
+  }
+  .astro-wheel .houses line {
+    stroke: #d6b25e88;
+  }
+  .astro-wheel .arc {
+    fill: none;
+    stroke: #d6b25e;
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: calc(var(--p, 0) * 100) 100;
+    transition: stroke-dasharray 250ms linear;
+  }
+  .astro-wheel .star {
+    fill: #d6b25e;
+    transform-origin: 130px 130px;
+    transform: rotate(calc(var(--p, 0) * 360deg));
+    transition: transform 250ms linear;
+  }
+  .astro-wheel[data-mode='sweep'] :is(.arc, .star) {
+    transition-duration: 900ms;
+  }
+  .astro-cv {
+    position: absolute;
+    inset: 17%;
+    width: auto !important;
+    height: auto !important;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px #d6b25e66;
+  }
+  .astro-moon {
+    width: 30px;
+    height: 30px;
+    flex: none;
+    border-radius: 50%;
+    background: #ece6d6;
+    /* The shadow grows from the right as the time runs out. */
+    box-shadow: inset calc((1 - var(--left, 1)) * -30px) 0 0 0 var(--color-panel);
+    transition: box-shadow 1s linear;
+  }
+  .astro-host {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    font-size: 22px;
+  }
+  .astro-host .stage-time {
+    font-size: 24px;
+  }
+  html[data-theme='astro'] .chat-inline {
+    background: var(--color-panel);
+  }
+}

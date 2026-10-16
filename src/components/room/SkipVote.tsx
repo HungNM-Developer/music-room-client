@@ -1,11 +1,10 @@
 'use client';
 
 import { Check, SkipForward, X } from 'lucide-react';
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { Thumb } from '@/components/ui/Thumb';
-import { useAct } from '@/hooks/useAct';
 import { vi } from '@/i18n/vi';
-import { useMe, useNowPlaying, useRoom } from '@/state/hooks';
+import { meterProps, useSkipVoteState, type VoteMeterProps } from './stage/useSkipVoteState';
 
 /**
  * The window whose timers drive the countdown. A Picture-in-Picture window stays visible
@@ -31,48 +30,13 @@ export function useNow(ms: number, active: boolean): number {
   return now;
 }
 
-type Result = { kind: 'skipped' | 'kept'; title: string };
-
-/** "Đã qua bài" / "Cả phòng muốn nghe tiếp" for a moment after a vote closes. */
-function useVoteResult(): Result | null {
-  const np = useNowPlaying();
-  const open = useRef<{ itemId: string; title: string } | null>(null);
-  const [result, setResult] = useState<Result | null>(null);
-  const endsAt = np?.skip.endsAt ?? null;
-  const itemId = np?.item.id ?? null;
-  const title = np?.item.track.title ?? '';
-  useEffect(() => {
-    if (endsAt !== null && itemId) {
-      open.current = { itemId, title };
-      return;
-    }
-    const prev = open.current;
-    if (!prev) return;
-    open.current = null;
-    setResult({ kind: itemId === prev.itemId ? 'kept' : 'skipped', title: prev.title });
-    const t = setTimeout(() => setResult(null), 2500);
-    return () => clearTimeout(t);
-  }, [endsAt, itemId, title]);
-  return result;
-}
-
 /**
  * V1: the skip vote everyone sees. `member`: floating card with ✅ / ❌ (compact once I
  * voted or chose "Để sau"); `host`: a large read-only banner on the speaker screen;
  * `pip`: inline in the mini player.
  */
-export function SkipVote({ variant }: { variant: 'member' | 'host' | 'pip' }) {
-  const np = useNowPlaying();
-  const me = useMe();
-  const offset = useRoom((s) => s.offset);
-  const windowSec = useRoom((s) => s.snapshot?.room.settings.skipVoteWindowSec ?? 20);
-  const act = useAct();
-  const result = useVoteResult();
-  const [dismissed, setDismissed] = useState<number | null>(null);
-
-  const endsAt = np?.skip.endsAt ?? null;
-  const open = Boolean(np && endsAt !== null);
-  const now = useNow(1000, open);
+export function SkipVote({ variant, meter: Meter }: { variant: 'member' | 'host' | 'pip'; meter?: React.ComponentType<VoteMeterProps> }) {
+  const s = useSkipVoteState(variant === 'host');
 
   const frame =
     variant === 'member'
@@ -87,28 +51,19 @@ export function SkipVote({ variant }: { variant: 'member' | 'host' | 'pip' }) {
         ? 'pointer-events-auto w-full max-w-md animate-rise rounded-panel border border-amber/50 bg-panel p-3.5 shadow-[0_16px_40px_-16px_rgb(0_0_0/0.7)]'
         : 'rounded-row border border-amber/50 bg-dial-deep p-2.5';
 
-  if (!open && result) {
+  if (!s.open) {
+    if (!s.result) return null;
     return (
       <div className={frame}>
         <div role="status" className={`${card} text-center font-semibold ${variant === 'host' ? 'text-[24px]' : 'text-[15px]'}`}>
-          {result.kind === 'skipped' ? vi.skipVote.skipped : vi.skipVote.kept}
+          {s.result.kind === 'skipped' ? vi.skipVote.skipped : vi.skipVote.kept}
         </div>
       </div>
     );
   }
-  if (!np || endsAt === null) return null;
 
-  const serverNow = now + offset;
-  const leftMs = Math.max(0, endsAt - serverNow);
-  const seconds = Math.ceil(leftMs / 1000);
-  const { votes, required, against, voters, againstVoters, openedBy } = np.skip;
-  const mine = me ? (voters.includes(me.id) ? 'yes' : againstVoters.includes(me.id) ? 'no' : null) : null;
-  const canVote = variant !== 'host' && Boolean(me && !me.isDevice);
-  const full = canVote && mine === null && dismissed !== endsAt;
+  const { np, votes, required, against, seconds, mine } = s;
   const host = variant === 'host';
-
-  const vote = (approve: boolean) =>
-    act('queue:vote-skip', { queueItemId: np.item.id, approve }, { optimistic: { kind: 'vote', itemId: np.item.id, approve } });
 
   return (
     <div className={frame}>
@@ -118,7 +73,7 @@ export function SkipVote({ variant }: { variant: 'member' | 'host' | 'pip' }) {
           <div className="min-w-0 flex-1">
             <p className={`leading-snug ${host ? 'text-[22px]' : 'text-[14px]'}`}>
               <SkipForward className={`mr-1.5 inline align-[-2px] text-amber ${host ? 'h-5 w-5' : 'h-4 w-4'}`} aria-hidden />
-              {openedBy ? vi.skipVote.asks(openedBy.id === me?.id ? vi.skipVote.you : openedBy.displayName) : vi.skipVote.asksAnon}
+              {s.asksLabel}
             </p>
             {/* The mini player already shows the song right above. */}
             {variant !== 'pip' && (
@@ -132,19 +87,25 @@ export function SkipVote({ variant }: { variant: 'member' | 'host' | 'pip' }) {
           </p>
         </div>
 
-        <Drain leftMs={leftMs} totalMs={windowSec * 1000} thick={host} />
+        {Meter ? (
+          <div className="mt-3">
+            <Meter {...meterProps(s)} />
+          </div>
+        ) : (
+          <Drain leftMs={s.leftMs} totalMs={s.totalMs} thick={host} />
+        )}
 
-        {full ? (
+        {s.offer ? (
           <div className="mt-3 grid grid-cols-[1fr_1fr_auto] gap-2">
-            <button type="button" onClick={() => void vote(true)} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-row bg-online font-semibold text-dial-deep hover:brightness-110">
+            <button type="button" onClick={() => s.vote(true)} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-row bg-online font-semibold text-dial-deep hover:brightness-110">
               <Check className="h-5 w-5" aria-hidden />
               {vi.skipVote.yes}
             </button>
-            <button type="button" onClick={() => void vote(false)} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-row bg-onair-deep font-semibold text-paper hover:bg-onair">
+            <button type="button" onClick={() => s.vote(false)} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-row bg-onair-deep font-semibold text-paper hover:bg-onair">
               <X className="h-5 w-5" aria-hidden />
               {vi.skipVote.no}
             </button>
-            <button type="button" onClick={() => setDismissed(endsAt)} className="min-h-11 rounded-row px-2 text-[13px] text-sage hover:text-paper">
+            <button type="button" onClick={s.dismiss} className="min-h-11 rounded-row px-2 text-[13px] text-sage hover:text-paper">
               {vi.skipVote.later}
             </button>
           </div>

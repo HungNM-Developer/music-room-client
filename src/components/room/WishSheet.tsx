@@ -45,7 +45,7 @@ export function WishSheet({ item, onClose }: { item: QueueItemView; onClose: () 
             className="mt-1 w-full resize-none bg-transparent text-[16px] leading-snug text-dial outline-none placeholder:text-dial/40"
             style={{ caretColor: 'var(--color-dial)' }}
           />
-          <p className="text-right text-[12px] text-dial/60 tabular-nums">
+          <p className="text-right text-[13px] sm:text-[12px] text-dial/60 tabular-nums">
             {text.length}/{LIMITS.wish}
           </p>
         </div>

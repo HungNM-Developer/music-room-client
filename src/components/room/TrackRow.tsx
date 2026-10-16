@@ -43,7 +43,7 @@ export function TrackRow({
           <p className="line-clamp-2 text-[14px] font-medium leading-snug [unicode-bidi:plaintext]" title={track.title}>
             {track.title}
           </p>
-          <div className="mt-0.5 text-[12px] text-sage">{meta}</div>
+          <div className="mt-0.5 text-[13px] sm:text-[12px] text-sage">{meta}</div>
         </div>
         <div className="ml-auto flex items-center gap-1">
           <SaveButton track={track} />

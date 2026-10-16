@@ -165,7 +165,7 @@ function SearchRow({
       </span>
       <div className="min-w-0 flex-1">
         <p className="line-clamp-2 text-[14px] font-medium leading-snug">{song}</p>
-        <p className="mt-0.5 flex gap-2 text-[12px] text-sage">
+        <p className="mt-0.5 flex gap-2 text-[13px] sm:text-[12px] text-sage">
           <span className="truncate">{artist}</span>
           <span className="shrink-0">{reason === 'dj' ? vi.suggest.reasons.dj : vi.suggest.fromLastfm}</span>
         </p>

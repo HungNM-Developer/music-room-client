@@ -1,0 +1,361 @@
+/* D · Bảng giờ tàu nhà ga: a 1970s station board — split-flap letters, the queue as a
+   departures board with expected times, chat lines running like station announcements.
+   Clear, readable from across the room. */
+html[data-theme='station'] {
+  --color-dial: #0f1d17;
+  --color-dial-deep: #0a1410;
+  --color-panel: #15241d;
+  --color-panel-hi: #24342c;
+  --color-line: #2c3b33;
+  --color-paper: #f2efe6;
+  --color-sage: #b9c4bd;
+  --color-amber: #ffb23f;
+  --color-amber-hi: #ffc466;
+  --color-amber-ink: #0f1d17;
+  --color-onair: #e04434;
+  --color-onair-deep: #b8352a;
+  --color-alert: #ff9a8e;
+  --color-online: #8fd9a8;
+  --radius-panel: 0px;
+  --radius-row: 0px;
+  --font-display-face: var(--font-barlow-condensed);
+}
+
+@layer components {
+  html[data-theme='station'] .type-display {
+    font-stretch: normal;
+    font-weight: 700;
+  }
+  html[data-theme='station'] .room-header {
+    border-bottom: 4px solid #2c3b33;
+  }
+  html[data-theme='station'] .room-name {
+    font: 700 24px/1.1 var(--font-barlow-condensed);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .st-flaps {
+    display: inline-flex;
+    gap: 3px;
+  }
+  .st-flaps i {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 28px;
+    border-radius: 3px;
+    background: #1b2a23;
+    color: #f2efe6;
+    font: 700 20px/1 var(--font-barlow-condensed);
+    font-style: normal;
+    animation: st-flap 420ms ease-out both;
+    animation-delay: var(--d, 0ms);
+  }
+  .st-flaps i::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    background: #0009;
+  }
+  @keyframes st-flap {
+    from {
+      transform: rotateX(-90deg);
+    }
+  }
+  .st-clock {
+    margin-right: 8px;
+    color: #ffb23f;
+    font: 700 22px var(--font-barlow-condensed);
+    font-variant-numeric: tabular-nums;
+  }
+  .st-clock[data-large] {
+    font-size: 44px;
+  }
+
+  html[data-theme='station'] .stage {
+    --stage-btn-radius: 0px;
+    --stage-card-radius: 0px;
+    --stage-thumb-radius: 0px;
+    --stage-title-font: 700 40px/0.95 var(--font-barlow-condensed);
+    --stage-title-phone: 30px;
+    --stage-h3-font: 700 22px/1.1 var(--font-barlow-condensed);
+    --stage-wish-font: 400 15px/1.45 var(--font-body);
+    --stage-lyric: #9fb0a7;
+    --stage-live: #e04434;
+  }
+  html[data-theme='station'] .stage-h3 {
+    color: #ffb23f;
+    letter-spacing: 0.04em;
+  }
+  .st-now {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+  }
+  .st-now .art {
+    width: 150px;
+    height: 150px;
+    border: 4px solid #2c3b33;
+  }
+  .st-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px;
+    background: #ffb23f;
+    color: #0f1d17;
+    font: 700 15px var(--font-barlow-condensed);
+    letter-spacing: 0.06em;
+  }
+  .st-tag .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #0f1d17;
+  }
+  .st-tag .dot[data-live='true'] {
+    background: #b8352a;
+  }
+  html[data-theme='station'] .stage-title {
+    margin: 8px 0 0;
+  }
+  .st-flip-in {
+    animation: st-flap 520ms ease-out both;
+    transform-origin: top;
+  }
+  .st-who {
+    margin: 6px 0 0;
+    color: #b9c4bd;
+  }
+  .st-track-wrap {
+    margin-top: 14px;
+  }
+  .st-track {
+    position: relative;
+    height: 12px;
+    background: #24342c;
+  }
+  .st-track-wrap[data-large] .st-track {
+    height: 20px;
+  }
+  .st-track i {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: calc(var(--p, 0) * 100%);
+    background: #ffb23f;
+    transition: width 250ms linear;
+  }
+  .st-track b {
+    position: absolute;
+    top: -5px;
+    left: calc(var(--p, 0) * 100%);
+    width: 4px;
+    height: 22px;
+    background: #f2efe6;
+    transition: left 250ms linear;
+  }
+  .st-track-wrap[data-mode='sweep'] :is(.st-track i, .st-track b) {
+    transition-duration: 900ms;
+  }
+  .st-times {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    color: #b9c4bd;
+    font: 700 15px var(--font-barlow-condensed);
+    font-variant-numeric: tabular-nums;
+  }
+  .st-track-wrap[data-large] .st-times {
+    font-size: 24px;
+  }
+  .st-host {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+  }
+  .st-host .st-track-wrap {
+    flex: 1;
+    margin: 0;
+  }
+  /* The wish as an announcement panel. */
+  html[data-theme='station'] .stage-wish.st-ann {
+    margin-top: 14px;
+    padding: 8px 12px;
+    border: 2px solid #ffb23f;
+    color: #ffb23f;
+  }
+  html[data-theme='station'] .st-ann figcaption {
+    color: #d7c08f;
+  }
+  html[data-theme='station'] .stage .lyric-now {
+    font: 700 24px var(--font-barlow-condensed);
+  }
+  html[data-theme='station'] .stage-controls[data-variant='station'] > button {
+    background: #24342c;
+    border: 2px solid #3b4d44;
+    color: #f2efe6 !important;
+    font: 700 16px var(--font-barlow-condensed);
+    letter-spacing: 0.04em;
+  }
+  html[data-theme='station'] .stage-controls[data-variant='station'] > button[data-primary],
+  html[data-theme='station'] .stage-vote .stage-btn[data-primary] {
+    background: #ffb23f;
+    border-color: #ffb23f;
+    color: #0f1d17 !important;
+  }
+  html[data-theme='station'] .stage-vote {
+    border: 2px solid #ffb23f;
+    background: #15241d;
+  }
+  html[data-theme='station'] .stage-vote .stage-btn[data-primary] {
+    min-height: 40px;
+    padding: 0 18px;
+    font-size: 15px;
+  }
+  /* The departures board. */
+  .st-board {
+    width: 100%;
+    border-collapse: collapse;
+    font: 500 17px var(--font-barlow-condensed);
+  }
+  .st-board th {
+    padding: 6px 8px;
+    border-bottom: 2px solid #2c3b33;
+    color: #ffb23f;
+    font-weight: 700;
+    font-size: 14px;
+    text-align: left;
+    letter-spacing: 0.04em;
+  }
+  .st-board td {
+    padding: 6px 8px;
+    border-bottom: 1px solid #22322a;
+    background: #15241d;
+    vertical-align: middle;
+  }
+  .st-board td.t {
+    width: 72px;
+    white-space: nowrap;
+    color: #ffb23f;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  /* The title cell takes what is left; long titles end in "…". */
+  .st-board td.main {
+    width: 100%;
+    max-width: 0;
+  }
+  .st-board .title {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .st-board td.main + td {
+    white-space: nowrap;
+  }
+  .st-board span.s {
+    display: block;
+    color: #9fb0a7;
+    font-size: 14px;
+  }
+  .st-board td.s {
+    color: #9fb0a7;
+    font-size: 14px;
+  }
+  .st-board td.s .note {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: 10px;
+  }
+  .st-board td.acts {
+    width: 1%;
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  .st-board tr.dim td {
+    color: #9fb0a7;
+  }
+  /* The loudspeaker ticker. */
+  .st-ticker {
+    overflow: hidden;
+    padding: 6px 12px;
+    background: #ffb23f;
+    color: #0f1d17;
+    font: 700 15px var(--font-barlow-condensed);
+    white-space: nowrap;
+  }
+  .st-ticker .run {
+    display: inline-block;
+    padding-left: 100%;
+    animation: st-run 28s linear infinite;
+  }
+  .st-ticker .gap {
+    display: inline-block;
+    width: 6em;
+  }
+  @keyframes st-run {
+    to {
+      transform: translateX(-100%);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    /* No running text: the latest lines, still. */
+    .st-ticker {
+      white-space: normal;
+    }
+    .st-ticker .run {
+      padding-left: 0;
+      animation: none;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .st-ticker .gap {
+      display: none;
+    }
+  }
+  html[data-theme='station'] .chat-inline {
+    border: 2px solid #2c3b33;
+    background: transparent;
+  }
+  html[data-theme='station'] .chat-inline h2 {
+    color: #ffb23f;
+  }
+  html[data-theme='station'] .room-side [role='tab'][aria-selected='true'] {
+    background: #ffb23f !important;
+    color: #0f1d17 !important;
+  }
+  @media (max-width: 639px) {
+    .st-clock {
+      display: none;
+    }
+    .st-flaps i {
+      width: 15px;
+      height: 22px;
+      font-size: 15px;
+    }
+    .st-board td {
+      padding: 6px 4px;
+    }
+    .st-board td.t {
+      width: 52px;
+    }
+  }
+  @media (max-width: 1023px) {
+    .st-now {
+      grid-template-columns: 1fr;
+    }
+    .st-now .art {
+      display: none;
+    }
+  }
+}

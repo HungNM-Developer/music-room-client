@@ -69,7 +69,7 @@ export function DjAsk({ add, added }: { add: ReturnType<typeof useAddTrack>['add
             </button>
           ))}
         </div>
-        <p className="px-1 text-[12px] text-sage/80">{vi.djAsk.note}</p>
+        <p className="px-1 text-[13px] sm:text-[12px] text-sage/80">{vi.djAsk.note}</p>
       </form>
       {busy && (
         <p role="status" className="flex items-center gap-2 px-1 text-sage">

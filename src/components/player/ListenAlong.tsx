@@ -86,8 +86,11 @@ export function ListenVolume({ compact = false }: { compact?: boolean }) {
   );
 }
 
-/** Mounted on the room page: the visible player while "Nghe cùng" is on. */
-export function ListenAlong() {
+/**
+ * Once per room page (not per layout: themes remount their player box): re-announce
+ * listening after a reconnect, and stop it when the page is left.
+ */
+export function useListenSession(): void {
   const on = useListening();
   const connectCount = useRoom((s) => s.connectCount);
   const connection = useRoom((s) => s.connection);
@@ -98,7 +101,11 @@ export function ListenAlong() {
   }, [on, connection, connectCount]);
   // Leaving the room page stops it.
   useEffect(() => () => setListening(false), []);
+}
 
+/** The visible player while "Nghe cùng" is on (placed by each layout). */
+export function ListenAlong() {
+  const on = useListening();
   if (!on) return null;
   return <ListenPlayer />;
 }

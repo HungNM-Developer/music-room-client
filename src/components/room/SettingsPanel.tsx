@@ -14,6 +14,8 @@ import { isPin } from '@/lib/validate';
 import { DeleteRoomDialog } from './DeleteRoomDialog';
 import { useMe, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
+import { ThemeGrid } from '@/themes/ThemePicker';
+import { useRoomTheme } from '@/themes/useTheme';
 
 export function SettingsPanel() {
   const settings = useRoom((s) => s.snapshot?.room.settings);
@@ -48,6 +50,7 @@ export function SettingsPanel() {
         <span className="flex-1 font-semibold">{vi.settings.title}</span>
         <ChevronDown className="h-5 w-5 text-sage transition-transform group-open:rotate-180" aria-hidden />
       </summary>
+      <RoomTheme />
       <form onSubmit={save} className="space-y-4 px-4 pb-4" noValidate>
         <Field label={vi.settings.skipThreshold} inputMode="numeric" value={form.thresholdPct} onChange={(e) => set({ thresholdPct: e.target.value })} hint={vi.settings.errThreshold} invalid={errors.thresholdPct} />
         <Field label={vi.settings.voteWindow} inputMode="numeric" value={form.voteWindow} onChange={(e) => set({ voteWindow: e.target.value })} hint={vi.settings.errVoteWindow} invalid={errors.voteWindow} />
@@ -88,6 +91,28 @@ export function SettingsPanel() {
       <PinSettings />
       <DeleteRoom />
     </details>
+  );
+}
+
+/** The room's theme: saved as soon as it is picked (not part of the form above). */
+function RoomTheme() {
+  const theme = useRoomTheme();
+  const act = useAct();
+  const toast = useToast();
+  return (
+    <section aria-labelledby="room-theme-title" className="space-y-2 border-b border-line px-4 pb-5">
+      <h3 id="room-theme-title" className="font-semibold">
+        {vi.theme.roomTitle}
+      </h3>
+      <p className="text-[13px] text-sage">{vi.theme.roomHint}</p>
+      <ThemeGrid
+        value={theme}
+        onPick={async (v) => {
+          if (v === 'room' || v === theme) return;
+          if (await act('room:settings', { theme: v })) toast(vi.theme.saved, 'success');
+        }}
+      />
+    </section>
   );
 }
 

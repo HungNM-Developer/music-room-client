@@ -91,7 +91,7 @@ export function SaveToDialog({ track, onClose }: { track: TrackSummary; onClose:
             <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-row px-1 hover:bg-panel-hi">
               <input type="checkbox" className="h-5 w-5 accent-amber" checked={Boolean(p.hasTrack)} disabled={busy === p.id} onChange={() => void toggleList(p)} />
               <span className="min-w-0 flex-1 truncate">{p.name}</span>
-              <span className="shrink-0 text-[12px] text-sage">{vi.playlists.count(p.trackCount)}</span>
+              <span className="shrink-0 text-[13px] sm:text-[12px] text-sage">{vi.playlists.count(p.trackCount)}</span>
             </label>
           </li>
         ))}

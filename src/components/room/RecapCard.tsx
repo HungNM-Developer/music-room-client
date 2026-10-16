@@ -87,7 +87,7 @@ export function RecapCard() {
                   <Thumb url={s.track.thumbnailUrl} size={40} />
                   <div className="min-w-0">
                     <p className="truncate text-[14px] font-medium [unicode-bidi:plaintext]">{s.track.title}</p>
-                    <p className="text-[12px] text-sage">{vi.recap.songLine(s.plays, s.hearts)}</p>
+                    <p className="text-[13px] sm:text-[12px] text-sage">{vi.recap.songLine(s.plays, s.hearts)}</p>
                   </div>
                 </li>
               ))}
@@ -101,7 +101,7 @@ export function RecapCard() {
                 {recap.topPickers.map((p) => (
                   <li key={p.member.id} className="flex items-baseline justify-between gap-3 text-[14px]">
                     <span className="truncate">{p.member.displayName}</span>
-                    <span className="shrink-0 text-[12px] text-sage">{vi.recap.pickerLine(p.songs, p.hearts)}</span>
+                    <span className="shrink-0 text-[13px] sm:text-[12px] text-sage">{vi.recap.pickerLine(p.songs, p.hearts)}</span>
                   </li>
                 ))}
               </ol>

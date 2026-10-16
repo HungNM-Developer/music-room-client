@@ -1,0 +1,374 @@
+/* The shared "stage" layout (8 themes). Themes tune it with the --stage-* variables and
+   html[data-theme='<id>'] selectors in their own theme.css. Layered so Tailwind utilities
+   (hidden, lg:…) still win. */
+@layer components {
+  .stage {
+    --stage-cover: 240px;
+    --stage-cover-phone: 180px;
+    --stage-btn-radius: 999px;
+    --stage-card-radius: 14px;
+    --stage-thumb-radius: 6px;
+    --stage-title-font: 700 44px/1.03 var(--font-display);
+    --stage-title-phone: 30px;
+    --stage-h3-font: 700 20px/1.2 var(--font-display);
+    --stage-wish-font: 500 19px/1.4 var(--font-body);
+    --stage-lyric: color-mix(in oklab, var(--color-sage) 70%, transparent);
+    --stage-live: var(--color-onair);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .stage-hero {
+    display: grid;
+    grid-template-columns: var(--stage-cover) minmax(0, 1fr);
+    gap: 34px;
+    align-items: center;
+  }
+  .stage-cover {
+    position: relative;
+    width: var(--stage-cover);
+    aspect-ratio: 1;
+  }
+  .stage-cover-img {
+    width: 100%;
+    height: 100%;
+  }
+  .stage-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-sage);
+    font-size: 13px;
+  }
+  .stage-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--stage-live);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--stage-live) 18%, transparent);
+  }
+  .stage-dot[data-live='false'] {
+    background: var(--color-line);
+    box-shadow: none;
+  }
+  .stage-title {
+    font: var(--stage-title-font);
+    margin: 10px 0 8px;
+    overflow-wrap: anywhere;
+    unicode-bidi: plaintext;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .stage-by {
+    color: var(--color-sage);
+    margin: 0;
+  }
+  .stage-channel {
+    color: var(--color-sage);
+    font-size: 13px;
+    margin: 2px 0 0;
+  }
+  .stage-idle .stage-title {
+    font-size: 30px;
+  }
+  .stage-idle {
+    padding: 8px 0 4px;
+  }
+
+  .stage-dial {
+    margin-top: 28px;
+  }
+  .stage-dial:empty {
+    display: none;
+  }
+  .stage-info .stage-dial {
+    margin-top: 12px;
+  }
+
+  .stage-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .stage-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 0 16px;
+    border-radius: var(--stage-btn-radius);
+    border: 1px solid var(--color-line);
+    background: transparent;
+    color: var(--color-paper);
+    font-weight: 500;
+    font-size: 14px;
+    transition: background-color 150ms, color 150ms;
+  }
+  .stage-btn:hover {
+    background: var(--color-panel-hi);
+  }
+  .stage-btn[data-primary] {
+    background: var(--color-amber);
+    border-color: var(--color-amber);
+    color: var(--color-amber-ink);
+    font-weight: 600;
+  }
+  .stage-btn[data-primary]:hover {
+    background: var(--color-amber-hi);
+  }
+  .stage-btn[data-on] {
+    border-color: var(--color-amber);
+    color: var(--color-amber);
+  }
+  .stage-btn:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .stage-btn.stage-icon,
+  .stage-controls > button:not(.stage-btn) {
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    min-height: 42px;
+    padding: 0;
+    border-radius: var(--stage-btn-radius);
+    border: 1px solid var(--color-line);
+    color: var(--color-sage);
+  }
+  .stage-controls > button:not(.stage-btn):hover,
+  .stage-btn.stage-icon:hover {
+    color: var(--color-paper);
+  }
+
+  .stage-vote {
+    margin: 20px 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--stage-card-radius);
+    background: var(--color-panel);
+  }
+  .stage-vote-text {
+    flex: 1 1 220px;
+    font-size: 14px;
+  }
+  .stage-vote-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .stage-vote .stage-sb {
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+  .stage-vote-mine {
+    font-size: 13px;
+    color: var(--color-sage);
+  }
+  .stage-vote-bar {
+    flex: 1 0 100%;
+    height: 2px;
+    background: var(--color-line);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .stage-vote[data-meter='middle'] .stage-vote-bar {
+    flex: 1 1 120px;
+  }
+  .stage-vote-bar > i {
+    display: block;
+    height: 100%;
+    background: var(--color-amber);
+    transition: width 1s linear;
+  }
+
+  .stage-listeners {
+    margin-top: 14px;
+  }
+  .stage-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 10px 0 0;
+    color: var(--color-sage);
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+  }
+  .stage-time > span {
+    color: var(--color-paper);
+  }
+
+  .stage-wish {
+    margin: 24px 0 0;
+    padding-left: 14px;
+    border-left: 3px solid var(--stage-wish-line, var(--color-amber));
+  }
+  .stage-wish figcaption {
+    font-size: 13px;
+    color: var(--color-sage);
+    margin-bottom: 4px;
+  }
+  .stage-wish blockquote {
+    margin: 0;
+    font: var(--stage-wish-font);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .stage .lyrics-inline {
+    margin-top: 20px;
+  }
+  .stage .lyric-other {
+    color: var(--stage-lyric);
+  }
+
+  .stage-h3 {
+    font: var(--stage-h3-font);
+    margin: 34px 0 8px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .stage-count {
+    font: 500 13px var(--font-body);
+    color: var(--color-sage);
+  }
+  .stage-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .stage-q {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    border-top: 1px solid var(--color-line);
+  }
+  .stage-q-th {
+    border-radius: var(--stage-thumb-radius) !important;
+  }
+  .stage-q-n {
+    width: 18px;
+    flex: none;
+    text-align: center;
+    color: var(--color-sage);
+    font-variant-numeric: tabular-nums;
+  }
+  .stage-q-title {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    unicode-bidi: plaintext;
+  }
+  .stage-q-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--color-sage);
+  }
+  .stage-q-actions {
+    display: flex;
+    align-items: center;
+    flex: none;
+    color: var(--color-sage);
+  }
+  .stage-empty {
+    border: 1px dashed var(--color-line);
+    border-radius: var(--stage-card-radius);
+    padding: 26px 18px;
+    text-align: center;
+    color: var(--color-sage);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .stage > .stage-queue + section {
+    margin-top: 30px;
+  }
+  .stage > [aria-labelledby='suggest-title'] {
+    margin-top: 30px;
+  }
+
+  @media (max-width: 1023px) {
+    .stage-hero {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    .stage-cover {
+      width: var(--stage-cover-phone);
+    }
+    .stage-title {
+      font-size: var(--stage-title-phone);
+      margin-top: 6px;
+    }
+    .stage-dial {
+      margin-top: 18px;
+    }
+  }
+}
+
+/* LineDial: a progress line; the fill follows --p set by useLiveProgress. */
+@layer components {
+  .line-dial {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 6px 14px;
+    color: var(--color-sage);
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+  }
+  .line-dial[data-layout='below'] {
+    grid-template-columns: 1fr auto;
+  }
+  .line-dial[data-layout='below'] .line-dial-track {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+  .line-dial[data-layout='below'] .line-dial-t {
+    grid-row: 2;
+  }
+  .line-dial[data-layout='below'] .line-dial-total {
+    grid-row: 2;
+    text-align: right;
+  }
+  .line-dial-t {
+    color: var(--color-paper);
+  }
+  .line-dial-track {
+    position: relative;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--color-line);
+    overflow: hidden;
+  }
+  .line-dial-track > i {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 100%;
+    transform: scaleX(var(--p, 0));
+    transform-origin: left;
+    background: var(--color-amber);
+    border-radius: inherit;
+    transition: transform 250ms linear;
+  }
+  .line-dial[data-mode='sweep'] .line-dial-track > i {
+    transition: transform 900ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .line-dial[data-mode='none'] .line-dial-track > i {
+    transition: none;
+  }
+}

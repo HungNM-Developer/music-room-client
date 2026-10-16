@@ -13,14 +13,14 @@ const cache = new Map<string, Mood>();
  * air by overriding the surface tokens on <html>; globals.css animates the change.
  * Unmounting (leaving the room) restores the designed palette.
  */
-export function useRoomMood(): void {
+export function useRoomMood(enabled = true): void {
   const src = ytThumb(useRoom((s) => s.snapshot?.nowPlaying?.item.track.thumbnailUrl));
   // Last mood we computed; keeps the room in the previous song's colour while the next
   // artwork is still loading, instead of flashing back to the default.
   const [last, setLast] = useState<Mood | null>(null);
 
   useEffect(() => {
-    if (!src || cache.has(src)) return;
+    if (!enabled || !src || cache.has(src)) return;
     let alive = true;
     const img = new Image();
     img.crossOrigin = 'anonymous'; // i.ytimg.com sends ACAO: *, so the pixels are readable
@@ -34,12 +34,14 @@ export function useRoomMood(): void {
     return () => {
       alive = false;
     };
-  }, [src]);
+  }, [src, enabled]);
 
   const mood = src ? (cache.get(src) ?? last ?? DEFAULT_MOOD) : DEFAULT_MOOD;
   const key = `${Math.round(mood.hue)}:${mood.vivid.toFixed(2)}`;
 
   useEffect(() => {
+    // Themes paint the room themselves.
+    if (!enabled) return;
     const vars = moodVars(mood);
     const root = document.documentElement.style;
     for (const [name, value] of Object.entries(vars)) root.setProperty(name, value);
@@ -53,5 +55,5 @@ export function useRoomMood(): void {
     };
     // `key` captures the mood by value; the object identity changes every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  }, [key, enabled]);
 }

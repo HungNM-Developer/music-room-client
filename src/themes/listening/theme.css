@@ -1,0 +1,73 @@
+/* 1 · Phòng nghe nhạc: a listening bar — coffee brown, a thin serif, one amber accent;
+   the only vintage detail is the record peeking out behind the sleeve. */
+/* Tokens stay unlayered: next/font's variable classes on <html> are unlayered too. */
+html[data-theme='listening'] {
+  --color-dial: #1a1714;
+  --color-dial-deep: #13110e;
+  --color-panel: #211d19;
+  --color-panel-hi: #2c261f;
+  --color-line: #3a332b;
+  --color-paper: #ece5d8;
+  --color-sage: #a59a8a;
+  --color-amber: #d8a24a;
+  --color-amber-hi: #e6b664;
+  --color-amber-ink: #1a1714;
+  --color-onair: #e2553d;
+  --color-onair-deep: #b8432f;
+  --color-alert: #ff9a8e;
+  --color-online: #8fcf9f;
+  --radius-panel: 14px;
+  --radius-row: 10px;
+  --font-display-face: var(--font-fraunces);
+}
+
+@layer components {
+
+  html[data-theme='listening'] .stage {
+    --stage-cover: 220px;
+    --stage-cover-phone: 170px;
+    --stage-title-font: 400 46px/1.02 var(--font-fraunces), serif;
+    --stage-h3-font: 600 19px/1.2 var(--font-fraunces), serif;
+    --stage-wish-font: italic 400 20px/1.4 var(--font-fraunces), serif;
+    --stage-lyric: #7a7063;
+    --stage-thumb-radius: 2px;
+  }
+  html[data-theme='listening'] .stage-hero {
+    align-items: end;
+  }
+  html[data-theme='listening'] .stage-title {
+    letter-spacing: -0.01em;
+  }
+  html[data-theme='listening'] .stage-wish {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  /* The record peeks out behind the square sleeve. */
+  .listening-cover .rec {
+    position: absolute;
+    left: 21%;
+    top: 3%;
+    width: 94%;
+    height: 94%;
+    border-radius: 50%;
+    background: repeating-radial-gradient(circle, #0c0b0a 0 1.5px, #171513 1.5px 3px);
+    box-shadow: 0 0 0 1px #2b2621;
+  }
+  .listening-cover .rec::after {
+    content: '';
+    position: absolute;
+    inset: 37%;
+    border-radius: 50%;
+    background: var(--color-amber);
+  }
+  .listening-cover .stage-cover-img {
+    position: relative;
+    box-shadow: 0 18px 40px #000a;
+  }
+
+  /* Chat and the side column: thin lines, round pills. */
+  html[data-theme='listening'] .chat-inline {
+    background: var(--color-panel);
+  }
+}

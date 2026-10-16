@@ -1,0 +1,160 @@
+/* Sài Gòn xưa: patterned cement tiles in jade, lemon and brick red on lime-washed ivory.
+   The room name is a shop sign; "Tiếp theo" is a handwritten chalkboard; the wish is
+   handwritten like a card. Light theme, easy to read in daylight. */
+html[data-theme='saigon'] {
+  --color-dial: #f3ead6;
+  --color-dial-deep: #ece1c8;
+  --color-panel: #fbf5e7;
+  --color-panel-hi: #f1e7cf;
+  --color-line: #d7cbb0;
+  --color-paper: #1f2a28;
+  --color-sage: #4f5c58;
+  --color-amber: #1d6b66;
+  --color-amber-hi: #175955;
+  --color-amber-ink: #fff8e6;
+  --color-onair: #b8442f;
+  --color-onair-deep: #9a3624;
+  --color-alert: #a02a17;
+  --color-online: #1d6b66;
+  --radius-panel: 8px;
+  --radius-row: 6px;
+  --font-display-face: var(--font-bungee);
+}
+
+@layer components {
+  .saigon-tiles {
+    height: 26px;
+    background:
+      radial-gradient(circle at 50% 50%, #e8c547 0 5px, #0000 6px) 0 0 / 26px 26px,
+      conic-gradient(from 45deg, #1d6b66 0 25%, #f3ead6 0 50%, #1d6b66 0 75%, #f3ead6 0) 0 0 / 13px 13px;
+    border-bottom: 3px solid #b8442f;
+  }
+  /* The room name as a shop sign. */
+  html[data-theme='saigon'] .room-name {
+    display: inline-block;
+    max-width: 100%;
+    margin: 2px 0 6px;
+    padding: 3px 12px;
+    border-radius: 4px;
+    background: #1d6b66;
+    color: #fff8e6;
+    border: 3px solid #e8c547;
+    outline: 2px solid #1d6b66;
+    box-shadow: 4px 4px 0 #b8442f;
+    font: 400 18px/1.3 var(--font-bungee);
+    letter-spacing: 0.02em;
+    font-stretch: normal;
+  }
+  @media (max-width: 639px) {
+    html[data-theme='saigon'] .room-name {
+      font-size: 14px;
+      padding: 2px 8px;
+    }
+  }
+  html[data-theme='saigon'] .type-display {
+    font-stretch: normal;
+  }
+  html[data-theme='saigon'] h2.type-display,
+  html[data-theme='saigon'] h3.type-display {
+    font-family: var(--font-bungee);
+    font-weight: 400;
+    font-size: 17px;
+  }
+
+  html[data-theme='saigon'] .stage {
+    --stage-cover: 260px;
+    --stage-cover-phone: 100%;
+    --stage-btn-radius: 6px;
+    --stage-card-radius: 8px;
+    --stage-thumb-radius: 4px;
+    --stage-title-font: 700 40px/1.06 var(--font-body);
+    --stage-title-phone: 28px;
+    --stage-h3-font: 400 18px/1.2 var(--font-bungee);
+    --stage-wish-font: 400 23px/1.3 var(--font-patrick-hand);
+    --stage-lyric: #8a948f;
+    --stage-wish-line: var(--color-onair);
+    --stage-live: var(--color-onair);
+  }
+  html[data-theme='saigon'] .stage-title {
+    font-stretch: normal;
+  }
+  .saigon-frame {
+    padding: 12px;
+    background: #fbf5e7;
+    border: 1px solid var(--color-line);
+    box-shadow: 6px 6px 0 #1d6b66;
+  }
+  .saigon-frame .stage-cover-img {
+    filter: saturate(0.85) sepia(0.15);
+  }
+  @media (max-width: 1023px) {
+    html[data-theme='saigon'] .stage-cover {
+      aspect-ratio: auto;
+      height: 210px;
+    }
+  }
+  /* Time: a paper tape, handwritten numbers. */
+  .line-dial[data-variant='tape'] {
+    font: 400 19px var(--font-patrick-hand);
+    margin-top: 6px;
+  }
+  .line-dial[data-variant='tape'] .line-dial-track {
+    height: 10px;
+    border-radius: 5px;
+    background: #e2d7bd;
+  }
+  .line-dial[data-variant='tape'] .line-dial-track > i {
+    background: #b8442f;
+  }
+  .line-dial.saigon-host {
+    font-size: 26px;
+  }
+  html[data-theme='saigon'] .stage-vote {
+    border-color: #b8442f;
+  }
+  /* "Tiếp theo" on a chalkboard in a wooden frame. */
+  .stage-queue[data-variant='chalk'] .stage-list,
+  .stage-queue[data-variant='chalk'] .stage-empty {
+    background: #22372f;
+    color: #f4efe1;
+    border: 8px solid #6b4a2b;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font: 400 20px/1.35 var(--font-patrick-hand);
+  }
+  .stage-queue[data-variant='chalk'] .stage-q {
+    border-top: 0;
+    border-bottom: 1px dashed #f4efe144;
+    padding: 4px 0;
+  }
+  .stage-queue[data-variant='chalk'] .stage-q:last-child {
+    border-bottom: 0;
+  }
+  .stage-queue[data-variant='chalk'] .stage-q-th {
+    display: none;
+  }
+  .stage-queue[data-variant='chalk'] .stage-q-title {
+    font-weight: 400;
+  }
+  .stage-queue[data-variant='chalk'] .stage-q-meta,
+  .stage-queue[data-variant='chalk'] .stage-q-n {
+    color: #e8c547;
+    font-size: 17px;
+  }
+  .stage-queue[data-variant='chalk'] .stage-q-actions,
+  .stage-queue[data-variant='chalk'] .stage-q-actions button {
+    color: #f4efe1cc;
+  }
+  .stage-queue[data-variant='chalk'] .stage-q-actions button[aria-pressed='true'] {
+    color: #ff8a73;
+  }
+  .stage-queue[data-variant='chalk'] .stage-q-actions button:hover {
+    background: #ffffff14;
+  }
+  .stage-queue[data-variant='chalk'] .stage-empty .stage-btn {
+    font: 600 14px var(--font-body);
+  }
+  html[data-theme='saigon'] .chat-inline {
+    background: var(--color-panel);
+  }
+}

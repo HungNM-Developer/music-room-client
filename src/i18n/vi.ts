@@ -67,6 +67,16 @@ export const vi = {
 
   tabs: { label: 'Điều hướng phòng', room: 'Phòng', add: 'Thêm bài', people: 'Mọi người' },
 
+  theme: {
+    button: 'Giao diện',
+    title: 'Giao diện',
+    personalHint: 'Chỉ đổi trên máy này, cho mọi phòng bạn vào.',
+    followRoom: (name: string) => `Theo phòng (${name})`,
+    roomTitle: 'Giao diện của phòng',
+    roomHint: 'Mặc định cho mọi người và màn hình máy phát. Ai cũng có thể chọn giao diện riêng cho máy mình.',
+    saved: 'Đã đổi giao diện phòng',
+  },
+
   header: {
     copyLink: 'Sao chép link phòng',
     copied: 'Đã sao chép link phòng',
@@ -581,6 +591,9 @@ export const vi = {
     playerOffline: 'Máy phát đang mất kết nối. Hàng chờ vẫn nhận bài mới.',
     playerWaiting: 'Máy phát đang mở nhưng chưa phát. Hãy bấm “Bắt đầu phát” trên máy phát.',
     noPlayer: (url: string) => `Chưa có máy phát. Mở trang máy phát trên máy nối loa: ${url}`,
+    noPlayerMember: 'Chưa có máy phát. Nhờ quản trị viên mở trang máy phát trên máy nối loa.',
+    copyHostLink: 'Sao chép link',
+    hostLinkCopied: 'Đã sao chép link trang máy phát',
     kicked: 'Bạn đã được mời ra khỏi phòng.',
   },
 } as const;

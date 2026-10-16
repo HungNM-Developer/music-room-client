@@ -2,6 +2,7 @@
 
 import { Hourglass, RefreshCw, Speaker, Trash2, WifiOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useToast } from '@/components/ui/Toast';
 import { useOrigin } from '@/hooks/useOrigin';
 import { useSlow } from '@/hooks/useSlow';
 import { vi } from '@/i18n/vi';
@@ -20,6 +21,7 @@ export function Banners() {
     return Boolean(id && s.snapshot?.members.some((m) => m.id === id && m.online));
   });
   const skew = useVersionSkew();
+  const toast = useToast();
   // A room nobody signed in for is deleted after 30 days unused: tell its admins how to keep it.
   const me = useMe();
   const orphan = useRoom((s) => Boolean(s.snapshot && s.snapshot.room.ownerUserId === null));
@@ -58,15 +60,36 @@ export function Banners() {
   if (connection === 'reconnecting') {
     items.push({ key: 'conn', icon: <WifiOff className="h-4 w-4" aria-hidden />, text: vi.banners.reconnecting });
   }
+  const hostUrl = `${origin}/r/${code}/host`;
   if (player && kind === 'member' && connection === 'connected' && !player.online) {
     items.push({
       key: 'player',
       icon: <Speaker className="h-4 w-4" aria-hidden />,
+      // Only the admin sets up the speaker: the link is for them, a short line for everyone else.
       text: !player.memberId
-        ? vi.banners.noPlayer(`${origin}/r/${code}/host`)
+        ? me?.role === 'ADMIN'
+          ? vi.banners.noPlayer(hostUrl)
+          : vi.banners.noPlayerMember
         : playerPageOpen
           ? vi.banners.playerWaiting
           : vi.banners.playerOffline,
+      action:
+        !player.memberId && me?.role === 'ADMIN' ? (
+          <button
+            type="button"
+            className="shrink-0 font-semibold text-amber underline-offset-2 hover:underline"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(hostUrl);
+                toast(vi.banners.hostLinkCopied, 'success');
+              } catch {
+                toast(hostUrl);
+              }
+            }}
+          >
+            {vi.banners.copyHostLink}
+          </button>
+        ) : undefined,
     });
   }
   if (orphan && me?.role === 'ADMIN' && kind === 'member' && !orphanSeen) {
