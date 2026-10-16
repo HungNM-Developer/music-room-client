@@ -4,7 +4,7 @@ import { Hourglass, RefreshCw, Speaker, WifiOff } from 'lucide-react';
 import { useOrigin } from '@/hooks/useOrigin';
 import { useSlow } from '@/hooks/useSlow';
 import { vi } from '@/i18n/vi';
-import { useRoom, useVersionMismatch } from '@/state/hooks';
+import { useRoom, useVersionSkew } from '@/state/hooks';
 
 /** Connection / version / player banners (TC-123, TC-192, TC-200). */
 export function Banners() {
@@ -18,13 +18,16 @@ export function Banners() {
     const id = s.snapshot?.player.memberId;
     return Boolean(id && s.snapshot?.members.some((m) => m.id === id && m.online));
   });
-  const versionMismatch = useVersionMismatch();
+  const skew = useVersionSkew();
   const origin = useOrigin();
   // A first connection that takes this long usually means a free-tier server waking up.
   const waking = useSlow(connection === 'connecting', 2500);
   const items: { key: string; icon: React.ReactNode; text: string; action?: React.ReactNode }[] = [];
 
-  if (versionMismatch) {
+  if (skew === 'serverOlder') {
+    items.push({ key: 'version', icon: <Hourglass className="h-4 w-4" aria-hidden />, text: vi.banners.serverUpdating });
+  }
+  if (skew === 'serverNewer') {
     items.push({
       key: 'version',
       icon: <RefreshCw className="h-4 w-4" aria-hidden />,

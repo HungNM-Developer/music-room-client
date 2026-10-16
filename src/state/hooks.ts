@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import type { MemberView } from '@/contracts';
-import { isVersionMismatch } from '@/lib/version';
+import { isVersionMismatch, versionSkew } from '@/lib/version';
 import { applyNowPlaying } from './optimistic';
 import { INITIAL_STATE, room, type RoomState } from './room-store';
 
@@ -34,6 +34,7 @@ export function useNowPlaying() {
 }
 
 export const useVersionMismatch = () => useRoom((s) => isVersionMismatch(s.health));
+export const useVersionSkew = () => useRoom((s) => versionSkew(s.health));
 
 /** Mounted once in the root layout: opens the app-wide socket in the browser. */
 export function RoomRuntime() {

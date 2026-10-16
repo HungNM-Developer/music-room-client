@@ -532,6 +532,7 @@ export const vi = {
     reconnecting: 'Đang kết nối lại…',
     waking: 'Đang kết nối tới máy chủ… Máy chủ miễn phí có thể cần khoảng 1 phút để khởi động.',
     newVersion: 'Có phiên bản mới. Hãy tải lại trang.',
+    serverUpdating: 'Máy chủ đang cập nhật lên phiên bản mới. Trang sẽ tự kết nối lại khi xong, không cần tải lại.',
     reload: 'Tải lại',
     playerOffline: 'Máy phát đang mất kết nối. Hàng chờ vẫn nhận bài mới.',
     playerWaiting: 'Máy phát đang mở nhưng chưa phát. Hãy bấm “Bắt đầu phát” trên máy phát.',
