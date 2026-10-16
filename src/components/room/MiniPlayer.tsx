@@ -10,6 +10,7 @@ import { vi } from '@/i18n/vi';
 import { addedByLabel } from '@/lib/added-by';
 import { estimatePosition, formatDuration } from '@/lib/time';
 import { useMe, useNowPlaying, useRoom } from '@/state/hooks';
+import { ListenButton, ListenVolume, useListening } from '@/components/player/ListenAlong';
 import { SkipVote, TimerWindowContext, useNow } from './SkipVote';
 
 // M1: an always-on-top mini player (Document Picture-in-Picture, Chrome / Edge desktop).
@@ -101,6 +102,7 @@ function MiniPlayerView() {
   const me = useMe();
   const offset = useRoom((s) => s.offset);
   const act = useAct();
+  const listening = useListening();
   const playing = np?.status === 'PLAYING';
   const now = useNow(1000, playing || Boolean(np?.skip.blockedUntil));
 
@@ -140,6 +142,13 @@ function MiniPlayerView() {
       ) : null}
 
       <SkipVote variant="pip" />
+
+      {canVote && !me?.canPlay && (
+        <div className="flex items-center gap-2">
+          <ListenButton />
+          {listening && <ListenVolume compact />}
+        </div>
+      )}
 
       {canVote && (
         <div className="mt-auto flex items-center gap-1.5">

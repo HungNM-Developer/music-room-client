@@ -8,6 +8,7 @@ import { AddTrackPanel } from '@/components/room/AddTrackPanel';
 import { Backdrop } from '@/components/room/Backdrop';
 import { Banners } from '@/components/room/Banners';
 import { ChatOverlay } from '@/components/room/Chat';
+import { ListenAlong } from '@/components/player/ListenAlong';
 import { HeartCanvas, triggerReaction } from '@/components/room/HeartCanvas';
 import { MiniPlayerPortal } from '@/components/room/MiniPlayer';
 import { SkipVote } from '@/components/room/SkipVote';
@@ -103,6 +104,7 @@ export default function RoomPage() {
           {hasSnapshot ? (
             <>
               <NowPlayingCard />
+              <ListenAlong />
               <Suggestions />
               <QueueList onAdd={() => setTab('add')} />
             </>

@@ -247,6 +247,18 @@ export const vi = {
     listLabel: 'Nguồn trên YouTube',
   },
 
+  listen: {
+    start: 'Nghe cùng',
+    on: 'Đang nghe cùng',
+    title: 'Đang nghe cùng trên máy này',
+    stop: 'Tắt nghe cùng',
+    volume: 'Âm lượng nghe cùng',
+    keepScreenOn: 'Giữ màn hình mở: trình duyệt điện thoại dừng nhạc khi tắt màn hình hoặc chuyển ứng dụng.',
+    count: (n: number) => `${n} người đang nghe cùng từ xa`,
+    onlyYou: 'Bạn đang nghe cùng từ xa',
+    badge: 'Đang nghe cùng',
+  },
+
   miniPlayer: {
     title: 'Music Room',
     open: 'Thu nhỏ ra màn hình',
