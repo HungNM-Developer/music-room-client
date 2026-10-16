@@ -2,10 +2,11 @@
 
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { useToast } from '@/components/ui/Toast';
+import { AdminNameNotice } from './AdminNameNotice';
 import { PinField } from '@/components/ui/PinField';
 import { panelId, tabId, TabList } from '@/components/ui/Tabs';
 import { useSlow } from '@/hooks/useSlow';
@@ -27,6 +28,7 @@ export function HomeForm() {
   const [pin, setPin] = useState('');
   // Joining under the name of an offline admin: the server asks for the PIN (PIN_REQUIRED).
   const [needPin, setNeedPin] = useState(false);
+  const nameBox = useRef<HTMLDivElement>(null);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,8 +64,9 @@ export function HomeForm() {
         : await room.send('room:join', { code, displayName: name, ...(needPin ? { adminPin: pin } : {}) });
     setBusy(false);
     if (!r.ok) {
+      // PIN_REQUIRED: the notice explains it and offers another name, no red error on top.
       if (r.error.code === 'PIN_REQUIRED') setNeedPin(true);
-      setError(errorMessage(r.error.code, r.error.params));
+      else setError(errorMessage(r.error.code, r.error.params));
       return;
     }
     rememberName(name.trim(), r.data.code);
@@ -97,20 +100,22 @@ export function HomeForm() {
         className="mt-6 space-y-4"
         noValidate
       >
-        <Field
-          label={vi.home.yourName}
-          placeholder={vi.home.yourNamePlaceholder}
-          value={name}
-          maxLength={30}
-          autoComplete="nickname"
-          onChange={(e) => {
-            setName(e.target.value);
-            setNeedPin(false);
-          }}
-          onBlur={() => touch('name')}
-          hint={vi.home.hintName}
-          invalid={touched.name && !ok.name}
-        />
+        <div ref={nameBox}>
+          <Field
+            label={vi.home.yourName}
+            placeholder={vi.home.yourNamePlaceholder}
+            value={name}
+            maxLength={30}
+            autoComplete="nickname"
+            onChange={(e) => {
+              setName(e.target.value);
+              setNeedPin(false);
+            }}
+            onBlur={() => touch('name')}
+            hint={vi.home.hintName}
+            invalid={touched.name && !ok.name}
+          />
+        </div>
         {mode === 'create' ? (
           <>
             <Field
@@ -146,7 +151,19 @@ export function HomeForm() {
             invalid={touched.code && !ok.code}
           />
         )}
-        {mode === 'join' && needPin && <PinField value={pin} onChange={setPin} autoFocus />}
+        {mode === 'join' && needPin && (
+          <AdminNameNotice
+            name={name}
+            pin={pin}
+            onPin={setPin}
+            onOtherName={() => {
+              setNeedPin(false);
+              setPin('');
+              setName('');
+              nameBox.current?.querySelector('input')?.focus();
+            }}
+          />
+        )}
         {mode === 'join' && !needPin && <p className="text-[13px] text-sage">{vi.home.rejoinNote}</p>}
 
         {error && (

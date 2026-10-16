@@ -5,9 +5,9 @@ import { useEffect, useRef, useState } from 'react';
 import { GoogleButton } from '@/components/account/GoogleButton';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
+import { AdminNameNotice } from '@/components/home/AdminNameNotice';
 import { Field } from '@/components/ui/Field';
 import { useToast } from '@/components/ui/Toast';
-import { PinField } from '@/components/ui/PinField';
 import { errorMessage, vi } from '@/i18n/vi';
 import { lastName, rememberName } from '@/lib/session-store';
 import { isDisplayName, isPin } from '@/lib/validate';
@@ -24,6 +24,7 @@ export function JoinDialog({ code, notice }: { code: string; notice?: string | n
   const [pin, setPin] = useState('');
   // The name belongs to an offline admin: the server asks for the PIN (PIN_REQUIRED).
   const [needPin, setNeedPin] = useState(false);
+  const nameBox = useRef<HTMLDivElement>(null);
 
   // Prefill after hydration (the server render has no localStorage). The name used in
   // this room before comes first: typing it again brings back the same member.
@@ -69,8 +70,11 @@ export function JoinDialog({ code, notice }: { code: string; notice?: string | n
     const r = await room.send('room:join', { code, displayName: name, ...(needPin ? { adminPin: pin } : {}) });
     setBusy(false);
     if (!r.ok) {
-      if (r.error.code === 'PIN_REQUIRED') setNeedPin(true);
-      setError(errorMessage(r.error.code, r.error.params));
+      // PIN_REQUIRED: the notice explains it and offers another name, no red error on top.
+      if (r.error.code === 'PIN_REQUIRED') {
+        setNeedPin(true);
+        setError(null);
+      } else setError(errorMessage(r.error.code, r.error.params));
     } else {
       rememberName(name.trim(), r.data.code);
       if (r.data.rightsReset) toast(vi.home.rightsReset, 'info');
@@ -90,19 +94,36 @@ export function JoinDialog({ code, notice }: { code: string; notice?: string | n
   return (
     <Dialog open dismissable={false} onClose={() => undefined} title={roomName ? vi.joinDialog.title(roomName) : vi.joinDialog.loading}>
       <form onSubmit={submit} className="space-y-4">
-        <Field
-          label={vi.home.yourName}
-          placeholder={vi.home.yourNamePlaceholder}
-          value={name}
-          maxLength={30}
-          autoComplete="nickname"
-          data-autofocus
-          onChange={(e) => {
-            setName(e.target.value);
-            setNeedPin(false);
-          }}
-        />
-        {needPin ? <PinField value={pin} onChange={setPin} autoFocus /> : <p className="text-[13px] text-sage">{vi.home.rejoinNote}</p>}
+        <div ref={nameBox}>
+          <Field
+            label={vi.home.yourName}
+            placeholder={vi.home.yourNamePlaceholder}
+            value={name}
+            maxLength={30}
+            autoComplete="nickname"
+            data-autofocus
+            onChange={(e) => {
+              setName(e.target.value);
+              setNeedPin(false);
+            }}
+          />
+        </div>
+        {needPin ? (
+          <AdminNameNotice
+            name={name}
+            pin={pin}
+            onPin={setPin}
+            onOtherName={() => {
+              setNeedPin(false);
+              setPin('');
+              setError(null);
+              setName('');
+              nameBox.current?.querySelector('input')?.focus();
+            }}
+          />
+        ) : (
+          <p className="text-[13px] text-sage">{vi.home.rejoinNote}</p>
+        )}
         {error && (
           <p role="alert" className="rounded-row border border-onair/50 bg-onair/10 p-3 text-[14px]">
             {error}
