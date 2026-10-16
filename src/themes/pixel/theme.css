@@ -1,0 +1,175 @@
+/* Máy chơi game 8-bit: pixel type, hard square shadows, old console colours. Time is a
+   health bar; voting to skip is "fighting the boss"; buttons are game buttons. Chat and
+   long text stay in the normal face so they read easily. */
+html[data-theme='pixel'] {
+  --color-dial: #1d1b33;
+  --color-dial-deep: #14132a;
+  --color-panel: #26244a;
+  --color-panel-hi: #34315f;
+  --color-line: #4a4680;
+  --color-paper: #fcfcfc;
+  --color-sage: #b2afdc;
+  --color-amber: #f8b800;
+  --color-amber-hi: #ffcc33;
+  --color-amber-ink: #1d1b33;
+  --color-onair: #00d000;
+  --color-onair-deep: #009a00;
+  --color-alert: #ff8a7a;
+  --color-online: #00d000;
+  --radius-panel: 0px;
+  --radius-row: 0px;
+  --font-display-face: var(--font-vt323);
+}
+
+@layer components {
+  html[data-theme='pixel'] .type-display {
+    font-stretch: normal;
+    letter-spacing: 0.02em;
+  }
+  html[data-theme='pixel'] .room-header {
+    border-bottom: 3px solid #000;
+  }
+  html[data-theme='pixel'] .room-name {
+    font-size: 26px;
+    text-transform: uppercase;
+  }
+  .pix-lives {
+    color: #f8b800;
+    font: 400 22px var(--font-vt323);
+    white-space: nowrap;
+    margin-right: 6px;
+  }
+  @media (max-width: 639px) {
+    .pix-lives {
+      display: none;
+    }
+  }
+
+  html[data-theme='pixel'] .stage {
+    --stage-cover: 250px;
+    --stage-cover-phone: 200px;
+    --stage-btn-radius: 0px;
+    --stage-card-radius: 0px;
+    --stage-thumb-radius: 0px;
+    --stage-title-font: 400 46px/1 var(--font-vt323);
+    --stage-title-phone: 36px;
+    --stage-h3-font: 400 28px/1 var(--font-vt323);
+    --stage-wish-font: 400 26px/1.2 var(--font-vt323);
+    --stage-lyric: #7c79b4;
+    --stage-live: #00d000;
+    --stage-wish-line: #e45c10;
+  }
+  html[data-theme='pixel'] .stage-state {
+    font: 400 22px var(--font-vt323);
+  }
+  html[data-theme='pixel'] .stage-dot {
+    border-radius: 0;
+  }
+  .pix-screen {
+    padding: 10px;
+    background: #000;
+    border: 4px solid #fcfcfc;
+    box-shadow: 6px 6px 0 #000;
+  }
+  .pix-screen .stage-cover-img img {
+    image-rendering: pixelated;
+    filter: contrast(1.1) saturate(1.2);
+  }
+  /* Health bar: cells light up to --p (whole cells only). */
+  .pix-hp {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font: 400 22px var(--font-vt323);
+    color: var(--color-paper);
+  }
+  .pix-hp[data-large] {
+    font-size: 32px;
+  }
+  .pix-hp .bar {
+    flex: 1;
+    height: 18px;
+    border: 3px solid #fcfcfc;
+    background: #000;
+    display: flex;
+    gap: 2px;
+    padding: 2px;
+  }
+  .pix-hp[data-large] .bar {
+    height: 28px;
+  }
+  .pix-hp .bar i {
+    flex: 1;
+    position: relative;
+    background: #222;
+  }
+  .pix-hp .bar i::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: #00d000;
+    /* lit while this cell's index is below p × 16 (whole cells, no half-lit cell) */
+    opacity: clamp(0, calc((var(--p, 0) * 16 - var(--i)) * 1000), 1);
+  }
+  /* Game buttons: hard shadow, square. */
+  html[data-theme='pixel'] .stage-btn,
+  html[data-theme='pixel'] .stage-controls > button:not(.stage-btn) {
+    border-width: 2px;
+    border-color: var(--color-line);
+    box-shadow: 3px 3px 0 #000;
+  }
+  html[data-theme='pixel'] .stage-btn[data-primary] {
+    box-shadow: 3px 3px 0 #a86f00;
+  }
+  html[data-theme='pixel'] .stage-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 #000;
+  }
+  html[data-theme='pixel'] .stage-vote {
+    border: 3px solid #e45c10;
+    background: #2a1414;
+  }
+  html[data-theme='pixel'] .stage-vote-text {
+    flex: 0 1 auto;
+    font: 400 22px var(--font-vt323);
+  }
+  .pix-boss {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1 1 160px;
+  }
+  .pix-boss .bb {
+    flex: 1;
+    height: 14px;
+    border: 2px solid #fcfcfc;
+    display: flex;
+    gap: 2px;
+    padding: 1px;
+  }
+  .pix-boss .bb i {
+    flex: 1;
+    background: #222;
+  }
+  .pix-boss .bb i[data-hit] {
+    background: #e45c10;
+  }
+  .pix-boss .hud {
+    font: 400 22px var(--font-vt323);
+    color: var(--color-sage);
+  }
+  html[data-theme='pixel'] .stage-q {
+    border-top-width: 2px;
+  }
+  html[data-theme='pixel'] .stage .lyrics-inline .lyric-now {
+    font: 400 28px var(--font-vt323);
+  }
+  html[data-theme='pixel'] .stage .lyrics-inline .lyric-other {
+    font: 400 22px var(--font-vt323);
+  }
+  html[data-theme='pixel'] .chat-inline,
+  html[data-theme='pixel'] .stage-vote,
+  html[data-theme='pixel'] .stage-empty {
+    border-width: 3px;
+  }
+}

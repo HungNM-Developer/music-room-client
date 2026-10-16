@@ -31,8 +31,11 @@ export function toForm(s: RoomSettings): SettingsForm {
 
 const INT = /^\d+$/;
 
+/** Everything the settings form edits; the theme has its own picker (saved on its own). */
+export type FormSettings = Omit<RoomSettings, 'theme'>;
+
 /** UI units (%, minutes) → stored units (ratio, seconds) with R-47 bounds (TC-181…TC-184). */
-export function fromForm(f: SettingsForm): { settings?: RoomSettings; errors: SettingsErrors } {
+export function fromForm(f: SettingsForm): { settings?: FormSettings; errors: SettingsErrors } {
   const errors: SettingsErrors = {};
   const pct = Number(f.thresholdPct.trim());
   if (!INT.test(f.thresholdPct.trim()) || pct < 10 || pct > 100) errors.thresholdPct = true;

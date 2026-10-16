@@ -239,7 +239,7 @@ function ResultRow({
     return (
       <li className="px-1 py-2 opacity-60">
         <span className="line-clamp-2 break-all text-[14px] leading-snug [unicode-bidi:plaintext]">{item.line}</span>
-        <span className="text-[12px] text-sage">
+        <span className="text-[13px] sm:text-[12px] text-sage">
           {item.status === 'unsupported' ? vi.songList.unsupported : item.status === 'later' ? vi.songList.later : vi.songList.notFound}
         </span>
       </li>
@@ -251,7 +251,7 @@ function ResultRow({
         <Thumb url={t.thumbnailUrl} size={56} ratio="wide" />
         <span className="min-w-0 flex-1">
           <span className="line-clamp-2 text-[14px] leading-snug [unicode-bidi:plaintext]">{t.title}</span>
-          <span className="mt-0.5 flex gap-2 text-[12px] text-sage">
+          <span className="mt-0.5 flex gap-2 text-[13px] sm:text-[12px] text-sage">
             {blocked ? (
               <span className="truncate text-alert">{vi.block.label}</span>
             ) : (

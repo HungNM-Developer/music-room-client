@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
 import { vi } from '@/i18n/vi';
-import { estimatePosition, formatDuration } from '@/lib/time';
-import { useNowPlaying, useRoom } from '@/state/hooks';
+import { formatDuration } from '@/lib/time';
+import { useNowPlaying } from '@/state/hooks';
+import { useLiveProgress } from './stage/useLiveProgress';
 
 type Size = 'compact' | 'large';
 
@@ -23,7 +23,7 @@ const label = (sec: number, major: number) => (major < 60 ? formatDuration(sec) 
  * amber needle and the lit baseline behind it. Both read the CSS variable --p (0…1) on the
  * track, so moving them never re-renders React.
  */
-function DialScale({
+export function DialScale({
   durationSec,
   size,
   trackRef,
@@ -87,67 +87,21 @@ function DialScale({
   );
 }
 
-/** Scale used when YouTube gave no duration (no API key): the needle shows elapsed minutes. */
-const UNKNOWN_SCALE_SEC = 600;
-
-const prefersReducedMotion = () =>
-  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
 /** Live dial for the track that is playing now. Updates 4×/s without React renders. */
 export function LiveDial({ size = 'compact' }: { size?: Size }) {
   const np = useNowPlaying();
-  const offset = useRoom((s) => s.offset);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const timeRef = useRef<HTMLSpanElement>(null);
-  const itemId = np?.item.id;
+  const { ref: trackRef, timeRef, info: progress } = useLiveProgress();
 
-  // A new track: sweep the needle in from the left once (the one automatic motion).
-  // Declared before the tick effect so p=0 is committed before the real position lands.
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!itemId || !track || prefersReducedMotion()) return;
-    track.dataset.mode = 'none';
-    track.style.setProperty('--p', '0');
-    void track.offsetWidth; // commit p=0 before turning the sweep transition on
-    track.dataset.mode = 'sweep';
-    const settle = setTimeout(() => (track.dataset.mode = 'run'), 950);
-    return () => {
-      clearTimeout(settle);
-      track.dataset.mode = 'run';
-    };
-  }, [itemId]);
-
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!np || !track) return;
-    const dur = np.item.track.durationSec;
-    const scale = dur || UNKNOWN_SCALE_SEC;
-    let lastSec = -1;
-    const tick = () => {
-      const pos = estimatePosition({ ...np, durationSec: dur }, offset, Date.now());
-      track.style.setProperty('--p', String(Math.min(1, pos / scale)));
-      const sec = Math.floor(pos);
-      if (sec !== lastSec && timeRef.current) {
-        lastSec = sec;
-        timeRef.current.textContent = formatDuration(pos);
-      }
-    };
-    tick();
-    const timer = np.status === 'PLAYING' ? setInterval(tick, 250) : undefined;
-    return () => clearInterval(timer);
-  }, [np, offset]);
-
-  if (!np) return null;
-  const dur = np.item.track.durationSec;
+  if (!np || !progress) return null;
   const large = size === 'large';
   return (
     <div className="dial">
-      <DialScale durationSec={dur || UNKNOWN_SCALE_SEC} size={size} trackRef={trackRef} />
-      <div className={`type-display mt-1.5 flex items-baseline justify-between leading-none tabular-nums ${large ? 'text-[16px]' : 'text-[12px]'}`}>
+      <DialScale durationSec={progress.durationSec} size={size} trackRef={trackRef} />
+      <div className={`type-display mt-1.5 flex items-baseline justify-between leading-none tabular-nums ${large ? 'text-[16px]' : 'text-[13px] sm:text-[12px]'}`}>
         <span ref={timeRef} className="text-paper">
           0:00
         </span>
-        <span className="text-sage">{dur ? formatDuration(dur) : vi.nowPlaying.unknownDuration}</span>
+        <span className="text-sage">{progress.known ? formatDuration(progress.durationSec) : vi.nowPlaying.unknownDuration}</span>
       </div>
     </div>
   );

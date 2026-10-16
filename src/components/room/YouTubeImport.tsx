@@ -102,7 +102,7 @@ export function YouTubeImport({ onImported }: { onImported: () => void }) {
                 )}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{row.title}</span>
-                  {row.count !== null && <span className="text-[12px] text-sage">{vi.ytImport.count(row.count)}</span>}
+                  {row.count !== null && <span className="text-[13px] sm:text-[12px] text-sage">{vi.ytImport.count(row.count)}</span>}
                 </span>
                 <Button size="sm" variant={row.imported ? 'secondary' : 'primary'} disabled={busy !== null} aria-busy={busy === row.source} onClick={() => importRow(row)}>
                   {busy === row.source && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}

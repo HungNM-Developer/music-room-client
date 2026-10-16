@@ -1,0 +1,131 @@
+/* Synthwave 80s: night purple, hot pink, cyan. A striped sun over a horizon grid; the
+   title in glowing italics; a neon time bar; the vote countdown in LED digits. */
+html[data-theme='synthwave'] {
+  --color-dial: #140428;
+  --color-dial-deep: #0e021e;
+  --color-panel: #1d0838;
+  --color-panel-hi: #2b0f52;
+  --color-line: #43207a;
+  --color-paper: #fbe9ff;
+  --color-sage: #c4a3e3;
+  --color-amber: #ff3ea5;
+  --color-amber-hi: #ff66b8;
+  --color-amber-ink: #1b0430;
+  --color-onair: #29e7ff;
+  --color-onair-deep: #0aa6bf;
+  --color-alert: #ff9ab0;
+  --color-online: #29e7ff;
+  --radius-panel: 14px;
+  --radius-row: 10px;
+  --font-display-face: var(--font-exo2);
+}
+
+@layer components {
+  .synth-sky {
+    position: fixed;
+    inset: 0;
+    z-index: -10;
+    pointer-events: none;
+    background: radial-gradient(60% 40% at 50% 0%, #3b0a5c, #0000 70%), linear-gradient(#140428, #1a0533 60%, #140428);
+  }
+  html[data-theme='synthwave'] .type-display {
+    font-stretch: normal;
+    font-style: italic;
+    font-weight: 800;
+  }
+  html[data-theme='synthwave'] .room-name {
+    font-weight: 900;
+  }
+
+  html[data-theme='synthwave'] .stage {
+    --stage-cover: 260px;
+    --stage-cover-phone: 220px;
+    --stage-btn-radius: 10px;
+    --stage-card-radius: 14px;
+    --stage-thumb-radius: 6px;
+    --stage-title-font: italic 900 48px/1 var(--font-exo2);
+    --stage-title-phone: 34px;
+    --stage-h3-font: italic 800 22px/1.1 var(--font-exo2);
+    --stage-wish-font: italic 800 20px/1.35 var(--font-exo2);
+    --stage-lyric: #8d6ab8;
+    --stage-live: #29e7ff;
+    --stage-wish-line: #29e7ff;
+  }
+  html[data-theme='synthwave'] .stage-title {
+    background: linear-gradient(180deg, #fff 0%, #ffd23f 45%, #ff3ea5 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 12px #ff3ea566);
+    padding-right: 0.1em; /* italic overhang */
+  }
+  .synth-scene {
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+    background: linear-gradient(#1b0636 0 55%, #2a0a4a 55%);
+  }
+  .synth-scene .sun {
+    position: absolute;
+    left: 50%;
+    top: 10%;
+    width: 58%;
+    aspect-ratio: 1;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: linear-gradient(#ffd23f, #ff3ea5 70%);
+    -webkit-mask: linear-gradient(#000, #000) top / 100% 46% no-repeat, repeating-linear-gradient(#000 0 7%, #0000 7% 10%) bottom / 100% 54% no-repeat;
+    mask: linear-gradient(#000, #000) top / 100% 46% no-repeat, repeating-linear-gradient(#000 0 7%, #0000 7% 10%) bottom / 100% 54% no-repeat;
+  }
+  .synth-scene .grid {
+    position: absolute;
+    left: -50%;
+    right: -50%;
+    bottom: -4%;
+    height: 46%;
+    background: repeating-linear-gradient(90deg, #29e7ff88 0 2px, #0000 2px 34px), repeating-linear-gradient(#29e7ff88 0 2px, #0000 2px 22px);
+    transform: perspective(160px) rotateX(55deg);
+    transform-origin: top;
+  }
+  .synth-scene .cv {
+    position: absolute;
+    left: 32%;
+    top: 25%;
+    width: 36% !important;
+    height: 36% !important;
+    border-radius: 8px;
+    box-shadow: 0 0 0 2px #29e7ff, 0 0 24px #29e7ff88;
+  }
+  .line-dial[data-variant='neon'] {
+    font: italic 800 14px var(--font-exo2);
+    margin-top: 6px;
+  }
+  .line-dial[data-variant='neon'] .line-dial-track {
+    height: 4px;
+    background: #3b1a66;
+    overflow: visible;
+  }
+  .line-dial[data-variant='neon'] .line-dial-track > i {
+    background: linear-gradient(90deg, #29e7ff, #ff3ea5);
+    box-shadow: 0 0 10px #ff3ea5;
+  }
+  .line-dial.synth-host {
+    font-size: 22px;
+  }
+  .line-dial.synth-host .line-dial-track {
+    height: 8px;
+  }
+  .synth-led {
+    min-width: 2ch;
+    font: italic 900 26px/1 var(--font-exo2);
+    color: #29e7ff;
+    text-shadow: 0 0 8px #29e7ff;
+    font-variant-numeric: tabular-nums;
+  }
+  html[data-theme='synthwave'] .stage-btn[data-primary] {
+    box-shadow: 0 0 18px #ff3ea566;
+  }
+  html[data-theme='synthwave'] .chat-inline {
+    background: color-mix(in oklab, var(--color-panel) 85%, transparent);
+  }
+}

@@ -50,21 +50,31 @@ async function openMiniPlayer(): Promise<void> {
   }
   const w = await api.requestWindow({ width: 360, height: 270 });
   w.document.title = vi.miniPlayer.title;
-  // Same stylesheets, and the room's mood colours, which live on <html>.
+  // Same stylesheets, and the room's mood colours and theme, which live on <html>.
+  const isSheet = (n: Node): n is HTMLElement => n instanceof HTMLStyleElement || (n instanceof HTMLLinkElement && n.rel === 'stylesheet');
   for (const node of document.querySelectorAll('link[rel="stylesheet"], style')) {
     w.document.head.appendChild(node.cloneNode(true));
   }
+  // A theme picked while the mini player is open brings its own stylesheet.
+  const sheets = new MutationObserver((records) => {
+    for (const r of records) for (const n of r.addedNodes) if (isSheet(n)) w.document.head.appendChild(n.cloneNode(true));
+  });
+  sheets.observe(document.head, { childList: true });
   const html = w.document.documentElement;
   const mirror = () => {
-    html.className = document.documentElement.className;
-    html.lang = document.documentElement.lang;
-    html.setAttribute('style', document.documentElement.getAttribute('style') ?? '');
+    const src = document.documentElement;
+    html.className = src.className;
+    html.lang = src.lang;
+    html.setAttribute('style', src.getAttribute('style') ?? '');
+    if (src.dataset.theme) html.dataset.theme = src.dataset.theme;
+    else delete html.dataset.theme;
   };
   mirror();
   const observer = new MutationObserver(mirror);
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style'] });
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style', 'data-theme'] });
   w.addEventListener('pagehide', () => {
     observer.disconnect();
+    sheets.disconnect();
     setPipWindow(null);
   });
   setPipWindow(w);

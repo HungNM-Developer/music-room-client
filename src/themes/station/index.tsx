@@ -1,0 +1,275 @@
+'use client';
+
+import { Mail, MoreHorizontal, Pin, Plus } from 'lucide-react';
+import { ListenAlong, ListenersStrip } from '@/components/player/ListenAlong';
+import { InlineLyrics, LyricsButton } from '@/components/room/Lyrics';
+import { HeartButton, hasItemMenu, useQueueView } from '@/components/room/QueueList';
+import { SaveButton } from '@/components/room/SaveButton';
+import { useNow } from '@/components/room/SkipVote';
+import { useLiveProgress } from '@/components/room/stage/useLiveProgress';
+import { useNowPlayingActions } from '@/components/room/stage/useNowPlayingActions';
+import { useSkipVoteState } from '@/components/room/stage/useSkipVoteState';
+import { Suggestions } from '@/components/room/Suggestions';
+import { IconButton } from '@/components/ui/Button';
+import { vi } from '@/i18n/vi';
+import { addedByLabel } from '@/lib/added-by';
+import { estimatePosition, formatDuration } from '@/lib/time';
+import { useNowPlaying, useRoom } from '@/state/hooks';
+import { barlowCondensed } from '../hifi82/fonts';
+import type { ThemeModule } from '../load';
+import { NowCover, StageIdle, WishBlock } from '../stage/parts';
+import { StageControls } from '../stage/StageControls';
+import { StageVote } from '../stage/StageVote';
+import { useTopSuggestions } from '../stage/useTopSuggestions';
+import '../stage/stage.css';
+import { etaTimes } from './eta';
+import './theme.css';
+
+const hhmm = (ms: number) => new Date(ms).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+/** Split-flap letters: each character on its own flap; a new text flaps in letter by letter. */
+export function FlipText({ text, className = '' }: { text: string; className?: string }) {
+  return (
+    <span className={`st-flaps ${className}`} aria-label={text} role="img">
+      {[...text].map((ch, i) => (
+        // Keyed by the letter too, so a changed letter remounts and flaps again.
+        <i key={`${i}-${ch}`} style={{ ['--d' as string]: `${i * 40}ms` }} aria-hidden>
+          {ch === ' ' ? ' ' : ch}
+        </i>
+      ))}
+    </span>
+  );
+}
+
+function CodeFlaps() {
+  const code = useRoom((s) => s.snapshot?.room.code ?? '');
+  return <FlipText text={code} />;
+}
+
+/** The station clock, HH:mm. */
+function Clock({ large = false }: { large?: boolean }) {
+  const now = useNow(15_000, true);
+  return (
+    <span className="st-clock" data-large={large || undefined} suppressHydrationWarning>
+      {hhmm(now)}
+    </span>
+  );
+}
+
+/** The platform line: amber fill and a white marker at the song's position. */
+function Track({ large = false }: { large?: boolean }) {
+  const { ref, timeRef, info } = useLiveProgress();
+  return (
+    <div ref={ref} className="st-track-wrap" data-large={large || undefined}>
+      <div className="st-track" aria-hidden>
+        <i />
+        <b />
+      </div>
+      <div className="st-times">
+        <span ref={timeRef}>0:00</span>
+        <span>{info ? (info.known ? formatDuration(info.durationSec) : vi.nowPlaying.unknownDuration) : ''}</span>
+      </div>
+    </div>
+  );
+}
+
+/** The departures board: Dự kiến / Bài / Người chọn / Ghi chú, the room's suggestion last. */
+function Board({ openAdd }: { openAdd: () => void }) {
+  const { items, adding, me, openMenu, menus } = useQueueView();
+  const np = useNowPlaying();
+  const offset = useRoom((s) => s.offset);
+  const now = useNow(30_000, true);
+  const top = useTopSuggestions(1);
+  const pos = np ? estimatePosition({ ...np, durationSec: np.item.track.durationSec }, offset, now) : 0;
+  const etas = etaTimes(now, np ? { positionSec: pos, durationSec: np.item.track.durationSec ?? 0 } : null, items);
+  const empty = items.length === 0 && adding.length === 0;
+  return (
+    <section aria-labelledby="queue-title" className="st-board-wrap">
+      <h3 id="queue-title" aria-label={vi.queue.title} className="stage-h3">
+        Giờ khởi hành
+        {!empty && <span className="stage-count">{items.length + adding.length}</span>}
+      </h3>
+      {empty && (
+        <div className="stage-empty mb-3">
+          <p>{vi.queue.empty}</p>
+          {!me?.isDevice && (
+            <button type="button" className="stage-btn" data-primary onClick={openAdd}>
+              <Plus className="h-4 w-4" aria-hidden />
+              {vi.queue.addFirst}
+            </button>
+          )}
+        </div>
+      )}
+      <table className="st-board">
+        <thead>
+          <tr>
+            <th scope="col">Dự kiến</th>
+            <th scope="col">Bài</th>
+            <th scope="col" className="max-md:hidden">
+              Người chọn
+            </th>
+            <th scope="col" className="max-md:hidden">
+              Ghi chú
+            </th>
+            <th scope="col">
+              <span className="sr-only">Thao tác</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((q, i) => (
+            <tr key={q.id}>
+              <td className="t">{etas[i] !== null ? hhmm(etas[i] as number) : '—'}</td>
+              <td className="main">
+                <span className="title" title={q.track.title}>
+                  {q.track.title}
+                </span>
+                <span className="md:hidden s">{addedByLabel(q)}</span>
+              </td>
+              <td className="max-md:hidden">{addedByLabel(q)}</td>
+              <td className="s max-md:hidden">
+                {q.pinned && (
+                  <span className="note">
+                    <Pin className="h-3.5 w-3.5" aria-hidden /> Ghim
+                  </span>
+                )}
+                {q.wishMessage && (
+                  <span className="note">
+                    <Mail className="h-3.5 w-3.5" aria-hidden /> Lời chúc
+                  </span>
+                )}
+                {q.track.durationSec ? <span className="note">{formatDuration(q.track.durationSec)}</span> : null}
+              </td>
+              <td className="acts">
+                <div className="flex items-center justify-end">
+                  <HeartButton item={q} me={me} />
+                  <SaveButton track={q.track} />
+                  {hasItemMenu(q, me) && (
+                    <IconButton label={vi.queue.actions(q.track.title)} onClick={() => openMenu(q)}>
+                      <MoreHorizontal className="h-5 w-5" aria-hidden />
+                    </IconButton>
+                  )}
+                </div>
+              </td>
+            </tr>
+          ))}
+          {adding.map((op) => (
+            <tr key={op.id} aria-busy="true" className="dim">
+              <td className="t">…</td>
+              <td className="main">
+                <span className="title">{op.title ?? vi.queue.addingTitle}</span>
+              </td>
+              <td className="max-md:hidden">{vi.add.adding}</td>
+              <td className="max-md:hidden" />
+              <td />
+            </tr>
+          ))}
+          {top.items.map((s) => (
+            <tr key={s.track.id} className="dim">
+              <td className="t">gợi ý</td>
+              <td className="main">
+                <span className="title">{s.track.title}</span>
+              </td>
+              <td className="max-md:hidden">{vi.suggest.reasons[s.reason] ?? vi.suggest.title}</td>
+              <td className="max-md:hidden" />
+              <td className="acts">
+                <button type="button" className="stage-btn stage-sb" disabled={top.isAdded(s.track)} onClick={() => top.add(s.track)}>
+                  <Plus className="h-4 w-4" aria-hidden />
+                  {vi.add.addResult}
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {menus}
+    </section>
+  );
+}
+
+/** The station loudspeaker: the latest chat lines running across. */
+function Ticker() {
+  const chat = useRoom((s) => s.chat);
+  const recent = chat.slice(-5);
+  if (!recent.length) return null;
+  const line = recent.map((m) => `${m.displayName}: ${m.content}`).join('   ·   ');
+  return (
+    <div className="st-ticker" aria-hidden>
+      <span className="run">
+        {line}
+        <span className="gap" />
+        {line}
+      </span>
+    </div>
+  );
+}
+
+function Stage({ openAdd }: { openAdd: () => void }) {
+  const a = useNowPlayingActions();
+  const vote = useSkipVoteState();
+  if (!a) {
+    return (
+      <div className="stage station">
+        <StageIdle openAdd={openAdd} />
+        <Board openAdd={openAdd} />
+        <Suggestions />
+      </div>
+    );
+  }
+  const { track, playing } = a;
+  return (
+    <div className="stage station">
+      <section aria-label={vi.nowPlaying.title}>
+        <div className="st-now">
+          <NowCover className="art" />
+          <div className="min-w-0">
+            <span className="st-tag">
+              <span className="dot" data-live={playing} aria-hidden />
+              {playing ? vi.nowPlaying.live : vi.nowPlaying.paused} · Sân ga 1
+            </span>
+            {/* A new song flaps in. */}
+            <h2 key={a.np.item.id} className="stage-title st-flip-in" title={track.title}>
+              {track.title}
+            </h2>
+            <p className="st-who">
+              {a.pickerLabel}
+              {track.channel && ` · ${track.channel}`}
+            </p>
+            <LyricsButton trackId={track.id} />
+            <Track />
+          </div>
+        </div>
+        <WishBlock className="st-ann" />
+        <InlineLyrics trackId={track.id} size="stage" storageKey="mr:room-lyrics" className="max-lg:hidden" />
+        <StageControls a={a} variant="station" />
+        <StageVote s={vote} meterAt="middle" className="max-lg:hidden" />
+        <div className="stage-listeners empty:hidden">
+          <ListenersStrip />
+        </div>
+        {a.blockMenu}
+      </section>
+      <ListenAlong />
+      <Board openAdd={openAdd} />
+      <Suggestions />
+    </div>
+  );
+}
+
+function HostClockTrack() {
+  return (
+    <div className="st-host">
+      <Clock large />
+      <Track large />
+    </div>
+  );
+}
+
+const station: ThemeModule = {
+  Stage,
+  fontClass: barlowCondensed.variable,
+  header: { code: <CodeFlaps />, extra: <Clock />, variant: 'station' },
+  chat: { variant: 'station' },
+  SideTop: Ticker,
+  HostDial: HostClockTrack,
+};
+export default station;

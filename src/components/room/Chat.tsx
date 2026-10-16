@@ -54,10 +54,10 @@ function ChatMessages({ className = '' }: { className?: string }) {
 
 function Bubble({ m, mine }: { m: ChatMessageView; mine: boolean }) {
   return (
-    <li className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}>
-      <span className="mb-0.5 px-1 text-[12px] text-sage">{mine ? formatClock(m.createdAt) : `${m.displayName}, ${formatClock(m.createdAt)}`}</span>
+    <li data-mine={mine || undefined} className={`chat-msg flex flex-col ${mine ? 'items-end' : 'items-start'}`}>
+      <span className="mb-0.5 px-1 text-[13px] sm:text-[12px] text-sage">{mine ? formatClock(m.createdAt) : `${m.displayName}, ${formatClock(m.createdAt)}`}</span>
       <p
-        className={`max-w-[85%] whitespace-pre-wrap rounded-[16px] px-3 py-2 [overflow-wrap:anywhere] ${
+        className={`chat-bubble max-w-[85%] whitespace-pre-wrap rounded-[16px] px-3 py-2 [overflow-wrap:anywhere] ${
           mine ? 'rounded-br-[4px] bg-amber text-amber-ink' : 'rounded-bl-[4px] bg-panel-hi'
         }`}
       >
@@ -79,7 +79,7 @@ function PendingBubble({ m }: { m: PendingChat }) {
         {m.content}
       </p>
       {m.failed ? (
-        <span className="mt-0.5 flex max-w-[85%] flex-wrap items-center justify-end gap-x-2 px-1 text-right text-[12px] text-alert">
+        <span className="mt-0.5 flex max-w-[85%] flex-wrap items-center justify-end gap-x-2 px-1 text-right text-[13px] sm:text-[12px] text-alert">
           {m.error ? errorMessage(m.error.code, m.error.params) : vi.chat.failed}
           <button type="button" className="font-semibold text-amber hover:underline" onClick={() => void room.sendChat(m.content, m.id)}>
             {vi.chat.retry}
@@ -89,7 +89,7 @@ function PendingBubble({ m }: { m: PendingChat }) {
           </button>
         </span>
       ) : (
-        <span className="mt-0.5 px-1 text-[12px] text-sage">{vi.chat.sending}</span>
+        <span className="mt-0.5 px-1 text-[13px] sm:text-[12px] text-sage">{vi.chat.sending}</span>
       )}
     </li>
   );
@@ -122,7 +122,7 @@ function ReactionRow() {
   );
 }
 
-function ChatComposer({ inputRef }: { inputRef: React.RefObject<HTMLInputElement | null> }) {
+function ChatComposer({ inputRef, placeholder = vi.chat.placeholder }: { inputRef: React.RefObject<HTMLInputElement | null>; placeholder?: string }) {
   const [text, setText] = useState('');
   const id = useId();
 
@@ -147,7 +147,7 @@ function ChatComposer({ inputRef }: { inputRef: React.RefObject<HTMLInputElement
         value={text}
         maxLength={LIMITS.chat}
         onChange={(e) => setText(e.target.value)}
-        placeholder={vi.chat.placeholder}
+        placeholder={placeholder}
         className="field min-w-0 flex-1 !min-h-11 rounded-full"
         autoComplete="off"
         enterKeyHint="send"
@@ -160,12 +160,40 @@ function ChatComposer({ inputRef }: { inputRef: React.RefObject<HTMLInputElement
 }
 
 /**
+ * Phones: the chat bubble steps aside while the page scrolls down (it would sit on the
+ * "+ Thêm" buttons at the right edge of lists) and comes back on scrolling up or at the end.
+ */
+function useTuckOnScroll(): boolean {
+  const [tucked, setTucked] = useState(false);
+  useEffect(() => {
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      const atEnd = window.innerHeight + y >= document.documentElement.scrollHeight - 24;
+      if (y < 80 || atEnd || y < last - 4) setTucked(false);
+      else if (y > last + 4) setTucked(true);
+      last = y;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  return tucked;
+}
+
+/**
  * Facebook-style chat. Desktop (≥1024 px): a bar docked to the bottom edge that opens
  * a window docked to the same edge. Phones/tablets: a chat bubble above the tab bar
  * (with a short preview of new messages) that opens a sheet / floating window.
  * Quick reactions and the DJ keys live in the window's toolbar.
  */
-export function ChatOverlay() {
+/** How a theme dresses the chat: its own heading / placeholder and a CSS hook. */
+export interface InlineChatSkin {
+  title?: string;
+  placeholder?: string;
+  variant?: string;
+}
+
+export function ChatOverlay({ title, placeholder, variant }: InlineChatSkin = {}) {
   const [open, setOpen] = useState(false);
   const [djOpen, setDjOpen] = useState(false);
   const [dismissedId, setDismissedId] = useState<string | null>(null);
@@ -181,6 +209,7 @@ export function ChatOverlay() {
   const restoreFocus = useRef(false);
   const windowId = useId();
   const titleId = useId();
+  const tucked = useTuckOnScroll() && !open;
 
   const minimize = () => {
     restoreFocus.current = true;
@@ -233,8 +262,9 @@ export function ChatOverlay() {
           role="dialog"
           aria-modal="false"
           aria-labelledby={titleId}
+          data-variant={variant}
           className={[
-            'fixed z-50 flex animate-rise flex-col border border-line bg-dial-deep shadow-[0_-16px_48px_-12px_rgb(0_0_0/0.7)]',
+            'chat-window fixed z-50 flex animate-rise flex-col border border-line bg-dial-deep shadow-[0_-16px_48px_-12px_rgb(0_0_0/0.7)]',
             // phones: tall sheet from the bottom edge
             'inset-x-0 bottom-0 h-[min(85dvh,640px)] rounded-t-panel border-b-0',
             // tablets: floating window above the chat bubble
@@ -248,10 +278,10 @@ export function ChatOverlay() {
               <MessageCircle className="h-5 w-5" />
             </span>
             <div className="min-w-0 flex-1">
-              <h2 id={titleId} className="type-display text-[18px] font-bold leading-tight">
-                {vi.chat.title}
+              <h2 id={titleId} aria-label={vi.chat.title} className="type-display text-[18px] font-bold leading-tight">
+                {title ?? vi.chat.title}
               </h2>
-              {roomName && <p className="truncate text-[12px] text-sage">{roomName}</p>}
+              {roomName && <p className="truncate text-[13px] sm:text-[12px] text-sage">{roomName}</p>}
             </div>
             <IconButton label={vi.chat.minimize} onClick={minimize}>
               <ChevronDown className="h-5 w-5" aria-hidden />
@@ -279,7 +309,7 @@ export function ChatOverlay() {
               )}
             </div>
             {canDj && djOpen && <DjPads />}
-            <ChatComposer inputRef={inputRef} />
+            <ChatComposer inputRef={inputRef} placeholder={placeholder} />
           </div>
         </section>
       )}
@@ -308,14 +338,18 @@ export function ChatOverlay() {
       )}
 
       {/* Phone / tablet launcher: a chat bubble above the tab bar, with a short preview. */}
-      <div className="fixed bottom-[calc(57px+1rem+env(safe-area-inset-bottom))] right-4 z-40 flex items-end gap-2 lg:hidden">
+      <div
+        className={`fixed bottom-[calc(57px+1rem+env(safe-area-inset-bottom))] right-4 z-40 flex items-end gap-2 transition-[transform,opacity] duration-200 motion-reduce:transition-none lg:hidden ${
+          tucked ? 'pointer-events-none translate-x-[calc(100%+1rem)] opacity-0' : ''
+        }`}
+      >
         {preview && (
           <button
             type="button"
             onClick={() => setOpen(true)}
             className="mb-1 max-w-[240px] animate-rise rounded-[16px] rounded-br-[4px] border border-line bg-panel px-3 py-2 text-left text-[14px] shadow-[0_12px_32px_-12px_rgb(0_0_0/0.7)]"
           >
-            <span className="block text-[12px] text-sage">{preview.displayName}</span>
+            <span className="block text-[13px] sm:text-[12px] text-sage">{preview.displayName}</span>
             <span className="line-clamp-2 [overflow-wrap:anywhere]">{preview.content}</span>
           </button>
         )}
@@ -339,6 +373,62 @@ export function ChatOverlay() {
 }
 
 /** Speaker screen: the last few messages, large enough to read across the office. */
+/**
+ * Desktop (≥1024 px): the chat always open in the side column, like the speaker page.
+ * Seen on screen = read. Phones keep the floating chat (ChatOverlay).
+ */
+export function InlineChat({ title, placeholder, variant }: InlineChatSkin = {}) {
+  const me = useMe();
+  const canDj = Boolean(me && (me.canDj || me.role === 'ADMIN'));
+  const chatLength = useRoom((s) => s.chat.length);
+  const [djOpen, setDjOpen] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const boxRef = useRef<HTMLElement>(null);
+
+  // Hidden below 1024 px (display: none never intersects), so phones keep their unread count.
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting));
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  useEffect(() => {
+    if (visible) room.markChatRead();
+  }, [visible, chatLength]);
+
+  return (
+    <section ref={boxRef} aria-labelledby="inline-chat-title" data-variant={variant} className="chat-inline flex flex-col rounded-panel border border-line bg-panel/70">
+      <h2 id="inline-chat-title" aria-label={vi.chat.title} className="type-display px-4 pt-3 text-[22px] font-bold">
+        {title ?? vi.chat.title}
+      </h2>
+      <ChatMessages className="h-[300px]" />
+      <div className="space-y-2 border-t border-line p-3">
+        <div className="flex items-center gap-2">
+          <ReactionRow />
+          {canDj && (
+            <button
+              type="button"
+              aria-pressed={djOpen}
+              aria-label={vi.chat.djToggle}
+              title={vi.chat.djToggle}
+              onClick={() => setDjOpen((v) => !v)}
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                djOpen ? 'border-amber bg-amber text-amber-ink' : 'border-line text-sage hover:text-paper'
+              }`}
+            >
+              <Disc3 className={`h-5 w-5 ${djOpen ? 'motion-safe:animate-spin [animation-duration:3s]' : ''}`} aria-hidden />
+            </button>
+          )}
+        </div>
+        {canDj && djOpen && <DjPads />}
+        <ChatComposer inputRef={inputRef} placeholder={placeholder} />
+      </div>
+    </section>
+  );
+}
+
 export function HostChat() {
   const chat = useRoom((s) => s.chat);
   const recent = chat.slice(-4);

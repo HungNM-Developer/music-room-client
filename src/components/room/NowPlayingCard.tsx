@@ -1,38 +1,22 @@
 'use client';
 
 import { Loader2, MoreHorizontal, Pause, Play, SkipForward, StepForward } from 'lucide-react';
-import { useState } from 'react';
 import { Button, IconButton } from '@/components/ui/Button';
 import { OnAirLamp } from '@/components/ui/OnAirLamp';
 import { Thumb } from '@/components/ui/Thumb';
-import type { TrackSummary } from '@/contracts';
-import { useAct } from '@/hooks/useAct';
 import { vi } from '@/i18n/vi';
-import { addedByLabel } from '@/lib/added-by';
-import { estimatePosition } from '@/lib/time';
-import { useMe, useNowPlaying, useRoom } from '@/state/hooks';
-import { BlockMenu } from './BlockDialog';
 import { LyricsButton } from './Lyrics';
 import { ListenButton, ListenersStrip } from '@/components/player/ListenAlong';
 import { MiniPlayerButton } from './MiniPlayer';
-import { useNow } from './SkipVote';
 import { SaveButton } from './SaveButton';
+import { useNowPlayingActions } from './stage/useNowPlayingActions';
 import { LiveDial } from './TuningDial';
 
 /** The song on air: cover, who picked it, their wish, the dial and the controls. */
 export function NowPlayingCard() {
-  const np = useNowPlaying();
-  const offset = useRoom((s) => s.offset);
-  const me = useMe();
-  const act = useAct();
-  const [skipping, setSkipping] = useState(false);
-  // The song the ⋯ menu was opened for: a song change closes the menu, so the next song
-  // can never be blocked by mistake.
-  const [blockFor, setBlockFor] = useState<{ itemId: string; track: TrackSummary } | null>(null);
-  const menuTrack = blockFor && blockFor.itemId === np?.item.id ? blockFor.track : null;
-  const now = useNow(1000, Boolean(np?.skip.blockedUntil));
+  const a = useNowPlayingActions();
 
-  if (!np) {
+  if (!a) {
     return (
       <section aria-label={vi.nowPlaying.title} className="rounded-panel bg-panel p-5">
         <OnAirLamp live={false}>{vi.nowPlaying.paused}</OnAirLamp>
@@ -42,14 +26,7 @@ export function NowPlayingCard() {
     );
   }
 
-  const t = np.item.track;
-  const playing = np.status === 'PLAYING';
-  const canControl = me?.role === 'ADMIN' || me?.canControl;
-  const voted = Boolean(me && (np.skip.voters.includes(me.id) || np.skip.againstVoters.includes(me.id)));
-  // V1: a song the room just voted to keep cannot be put to a vote again for a while.
-  const keptSec = np.skip.blockedUntil ? Math.max(0, Math.ceil((np.skip.blockedUntil - (now + offset)) / 1000)) : 0;
-  const canVote = me && !me.isDevice;
-  const picker = np.item.addedBy?.displayName;
+  const { np, track: t, playing, picker, canVote, canControl } = a;
 
   return (
     <section aria-label={vi.nowPlaying.title} className="rounded-panel border border-paper/10 bg-panel/80 p-4 sm:p-5">
@@ -58,12 +35,10 @@ export function NowPlayingCard() {
       <div className="mt-3 flex gap-3.5">
         <Thumb url={t.thumbnailUrl} size={76} className="rounded-row" />
         <div className="min-w-0 flex-1">
-          <h2 className="type-display line-clamp-2 text-[22px] font-bold leading-[1.1] [unicode-bidi:plaintext]" title={t.title}>
+          <h2 className="type-display line-clamp-2 text-[22px] font-bold leading-[1.1] [unicode-bidi:plaintext] lg:text-[28px]" title={t.title}>
             {t.title}
           </h2>
-          <p className="mt-1 truncate text-[14px] text-sage">
-            {picker ? vi.nowPlaying.pickedBy(picker) : addedByLabel(np.item)}
-          </p>
+          <p className="mt-1 truncate text-[14px] text-sage">{a.pickerLabel}</p>
           {t.channel && <p className="truncate text-[13px] text-sage/80">{t.channel}</p>}
           <LyricsButton trackId={t.id} />
         </div>
@@ -74,9 +49,9 @@ export function NowPlayingCard() {
       </div>
 
       {np.item.wishMessage && picker && (
-        <figure className="mt-4 border-l-2 border-amber pl-3">
-          <figcaption className="text-[13px] text-sage">{vi.nowPlaying.wishFrom(picker)}</figcaption>
-          <blockquote className="mt-0.5 whitespace-pre-wrap [overflow-wrap:anywhere]">{np.item.wishMessage}</blockquote>
+        <figure className="mt-4 border-l-[3px] border-amber pl-4">
+          <figcaption className="text-[14px] text-sage">{vi.nowPlaying.wishFrom(picker)}</figcaption>
+          <blockquote className="mt-1 whitespace-pre-wrap text-[18px] leading-snug [overflow-wrap:anywhere] sm:text-[20px]">{np.item.wishMessage}</blockquote>
         </figure>
       )}
 
@@ -87,61 +62,28 @@ export function NowPlayingCard() {
       {(canVote || canControl) && (
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {canVote && (
-            <Button
-              size="sm"
-              disabled={voted || keptSec > 0}
-              aria-pressed={voted}
-              onClick={() => act('queue:vote-skip', { queueItemId: np.item.id }, { optimistic: { kind: 'vote', itemId: np.item.id } })}
-              className="flex-1 sm:flex-none"
-            >
+            <Button size="sm" disabled={a.voteDisabled} aria-pressed={a.voted} onClick={a.voteSkip} className="flex-1 sm:flex-none">
               <SkipForward className="h-4 w-4" aria-hidden />
-              {keptSec > 0
-                ? vi.nowPlaying.kept(keptSec)
-                : np.skip.endsAt !== null && !voted
-                  ? vi.nowPlaying.voting
-                  : voted
-                    ? vi.nowPlaying.voted(np.skip.votes, np.skip.required)
-                    : vi.nowPlaying.voteSkip(np.skip.votes, np.skip.required)}
+              {a.voteLabel}
             </Button>
           )}
-          {canVote && !me?.canPlay && <ListenButton />}
+          {a.canListen && <ListenButton />}
           {canControl && (
             <>
               <Button
                 size="sm"
                 variant="primary"
                 aria-label={playing ? vi.nowPlaying.pause : vi.nowPlaying.play}
-                onClick={() => {
-                  // Freeze / resume the dial right away, from where it is now.
-                  const serverNow = Date.now() + offset;
-                  const positionSec = estimatePosition({ ...np, durationSec: t.durationSec }, offset, Date.now());
-                  void act(
-                    'playback:control',
-                    { action: playing ? 'pause' : 'play', queueItemId: np.item.id },
-                    {
-                      optimistic: { kind: 'playback', itemId: np.item.id, status: playing ? 'PAUSED' : 'PLAYING', positionSec, positionAt: serverNow },
-                    },
-                  );
-                }}
+                onClick={a.togglePlay}
                 className="w-12 !px-0"
               >
                 {playing ? <Pause className="h-5 w-5" aria-hidden /> : <Play className="h-5 w-5" aria-hidden />}
               </Button>
-              <IconButton
-                label={vi.nowPlaying.skipNow}
-                disabled={skipping}
-                aria-busy={skipping}
-                onClick={async () => {
-                  // The next song is the server's call (fair queue, wishes): show progress, not a guess.
-                  setSkipping(true);
-                  await act('playback:control', { action: 'skip', queueItemId: np.item.id });
-                  setSkipping(false);
-                }}
-              >
-                {skipping ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden /> : <StepForward className="h-5 w-5" aria-hidden />}
+              <IconButton label={vi.nowPlaying.skipNow} disabled={a.skipping} aria-busy={a.skipping} onClick={a.skipNow}>
+                {a.skipping ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden /> : <StepForward className="h-5 w-5" aria-hidden />}
               </IconButton>
-              {me?.role === 'ADMIN' && (
-                <IconButton label={vi.block.more(t.title)} onClick={() => setBlockFor({ itemId: np.item.id, track: t })}>
+              {a.isAdmin && (
+                <IconButton label={vi.block.more(t.title)} onClick={a.openBlockMenu}>
                   <MoreHorizontal className="h-5 w-5" aria-hidden />
                 </IconButton>
               )}
@@ -153,7 +95,7 @@ export function NowPlayingCard() {
       <div className="mt-3 empty:hidden">
         <ListenersStrip />
       </div>
-      {menuTrack && <BlockMenu track={menuTrack} onClose={() => setBlockFor(null)} />}
+      {a.blockMenu}
     </section>
   );
 }

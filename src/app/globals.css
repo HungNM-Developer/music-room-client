@@ -46,6 +46,11 @@ html {
     --color-sage 1.6s ease;
 }
 
+/* Themes switch at once (no fade from the default palette on load). */
+html[data-theme] {
+  transition: none;
+}
+
 @keyframes rise {
   from {
     opacity: 0;
@@ -198,4 +203,16 @@ html {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Speaker screen QR card in light themes: the paper token is dark there, so the card
+   takes the panel colour instead (the code itself stays dark on white). */
+html[data-theme='hifi82'] .host-qr,
+html[data-theme='saigon'] .host-qr {
+  background: var(--color-panel);
+  color: var(--color-paper);
+}
+html[data-theme='hifi82'] .host-qr p:last-child,
+html[data-theme='saigon'] .host-qr p:last-child {
+  color: var(--color-sage);
 }

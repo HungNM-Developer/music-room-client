@@ -35,7 +35,11 @@ function groupQueue(queue: QueueItemView[]): Group[] {
   return groups;
 }
 
-export function QueueList({ onAdd }: { onAdd?: () => void }) {
+/**
+ * The queue for any layout: items in play order (with my pending changes), songs still
+ * being added, and the ⋯ menu with its sheets (pin, wish, remove, block).
+ */
+export function useQueueView() {
   const queue = useRoom((s) => s.snapshot?.queue);
   const pending = useRoom((s) => s.pending);
   const me = useMe();
@@ -43,6 +47,59 @@ export function QueueList({ onAdd }: { onAdd?: () => void }) {
   const [wishFor, setWishFor] = useState<QueueItemView | null>(null);
   const [blockFor, setBlockFor] = useState<QueueItemView | null>(null);
   const { items, adding } = useMemo(() => applyQueue(queue ?? [], pending, me?.id ?? null), [queue, pending, me?.id]);
+  const menus = (
+    <>
+      {menuFor && (
+        <ItemMenu
+          item={menuFor}
+          me={me}
+          onClose={() => setMenuFor(null)}
+          onWish={() => {
+            setWishFor(menuFor);
+            setMenuFor(null);
+          }}
+          onBlock={() => {
+            setBlockFor(menuFor);
+            setMenuFor(null);
+          }}
+        />
+      )}
+      {wishFor && <WishSheet item={wishFor} onClose={() => setWishFor(null)} />}
+      {blockFor && <BlockDialog track={blockFor.track} onClose={() => setBlockFor(null)} />}
+    </>
+  );
+  return { items, adding, me, openMenu: setMenuFor as (item: QueueItemView) => void, menus };
+}
+
+/** Someone may open the ⋯ of this song (pin, wish, remove, block). */
+export function hasItemMenu(item: QueueItemView, me: MemberView | null): boolean {
+  const mine = Boolean(me && item.addedBy?.id === me.id);
+  return Boolean(me && !me.isDevice && (me.role === 'ADMIN' || me.canControl || mine));
+}
+
+/** ♥ for a waiting song (count beside it); a read-only count for the speaker device. */
+export function HeartButton({ item, me, className = '' }: { item: QueueItemView; me: MemberView | null; className?: string }) {
+  const act = useAct();
+  const hearted = Boolean(me && item.heartedBy.includes(me.id));
+  if (!me || me.isDevice) return item.hearts > 0 ? <span className={`px-2 text-[13px] text-sage ${className}`}>{vi.queue.hearts(item.hearts)}</span> : null;
+  return (
+    <button
+      type="button"
+      aria-label={hearted ? vi.queue.unheart : vi.queue.heart}
+      aria-pressed={hearted}
+      onClick={() => act('queue:heart', { queueItemId: item.id }, { optimistic: { kind: 'heart', itemId: item.id, hearted: !hearted } })}
+      className={`flex h-11 min-w-11 items-center justify-center gap-1 rounded-row px-2 text-[13px] tabular-nums transition-colors hover:bg-panel-hi ${
+        hearted ? 'text-onair' : 'text-sage'
+      } ${className}`}
+    >
+      <Heart className="h-[18px] w-[18px]" fill={hearted ? 'currentColor' : 'none'} aria-hidden />
+      {item.hearts > 0 && <span>{item.hearts}</span>}
+    </button>
+  );
+}
+
+export function QueueList({ onAdd }: { onAdd?: () => void }) {
+  const { items, adding, me, openMenu, menus } = useQueueView();
 
   return (
     <section aria-labelledby="queue-title">
@@ -70,7 +127,7 @@ export function QueueList({ onAdd }: { onAdd?: () => void }) {
               {g.title && <h3 className="mb-1 px-1 text-[13px] font-medium text-sage">{g.title}</h3>}
               <ol className="divide-y divide-line/70 rounded-panel bg-panel px-1">
                 {g.items.map((item) => (
-                  <QueueRow key={item.id} item={item} me={me} onMenu={setMenuFor} />
+                  <QueueRow key={item.id} item={item} me={me} onMenu={openMenu} />
                 ))}
               </ol>
             </div>
@@ -88,23 +145,7 @@ export function QueueList({ onAdd }: { onAdd?: () => void }) {
         </div>
       )}
 
-      {menuFor && (
-        <ItemMenu
-          item={menuFor}
-          me={me}
-          onClose={() => setMenuFor(null)}
-          onWish={() => {
-            setWishFor(menuFor);
-            setMenuFor(null);
-          }}
-          onBlock={() => {
-            setBlockFor(menuFor);
-            setMenuFor(null);
-          }}
-        />
-      )}
-      {wishFor && <WishSheet item={wishFor} onClose={() => setWishFor(null)} />}
-      {blockFor && <BlockDialog track={blockFor.track} onClose={() => setBlockFor(null)} />}
+      {menus}
     </section>
   );
 }
@@ -118,11 +159,8 @@ const QueueRow = memo(function QueueRow({
   me: MemberView | null;
   onMenu: (item: QueueItemView) => void;
 }) {
-  const act = useAct();
   const mine = Boolean(me && item.addedBy?.id === me.id);
-  const hearted = Boolean(me && item.heartedBy.includes(me.id));
-  const isAdmin = me?.role === 'ADMIN';
-  const hasMenu = Boolean(me && !me.isDevice && (isAdmin || me.canControl || mine));
+  const hasMenu = hasItemMenu(item, me);
 
   return (
     <li className="flex animate-rise items-center gap-3 py-2.5 pl-2.5 pr-1">
@@ -141,22 +179,7 @@ const QueueRow = memo(function QueueRow({
         </p>
       </div>
       <SaveButton track={item.track} />
-      {me && !me.isDevice ? (
-        <button
-          type="button"
-          aria-label={hearted ? vi.queue.unheart : vi.queue.heart}
-          aria-pressed={hearted}
-          onClick={() => act('queue:heart', { queueItemId: item.id }, { optimistic: { kind: 'heart', itemId: item.id, hearted: !hearted } })}
-          className={`flex h-11 min-w-11 items-center justify-center gap-1 rounded-row px-2 text-[13px] tabular-nums transition-colors hover:bg-panel-hi ${
-            hearted ? 'text-onair' : 'text-sage'
-          }`}
-        >
-          <Heart className="h-[18px] w-[18px]" fill={hearted ? 'currentColor' : 'none'} aria-hidden />
-          {item.hearts > 0 && <span>{item.hearts}</span>}
-        </button>
-      ) : (
-        item.hearts > 0 && <span className="px-2 text-[13px] text-sage">{vi.queue.hearts(item.hearts)}</span>
-      )}
+      <HeartButton item={item} me={me} />
       {hasMenu && (
         <IconButton label={vi.queue.actions(item.track.title)} onClick={() => onMenu(item)}>
           <MoreHorizontal className="h-5 w-5" aria-hidden />

@@ -1,0 +1,362 @@
+/* C · Băng cassette tự thu: a home-made mixtape — handwritten label, two reels winding
+   with the song, mechanical keys, the wish and the chat as sticky notes, embossed Dymo
+   labels. Fun and close to home. */
+html[data-theme='cassette'] {
+  --color-dial: #2e1d13;
+  --color-dial-deep: #1c1612;
+  --color-panel: #1c1612;
+  --color-panel-hi: #3a2f27;
+  --color-line: #5a4433;
+  --color-paper: #f1ead9;
+  --color-sage: #d9cbb4;
+  --color-amber: #e3a62b;
+  --color-amber-hi: #f0ba4a;
+  --color-amber-ink: #2b1c12;
+  --color-onair: #c8401f;
+  --color-onair-deep: #a33316;
+  --color-alert: #ffab95;
+  --color-online: #9fd4b5;
+  --radius-panel: 16px;
+  --radius-row: 6px;
+  --font-display-face: var(--font-bungee);
+}
+
+@layer components {
+  .cs-stripe {
+    height: 10px;
+    background: linear-gradient(#c8401f 0 33%, #e07a1f 33% 66%, #e3a62b 66%);
+  }
+  html[data-theme='cassette'] .type-display {
+    font-stretch: normal;
+    font-weight: 400;
+  }
+  html[data-theme='cassette'] .room-header {
+    background: #2e1d13ee;
+  }
+  html[data-theme='cassette'] .room-name {
+    color: #e3a62b;
+    font: 400 22px/1.2 var(--font-bungee);
+  }
+  /* Embossed Dymo labels: the code and the header buttons. */
+  html[data-theme='cassette'] .room-code,
+  html[data-theme='cassette'] .room-header button[aria-label] {
+    background: #111;
+    color: #fff !important;
+    border-radius: 3px;
+    box-shadow: inset 0 -2px 0 #000;
+    font: 700 14px var(--font-barlow-condensed);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  html[data-theme='cassette'] .room-code {
+    padding: 2px 8px;
+  }
+  @media (min-width: 768px) {
+    html[data-theme='cassette'] .room-header button[aria-label] {
+      width: auto !important;
+      height: 34px !important;
+      gap: 6px;
+      padding: 0 10px;
+      margin-left: 6px;
+    }
+    html[data-theme='cassette'] .room-header button[aria-label]::after {
+      content: attr(aria-label);
+      white-space: nowrap;
+    }
+  }
+  html[data-theme='cassette'] .room-side [role='tablist'] {
+    background: none;
+    gap: 6px;
+  }
+  html[data-theme='cassette'] .room-side [role='tab'] {
+    border-radius: 3px !important;
+    background: #111 !important;
+    color: #fff !important;
+    font: 700 14px var(--font-barlow-condensed);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  html[data-theme='cassette'] .room-side [role='tab'][aria-selected='true'] {
+    background: #e3a62b !important;
+    color: #2b1c12 !important;
+  }
+
+  html[data-theme='cassette'] .stage {
+    --stage-btn-radius: 4px;
+    --stage-card-radius: 8px;
+    --stage-title-font: 400 30px/1.05 var(--font-patrick-hand);
+    --stage-title-phone: 24px;
+    --stage-h3-font: 400 18px/1.2 var(--font-bungee);
+    --stage-wish-font: 400 20px/1.3 var(--font-patrick-hand);
+    --stage-lyric: #b9a98f;
+    --stage-live: #c8401f;
+  }
+  .cs-tape {
+    background: #1c1612;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 12px 30px #0008;
+  }
+  .cs-label {
+    position: relative;
+    background: #f1ead9;
+    color: #2b1c12;
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+  .cs-label::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 38px;
+    height: 6px;
+    background: linear-gradient(#c8401f 0 33%, #e07a1f 33% 66%, #e3a62b 66%);
+  }
+  .cs-label .stage-title {
+    margin: 0 0 22px;
+    color: #2b1c12;
+  }
+  .cs-label .meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font: 400 18px var(--font-patrick-hand);
+    color: #5c4130;
+  }
+  .cs-window {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 78%;
+    margin: 14px auto 0;
+    padding: 10px 26px;
+    border-radius: 30px;
+    background: #3a2f27;
+  }
+  .cs-window[data-large] {
+    width: 100%;
+    padding: 16px 30px;
+  }
+  .cs-window .reel {
+    flex: none;
+    border-radius: 50%;
+    background:
+      repeating-conic-gradient(#0000 0 20deg, #2a211a 20deg 30deg),
+      radial-gradient(circle, #eee 0 10px, #2a211a 10px 14px, #5a3f2a 14px);
+    animation: cs-spin 3s linear infinite;
+    animation-play-state: paused;
+    transition:
+      width 250ms linear,
+      height 250ms linear;
+  }
+  .cs-window[data-playing='true'] .reel {
+    animation-play-state: running;
+  }
+  /* Tape moves from the left reel to the right one. */
+  .cs-window .reel.left {
+    width: calc(74px - var(--p, 0) * 22px);
+    height: calc(74px - var(--p, 0) * 22px);
+  }
+  .cs-window .reel.right {
+    width: calc(52px + var(--p, 0) * 22px);
+    height: calc(52px + var(--p, 0) * 22px);
+  }
+  @keyframes cs-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .cs-window .prog {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 14px;
+    font: 600 13px var(--font-barlow-condensed);
+    letter-spacing: 0.06em;
+    color: #e9dccb;
+    font-variant-numeric: tabular-nums;
+  }
+  .cs-window[data-large] .prog {
+    font-size: 20px;
+  }
+  .cs-window .line {
+    position: relative;
+    flex: 1;
+    height: 2px;
+    background: #e9dccb66;
+  }
+  .cs-window .line i {
+    position: absolute;
+    top: -4px;
+    left: calc(var(--p, 0) * 100%);
+    width: 10px;
+    height: 10px;
+    margin-left: -5px;
+    border-radius: 50%;
+    background: #e9dccb;
+    transition: left 250ms linear;
+  }
+  /* Mechanical keys with printed names; the one in effect is pressed in. */
+  html[data-theme='cassette'] .stage-controls[data-variant='tape'] {
+    gap: 6px;
+    margin-top: 14px;
+  }
+  html[data-theme='cassette'] .stage-controls[data-variant='tape'] > button {
+    width: auto !important;
+    min-width: 42px;
+    padding: 0 12px;
+    border: 0;
+    border-radius: 4px !important;
+    background: linear-gradient(#d9d2c4, #a39b8c);
+    color: #1c1612 !important;
+    font: 700 14px var(--font-barlow-condensed);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    box-shadow: 0 4px 0 #5e574b;
+  }
+  html[data-theme='cassette'] .stage-controls[data-variant='tape'] > button[aria-label]::after {
+    content: attr(aria-label);
+    white-space: nowrap;
+  }
+  html[data-theme='cassette'] .stage-controls[data-variant='tape'] > button[data-primary],
+  html[data-theme='cassette'] .stage-controls[data-variant='tape'] > button[aria-pressed='true'] {
+    background: linear-gradient(#e3a62b, #b9811a);
+    box-shadow: 0 2px 0 #6f4a0c;
+    transform: translateY(2px);
+  }
+  html[data-theme='cassette'] .stage-controls[data-variant='tape'] > button:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #5e574b;
+  }
+  html[data-theme='cassette'] .stage-vote {
+    background: none;
+    border: 0;
+    padding: 0;
+    font-weight: 600;
+  }
+  html[data-theme='cassette'] .stage-vote::before {
+    content: 'BỎ PHIẾU';
+    padding: 3px 8px;
+    border-radius: 3px;
+    background: #c8401f;
+    color: #fff;
+    font: 700 13px var(--font-barlow-condensed);
+    letter-spacing: 0.12em;
+  }
+  .cs-under {
+    margin-top: 6px;
+  }
+  /* The wish on a yellow sticky note. */
+  html[data-theme='cassette'] .stage-wish.cs-note {
+    max-width: 520px;
+    margin-top: 14px;
+    padding: 10px 12px;
+    border: 0;
+    background: #f7e48f;
+    color: #3a2a0e;
+    transform: rotate(-1deg);
+    box-shadow: 3px 4px 0 #0006;
+  }
+  html[data-theme='cassette'] .cs-note figcaption {
+    color: #6b5333;
+  }
+  html[data-theme='cassette'] .stage .lyrics-inline :is(.lyric-now, .lyric-other) {
+    font-family: var(--font-patrick-hand);
+  }
+  html[data-theme='cassette'] .stage .lyric-now {
+    font-size: 26px;
+  }
+  html[data-theme='cassette'] .stage .lyric-other {
+    font-size: 20px;
+  }
+  /* "Mặt B": the J-card, numbered in play order, handwritten. */
+  .stage-queue[data-variant='jcard'] {
+    margin-top: 18px;
+    padding: 12px 16px;
+    border-radius: 6px;
+    background: #f1ead9;
+    color: #2b1c12;
+  }
+  .stage-queue[data-variant='jcard'] .stage-h3 {
+    margin: 0 0 6px;
+    color: #c8401f;
+  }
+  .stage-queue[data-variant='jcard'] .stage-count {
+    color: #7a5a43;
+  }
+  .stage-queue[data-variant='jcard'] .stage-q {
+    border-top: 0;
+    padding: 2px 0;
+    font: 400 19px/1.35 var(--font-patrick-hand);
+  }
+  .stage-queue[data-variant='jcard'] .stage-q-th {
+    display: none;
+  }
+  .stage-queue[data-variant='jcard'] .stage-q-title {
+    font-weight: 400;
+  }
+  .stage-queue[data-variant='jcard'] :is(.stage-q-meta, .stage-q-n) {
+    color: #7a5a43;
+    font-size: 16px;
+  }
+  .stage-queue[data-variant='jcard'] .stage-q-actions button {
+    color: #7a5a43 !important;
+  }
+  .stage-queue[data-variant='jcard'] .stage-q-actions button[aria-pressed='true'] {
+    color: #c8401f !important;
+  }
+  .stage-queue[data-variant='jcard'] .stage-empty {
+    border-color: #c9b99c;
+    color: #5c4130;
+  }
+  .cs-suggest {
+    margin: 6px 0 0;
+    font: 400 17px var(--font-patrick-hand);
+    color: #7a5a43;
+  }
+  .cs-suggest button {
+    color: #c8401f;
+    font-weight: 600;
+  }
+  .cs-suggest button:disabled {
+    opacity: 0.5;
+  }
+  /* Chat as sticky notes in three colours. */
+  :is(.chat-inline, .chat-window)[data-variant='cassette'] {
+    background: #2e1d13;
+  }
+  :is(.chat-inline, .chat-window)[data-variant='cassette'] .chat-bubble {
+    border-radius: 0 !important;
+    background: #f7e48f !important;
+    color: #3a2a0e !important;
+    font: 400 18px/1.25 var(--font-patrick-hand);
+    box-shadow: 2px 3px 0 #0006;
+  }
+  :is(.chat-inline, .chat-window)[data-variant='cassette'] .chat-msg:nth-child(3n + 2) .chat-bubble {
+    background: #bfe3d9 !important;
+    transform: rotate(1deg);
+  }
+  :is(.chat-inline, .chat-window)[data-variant='cassette'] .chat-msg:nth-child(3n) .chat-bubble {
+    background: #f4c3b0 !important;
+    transform: rotate(-1.2deg);
+  }
+  html[data-theme='cassette'] .room-tabbar {
+    background: #111;
+  }
+  @media (max-width: 1023px) {
+    .cs-window {
+      width: 100%;
+      padding: 8px 14px;
+    }
+    .cs-window .reel.left {
+      width: calc(46px - var(--p, 0) * 12px);
+      height: calc(46px - var(--p, 0) * 12px);
+    }
+    .cs-window .reel.right {
+      width: calc(34px + var(--p, 0) * 12px);
+      height: calc(34px + var(--p, 0) * 12px);
+    }
+  }
+}

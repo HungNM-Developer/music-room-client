@@ -141,7 +141,7 @@ export function PlaylistPicker({ source, onClose }: { source: PickerSource; onCl
                     <Thumb url={t.thumbnailUrl} size={56} ratio="wide" />
                     <span className="min-w-0 flex-1">
                       <span className="line-clamp-2 text-[14px] leading-snug [unicode-bidi:plaintext]">{t.title}</span>
-                      <span className="mt-0.5 flex gap-2 text-[12px] text-sage">
+                      <span className="mt-0.5 flex gap-2 text-[13px] sm:text-[12px] text-sage">
                         {isBlocked ? (
                           <span className="text-alert">{vi.block.label}</span>
                         ) : taken ? (

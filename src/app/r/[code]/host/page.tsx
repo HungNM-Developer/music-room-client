@@ -25,6 +25,8 @@ import { useRoomMood } from '@/hooks/useRoomMood';
 import { errorMessage, vi } from '@/i18n/vi';
 import { useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
+import { useShownTheme } from '@/themes/load';
+import { useApplyTheme, useRoomTheme } from '@/themes/useTheme';
 
 const PlayerEngine = dynamic(() => import('@/components/player/PlayerEngine').then((m) => m.PlayerEngine), {
   ssr: false,
@@ -100,7 +102,12 @@ function HostScreen({ code }: { code: string }) {
   const queue = useRoom((s) => s.snapshot?.queue);
   const playerRevoked = useRoom((s) => s.playerRevoked);
   const [volume, setVolume] = useState(100);
-  useRoomMood();
+  // The speaker always wears the room's theme (never a personal choice on this browser).
+  const { id: theme, mod } = useShownTheme(useRoomTheme());
+  useApplyTheme(theme, mod?.fontClass);
+  const Decor = mod?.Decor;
+  const HostDial = mod?.HostDial;
+  useRoomMood(theme === 'default');
   const origin = useOrigin();
   const joinUrl = origin ? `${origin}/r/${code}` : '';
   const next = (queue ?? []).slice(0, 3);
@@ -109,9 +116,10 @@ function HostScreen({ code }: { code: string }) {
 
   return (
     <main className="relative isolate min-h-dvh px-4 py-4 md:px-8 md:py-6">
-      <Backdrop height="h-dvh" />
+      {theme === 'default' && <Backdrop height="h-dvh" />}
+      {Decor && <Decor />}
       <HeartCanvas />
-      <SkipVote variant="host" />
+      <SkipVote variant="host" meter={mod?.HostVoteMeter} />
       <div className="mx-auto grid max-w-[1600px] gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
         <section className="min-w-0 space-y-5">
           {/* Video height follows the screen so title, dial and volume fit on one TV screen. */}
@@ -147,7 +155,7 @@ function HostScreen({ code }: { code: string }) {
             </figure>
           )}
 
-          {np && <LiveDial size="large" />}
+          {np && (HostDial ? <HostDial /> : <LiveDial size="large" />)}
 
           <label className="flex max-w-sm items-center gap-3 text-[14px] text-sage">
             {vi.host.volume}
@@ -159,11 +167,16 @@ function HostScreen({ code }: { code: string }) {
         </section>
 
         <aside className="space-y-7">
-          <div className="rounded-panel bg-paper p-6 text-center text-dial">
+          <div className="host-qr rounded-panel bg-paper p-6 text-center text-dial">
             <h2 className="type-display text-[24px] font-bold">{vi.host.scan}</h2>
             <div className="mx-auto mt-4 w-fit">
               {joinUrl ? (
-                <QRCodeSVG value={joinUrl} size={180} fgColor="#0f2a26" bgColor="#f3ecdd" marginSize={0} title={joinUrl} />
+                // Themed: always dark on white with a quiet zone, so every phone camera reads it.
+                theme === 'default' ? (
+                  <QRCodeSVG value={joinUrl} size={180} fgColor="#0f2a26" bgColor="#f3ecdd" marginSize={0} title={joinUrl} />
+                ) : (
+                  <QRCodeSVG value={joinUrl} size={196} fgColor="#111111" bgColor="#ffffff" marginSize={2} title={joinUrl} className="rounded-md" />
+                )
               ) : (
                 <div className="h-[180px] w-[180px]" />
               )}

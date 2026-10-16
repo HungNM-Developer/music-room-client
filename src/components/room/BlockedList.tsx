@@ -52,7 +52,7 @@ export function BlockedList() {
             <p className="line-clamp-2 text-[14px] font-medium leading-snug [unicode-bidi:plaintext]" title={it.track.title}>
               {it.track.title}
             </p>
-            <p className="mt-0.5 text-[12px] text-sage">{vi.block.by(it.blockedByName, formatAgo(it.blockedAt))}</p>
+            <p className="mt-0.5 text-[13px] sm:text-[12px] text-sage">{vi.block.by(it.blockedByName, formatAgo(it.blockedAt))}</p>
           </div>
           <Button
             size="sm"

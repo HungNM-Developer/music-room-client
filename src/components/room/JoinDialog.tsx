@@ -13,6 +13,8 @@ import { lastName, rememberName } from '@/lib/session-store';
 import { isDisplayName, isPin } from '@/lib/validate';
 import { useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
+import { toThemeId } from '@/themes/registry';
+import { setRoomThemeHint } from '@/themes/useTheme';
 
 /** Shown on /r/CODE when there is no valid session (TC-015, TC-021). Cannot be dismissed. */
 export function JoinDialog({ code, notice }: { code: string; notice?: string | null }) {
@@ -36,7 +38,11 @@ export function JoinDialog({ code, notice }: { code: string; notice?: string | n
     let alive = true;
     void room.send('room:peek', { code }).then((r) => {
       if (!alive) return;
-      if (r.ok) setRoomName(r.data.name);
+      if (r.ok) {
+        setRoomName(r.data.name);
+        // The page wears the room's theme behind this form (unless this browser has its own).
+        setRoomThemeHint(code, toThemeId(r.data.theme));
+      }
       else setError(errorMessage(r.error.code, r.error.params));
     });
     return () => {

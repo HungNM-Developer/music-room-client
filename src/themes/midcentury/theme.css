@@ -1,0 +1,143 @@
+/* 3 · Áp phích giữa thế kỷ: 1950–60s poster geometry — a yellow sun, an orange ring,
+   narrow upright type on deep teal. One big graphic, everything else very quiet. */
+html[data-theme='midcentury'] {
+  --color-dial: #14303a;
+  --color-dial-deep: #0e2329;
+  --color-panel: #0e2329;
+  --color-panel-hi: #1b3b45;
+  --color-line: #2a4a53;
+  --color-paper: #f0ead9;
+  --color-sage: #a9bcbc;
+  --color-amber: #e5b53e;
+  --color-amber-hi: #f0c55a;
+  --color-amber-ink: #1a1a12;
+  --color-onair: #cf6a35;
+  --color-onair-deep: #b35526;
+  --color-alert: #ff9a8e;
+  --color-online: #8fd3a6;
+  --radius-panel: 20px;
+  --radius-row: 999px;
+  --font-display-face: var(--font-archivo);
+}
+
+@layer components {
+  html[data-theme='midcentury'] .type-display,
+  html[data-theme='midcentury'] .room-name {
+    font-stretch: 75%;
+  }
+  html[data-theme='midcentury'] .room-header {
+    border-bottom-color: transparent;
+  }
+  html[data-theme='midcentury'] .room-code {
+    color: var(--color-amber);
+    letter-spacing: 0.16em;
+  }
+
+  html[data-theme='midcentury'] .stage {
+    --stage-cover: 260px;
+    --stage-cover-phone: 200px;
+    --stage-card-radius: 16px;
+    --stage-thumb-radius: 50%;
+    --stage-title-font: 700 54px/0.94 var(--font-archivo);
+    --stage-title-phone: 36px;
+    --stage-h3-font: 700 22px/1.1 var(--font-archivo);
+    --stage-wish-font: 500 20px/1.35 var(--font-archivo);
+    --stage-lyric: #6f8a8c;
+    --stage-wish-line: var(--color-onair);
+    --stage-live: var(--color-onair);
+  }
+  html[data-theme='midcentury'] .stage-title,
+  html[data-theme='midcentury'] .stage-h3 {
+    font-stretch: 75%;
+  }
+  html[data-theme='midcentury'] .stage-hero {
+    padding-top: 24px;
+    gap: 46px;
+  }
+  html[data-theme='midcentury'] .stage-info {
+    position: relative;
+    z-index: 1;
+  }
+  .mc-cover .sun {
+    position: absolute;
+    left: -14%;
+    top: -14%;
+    width: 128%;
+    height: 128%;
+    border-radius: 50%;
+    background: #e5b53e;
+    opacity: 0.92;
+  }
+  .mc-cover .ring {
+    position: absolute;
+    left: 42%;
+    top: 40%;
+    width: 68%;
+    height: 68%;
+    border-radius: 50%;
+    background: #cf6a35;
+    mix-blend-mode: multiply;
+    opacity: 0.8;
+  }
+  .mc-cover .mc-art {
+    position: relative;
+    border-radius: 50%;
+    box-shadow: 0 0 0 10px var(--color-dial);
+  }
+  html[data-theme='midcentury'] .stage-dial {
+    margin-top: 44px;
+  }
+  .line-dial[data-variant='mc'] {
+    font: 500 14px var(--font-archivo);
+  }
+  .line-dial[data-variant='mc'] .line-dial-track > i {
+    background: var(--color-amber);
+  }
+  .line-dial.mc-host {
+    font-size: 20px;
+  }
+  .line-dial.mc-host .line-dial-track {
+    height: 6px;
+  }
+  /* Buttons: pills on deep teal, the main one sun yellow. */
+  html[data-theme='midcentury'] .stage-btn,
+  html[data-theme='midcentury'] .stage-controls > button:not(.stage-btn) {
+    border: 0;
+    background: var(--color-dial-deep);
+    min-height: 44px;
+  }
+  html[data-theme='midcentury'] .stage-btn[data-primary] {
+    background: var(--color-amber);
+  }
+  html[data-theme='midcentury'] .stage-vote {
+    border: 0;
+    background: var(--color-dial-deep);
+  }
+  html[data-theme='midcentury'] .stage-vote .stage-btn:not([data-primary]) {
+    background: transparent;
+    border: 1px solid var(--color-line);
+  }
+  html[data-theme='midcentury'] .stage-vote-bar {
+    height: 3px;
+  }
+  html[data-theme='midcentury'] .stage-wish {
+    border-left-width: 4px;
+  }
+  html[data-theme='midcentury'] .stage-q {
+    border-top: 0;
+    border-bottom: 1px solid var(--color-line);
+  }
+  html[data-theme='midcentury'] .chat-inline {
+    border: 0;
+    background: var(--color-dial-deep);
+    border-radius: 20px;
+  }
+  @media (max-width: 1023px) {
+    html[data-theme='midcentury'] .stage-hero {
+      padding-top: 30px;
+    }
+    html[data-theme='midcentury'] .stage-cover {
+      margin-left: 24px;
+    }
+  }
+}

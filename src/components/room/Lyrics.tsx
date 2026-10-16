@@ -62,31 +62,32 @@ function SyncedLines({ lines }: { lines: { t: number; text: string }[] }) {
   );
 }
 
-const HOST_KEY = 'mr:host-lyrics';
-
 /**
- * A7, speaker screen: karaoke lines under the title (the line before, the one being
- * sung, the next two). Only for synced lyrics; the toggle is remembered on the device.
+ * A7: karaoke lines under the title — the line before, the one being sung, the next
+ * (two next on the speaker). Only for synced lyrics; the show / hide toggle is remembered
+ * on the device (`storageKey`). `host`: the speaker screen; `stage`: a themed room page.
  */
-export function HostLyrics({ trackId }: { trackId: string }) {
+export function InlineLyrics({ trackId, size, storageKey, className = '' }: { trackId: string; size: 'host' | 'stage'; storageKey: string; className?: string }) {
   const lyrics = useLyrics(trackId);
   const pos = useSongPosition();
   const [shown, setShown] = useState(true);
   // eslint-disable-next-line react-hooks/set-state-in-effect -- read the device preference after hydration
-  useEffect(() => setShown(readPref()), []);
+  useEffect(() => setShown(readPref(storageKey)), [storageKey]);
   const lines = lyrics?.synced;
   if (!lines) return null;
   const toggle = () => {
     setShown((v) => {
-      writePref(!v);
+      writePref(storageKey, !v);
       return !v;
     });
   };
+  const host = size === 'host';
   const at = lineAt(lines, pos);
-  // Before the first line: the first three, none highlighted yet.
-  const windowLines = (at < 0 ? [0, 1, 2] : [at - 1, at, at + 1, at + 2]).map((i) => ({ i, line: lines[i] }));
+  // Before the first line: the first lines, none highlighted yet.
+  const picks = host ? (at < 0 ? [0, 1, 2] : [at - 1, at, at + 1, at + 2]) : at < 0 ? [0, 1, 2] : [at - 1, at, at + 1];
+  const windowLines = picks.map((i) => ({ i, line: lines[i] }));
   return (
-    <section aria-label={vi.lyrics.title} className="max-w-3xl">
+    <section aria-label={vi.lyrics.title} className={`lyrics-inline ${host ? 'max-w-3xl' : ''} ${className}`}>
       <button type="button" onClick={toggle} className="mb-2 inline-flex items-center gap-1.5 text-[13px] text-sage hover:text-paper">
         {shown ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
         {shown ? vi.lyrics.hide : vi.lyrics.show}
@@ -96,11 +97,18 @@ export function HostLyrics({ trackId }: { trackId: string }) {
           {windowLines.map(({ i, line }) => (
             <p
               key={i}
+              data-current={i === at || undefined}
               className={`truncate leading-tight transition-colors motion-reduce:transition-none ${
-                i === at ? 'text-[clamp(22px,2.6vw,34px)] font-bold text-paper' : 'text-[clamp(16px,1.8vw,22px)] text-sage/70'
+                host
+                  ? i === at
+                    ? 'text-[clamp(22px,2.6vw,34px)] font-bold text-paper'
+                    : 'text-[clamp(16px,1.8vw,22px)] text-sage/70'
+                  : i === at
+                    ? 'lyric-now text-[19px] font-semibold text-paper'
+                    : 'lyric-other text-[16px] text-sage/70'
               }`}
             >
-              {line ? line.text || '♪' : ' '}
+              {line ? line.text || '♪' : '\u00a0'}
             </p>
           ))}
           <p className="pt-1 text-[11px] text-sage/60">{vi.lyrics.source}</p>
@@ -110,16 +118,19 @@ export function HostLyrics({ trackId }: { trackId: string }) {
   );
 }
 
-function readPref(): boolean {
+/** The speaker screen's lyrics (A7). */
+export const HostLyrics = ({ trackId }: { trackId: string }) => <InlineLyrics trackId={trackId} size="host" storageKey="mr:host-lyrics" />;
+
+function readPref(key: string): boolean {
   try {
-    return window.localStorage.getItem(HOST_KEY) !== 'off';
+    return window.localStorage.getItem(key) !== 'off';
   } catch {
     return true;
   }
 }
-function writePref(on: boolean): void {
+function writePref(key: string, on: boolean): void {
   try {
-    window.localStorage.setItem(HOST_KEY, on ? 'on' : 'off');
+    window.localStorage.setItem(key, on ? 'on' : 'off');
   } catch {
     // storage blocked: the toggle still works for this page
   }
