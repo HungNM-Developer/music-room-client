@@ -132,7 +132,7 @@ export function SkipVote({ variant }: { variant: 'member' | 'host' | 'pip' }) {
           </p>
         </div>
 
-        <Drain key={endsAt} endsAt={endsAt} offset={offset} totalMs={windowSec * 1000} thick={host} />
+        <Drain leftMs={leftMs} totalMs={windowSec * 1000} thick={host} />
 
         {full ? (
           <div className="mt-3 grid grid-cols-[1fr_1fr_auto] gap-2">
@@ -156,15 +156,16 @@ export function SkipVote({ variant }: { variant: 'member' | 'host' | 'pip' }) {
   );
 }
 
-/** Countdown bar that drains to zero by the deadline (mounted once per vote). */
-function Drain({ endsAt, offset, totalMs, thick }: { endsAt: number; offset: number; totalMs: number; thick: boolean }) {
-  const [leftMs] = useState(() => Math.max(0, endsAt - (Date.now() + offset)));
+/**
+ * Countdown bar: the share of time left, set from the same clock as "còn N giây" (ticks
+ * every second) and eased over that second. With "reduce motion" the easing is dropped
+ * by the global rule, so it steps once a second instead of vanishing.
+ */
+function Drain({ leftMs, totalMs, thick }: { leftMs: number; totalMs: number; thick: boolean }) {
+  const pct = Math.max(0, Math.min(100, (leftMs / totalMs) * 100));
   return (
     <div className={`mt-2.5 overflow-hidden rounded-full bg-dial-deep ${thick ? 'h-2.5' : 'h-1.5'}`} aria-hidden>
-      <div
-        className="vote-drain h-full origin-left rounded-full bg-amber"
-        style={{ ['--from' as string]: String(Math.min(1, leftMs / totalMs)), animationDuration: `${leftMs}ms` }}
-      />
+      <div className="h-full rounded-full bg-amber" style={{ width: `${pct}%`, transition: 'width 1s linear' }} />
     </div>
   );
 }
