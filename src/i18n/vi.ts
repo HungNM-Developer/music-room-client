@@ -460,7 +460,6 @@ export const vi = {
     done: (title: string) => `Đã chặn "${title}"`,
     undone: (title: string) => `Đã bỏ chặn "${title}"`,
     tab: 'Đã chặn',
-    tabCount: (n: number) => `Đã chặn ${n}`,
     listLabel: 'Bài đã chặn trong phòng',
     unblock: 'Bỏ chặn',
     unblockTrack: (title: string) => `Bỏ chặn "${title}"`,
