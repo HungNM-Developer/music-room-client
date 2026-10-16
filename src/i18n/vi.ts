@@ -259,6 +259,12 @@ export const vi = {
     badge: 'Đang nghe cùng',
   },
 
+  adminName: {
+    taken: (name: string) => `“${name}” là tên của quản trị viên phòng này. Nếu bạn không phải người đó, hãy dùng tên khác.`,
+    otherName: 'Dùng tên khác',
+    isYou: 'Nếu đúng là bạn, nhập mã PIN quản trị để vào lại:',
+  },
+
   miniPlayer: {
     title: 'Music Room',
     open: 'Thu nhỏ ra màn hình',
@@ -547,7 +553,7 @@ const ERRORS: Record<ClientErrorCode, (p: ErrorParams) => string> = {
   VALIDATION: () => 'Dữ liệu chưa hợp lệ. Hãy kiểm tra lại rồi thử lại.',
   ROOM_NOT_FOUND: () => 'Không tìm thấy phòng. Hãy kiểm tra lại mã phòng.',
   NAME_TAKEN: () => 'Tên này đang có người dùng trong phòng. Hãy chọn tên khác.',
-  PIN_REQUIRED: () => 'Tên này thuộc quản trị viên của phòng. Nhập mã PIN quản trị để vào lại.',
+  PIN_REQUIRED: () => 'Tên này là của quản trị viên phòng. Nếu không phải bạn, hãy dùng tên khác; nếu là bạn, nhập mã PIN quản trị.',
   PIN_INVALID: (p) => `Mã PIN không đúng. Bạn còn ${p.remaining} lần thử.`,
   PIN_LOCKED: (p) => `Nhập sai mã PIN quá nhiều lần. Hãy thử lại sau ${p.minutes} phút.`,
   PIN_NOT_SET: () =>
