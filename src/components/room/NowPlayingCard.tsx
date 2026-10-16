@@ -1,15 +1,17 @@
 'use client';
 
-import { Loader2, Pause, Play, SkipForward, StepForward } from 'lucide-react';
+import { Loader2, MoreHorizontal, Pause, Play, SkipForward, StepForward } from 'lucide-react';
 import { useState } from 'react';
 import { Button, IconButton } from '@/components/ui/Button';
 import { OnAirLamp } from '@/components/ui/OnAirLamp';
 import { Thumb } from '@/components/ui/Thumb';
+import type { TrackSummary } from '@/contracts';
 import { useAct } from '@/hooks/useAct';
 import { vi } from '@/i18n/vi';
 import { addedByLabel } from '@/lib/added-by';
 import { estimatePosition } from '@/lib/time';
 import { useMe, useNowPlaying, useRoom } from '@/state/hooks';
+import { BlockMenu } from './BlockDialog';
 import { LyricsButton } from './Lyrics';
 import { ListenButton, ListenersStrip } from '@/components/player/ListenAlong';
 import { MiniPlayerButton } from './MiniPlayer';
@@ -24,6 +26,10 @@ export function NowPlayingCard() {
   const me = useMe();
   const act = useAct();
   const [skipping, setSkipping] = useState(false);
+  // The song the ⋯ menu was opened for: a song change closes the menu, so the next song
+  // can never be blocked by mistake.
+  const [blockFor, setBlockFor] = useState<{ itemId: string; track: TrackSummary } | null>(null);
+  const menuTrack = blockFor && blockFor.itemId === np?.item.id ? blockFor.track : null;
   const now = useNow(1000, Boolean(np?.skip.blockedUntil));
 
   if (!np) {
@@ -134,6 +140,11 @@ export function NowPlayingCard() {
               >
                 {skipping ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden /> : <StepForward className="h-5 w-5" aria-hidden />}
               </IconButton>
+              {me?.role === 'ADMIN' && (
+                <IconButton label={vi.block.more(t.title)} onClick={() => setBlockFor({ itemId: np.item.id, track: t })}>
+                  <MoreHorizontal className="h-5 w-5" aria-hidden />
+                </IconButton>
+              )}
             </>
           )}
         </div>
@@ -142,6 +153,7 @@ export function NowPlayingCard() {
       <div className="mt-3 empty:hidden">
         <ListenersStrip />
       </div>
+      {menuTrack && <BlockMenu track={menuTrack} onClose={() => setBlockFor(null)} />}
     </section>
   );
 }

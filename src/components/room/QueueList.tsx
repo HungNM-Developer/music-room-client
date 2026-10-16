@@ -1,10 +1,11 @@
 'use client';
 
-import { Heart, Loader2, Mail, MoreHorizontal, Pin, PinOff, Plus, Trash2 } from 'lucide-react';
+import { Ban, Heart, Loader2, Mail, MoreHorizontal, Pin, PinOff, Plus, Trash2 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { memo, useMemo, useState } from 'react';
 import { Button, IconButton } from '@/components/ui/Button';
 import { addedByLabel } from '@/lib/added-by';
+import { BlockDialog } from './BlockDialog';
 import { SaveButton } from './SaveButton';
 import { Dialog, SheetAction } from '@/components/ui/Dialog';
 import { Thumb } from '@/components/ui/Thumb';
@@ -40,6 +41,7 @@ export function QueueList({ onAdd }: { onAdd?: () => void }) {
   const me = useMe();
   const [menuFor, setMenuFor] = useState<QueueItemView | null>(null);
   const [wishFor, setWishFor] = useState<QueueItemView | null>(null);
+  const [blockFor, setBlockFor] = useState<QueueItemView | null>(null);
   const { items, adding } = useMemo(() => applyQueue(queue ?? [], pending, me?.id ?? null), [queue, pending, me?.id]);
 
   return (
@@ -95,9 +97,14 @@ export function QueueList({ onAdd }: { onAdd?: () => void }) {
             setWishFor(menuFor);
             setMenuFor(null);
           }}
+          onBlock={() => {
+            setBlockFor(menuFor);
+            setMenuFor(null);
+          }}
         />
       )}
       {wishFor && <WishSheet item={wishFor} onClose={() => setWishFor(null)} />}
+      {blockFor && <BlockDialog track={blockFor.track} onClose={() => setBlockFor(null)} />}
     </section>
   );
 }
@@ -178,11 +185,13 @@ function ItemMenu({
   me,
   onClose,
   onWish,
+  onBlock,
 }: {
   item: QueueItemView;
   me: MemberView | null;
   onClose: () => void;
   onWish: () => void;
+  onBlock: () => void;
 }) {
   const act = useAct();
   const mine = Boolean(me && item.addedBy?.id === me.id);
@@ -216,6 +225,11 @@ function ItemMenu({
             onClick={() => run(() => act('queue:remove', { queueItemId: item.id }, { optimistic: { kind: 'remove', itemId: item.id } }))}
           >
             {vi.queue.remove}
+          </SheetAction>
+        )}
+        {isAdmin && (
+          <SheetAction danger icon={<Ban className="h-5 w-5" />} onClick={onBlock}>
+            {vi.block.menu}
           </SheetAction>
         )}
       </div>

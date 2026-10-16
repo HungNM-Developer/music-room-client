@@ -11,7 +11,7 @@ import { ADD_MANY_MAX, LIMITS } from '@/contracts/constants';
 import type { useAddTrack } from '@/hooks/useAddTrack';
 import { errorMessage, vi } from '@/i18n/vi';
 import { formatDuration } from '@/lib/time';
-import { useRoom } from '@/state/hooks';
+import { useBlockedIds, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 import { YouTubeImport } from './YouTubeImport';
 
@@ -82,6 +82,7 @@ function PlaylistDetail({ id, add, added, onBack }: { id: string; add: Add; adde
   const [menuFor, setMenuFor] = useState<TrackSummary | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [busy, setBusy] = useState(false);
+  const blocked = useBlockedIds();
   const max = useRoom((s) => s.snapshot?.room.settings.maxQueuedPerMember ?? 0);
   const mine = useRoom((s) => (s.snapshot?.queue ?? []).filter((q) => q.addedBy?.id === s.memberId).length);
   const waiting = useRoom((s) => {
@@ -114,7 +115,8 @@ function PlaylistDetail({ id, add, added, onBack }: { id: string; add: Add; adde
 
   const inQueue = new Set(waiting.split('|'));
   const slots = Math.max(0, Math.min(max - mine, ADD_MANY_MAX));
-  const toQueue = pl.tracks.filter((t) => !inQueue.has(t.id)).slice(0, slots);
+  // Blocked songs would only be refused and use up the free slots.
+  const toQueue = pl.tracks.filter((t) => !inQueue.has(t.id) && !blocked.has(t.id)).slice(0, slots);
   const link = pl.shareCode ? `${window.location.origin}/p/${pl.shareCode}` : null;
 
   async function queueAll() {
@@ -202,14 +204,21 @@ function PlaylistDetail({ id, add, added, onBack }: { id: string; add: Add; adde
       ) : (
         <ol aria-label={vi.playlists.tracksLabel} className="divide-y divide-line/70 rounded-panel bg-panel px-1">
           {pl.tracks.map((t) => {
-            const taken = inQueue.has(t.id) || added.has(t.id);
+            const isBlocked = blocked.has(t.id);
+            const taken = inQueue.has(t.id) || added.has(t.id) || isBlocked;
             return (
               <li key={t.id} className="flex items-center gap-3 py-2.5 pl-2.5 pr-1">
                 <Thumb url={t.thumbnailUrl} size={56} ratio="wide" />
                 <div className="min-w-0 flex-1">
                   <p className="line-clamp-2 text-[14px] font-medium leading-snug [unicode-bidi:plaintext]">{t.title}</p>
                   <p className="mt-0.5 flex gap-2 text-[12px] text-sage">
-                    {taken ? <span>{vi.library.inQueue}</span> : (t.artist ?? t.channel) && <span className="truncate">{t.artist ?? t.channel}</span>}
+                    {isBlocked ? (
+                      <span className="text-alert">{vi.block.label}</span>
+                    ) : taken ? (
+                      <span>{vi.library.inQueue}</span>
+                    ) : (
+                      (t.artist ?? t.channel) && <span className="truncate">{t.artist ?? t.channel}</span>
+                    )}
                     {t.durationSec ? <span className="shrink-0 tabular-nums">{formatDuration(t.durationSec)}</span> : null}
                   </p>
                 </div>

@@ -22,6 +22,12 @@ export function useRoom<T>(selector: (s: RoomState) => T): T {
 const selectMe = (s: RoomState): MemberView | null =>
   s.snapshot?.members.find((m) => m.id === s.memberId) ?? null;
 
+/** Videos the admin blocked in this room (nobody can add them). */
+export function useBlockedIds(): Set<string> {
+  const joined = useRoom((s) => s.snapshot?.room.blockedTrackIds.join('|') ?? '');
+  return useMemo(() => new Set(joined ? joined.split('|') : []), [joined]);
+}
+
 /** The current member's view (role, permissions), or null before joining. */
 export const useMe = () => useRoom(selectMe);
 

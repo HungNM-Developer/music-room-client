@@ -11,7 +11,7 @@ import { ADD_MANY_MAX, LIMITS, MAX_PLAYLIST_TRACKS } from '@/contracts/constants
 import { splitSongList } from '@/contracts/songlist';
 import { errorMessage, vi } from '@/i18n/vi';
 import { formatDuration } from '@/lib/time';
-import { useMe, useRoom } from '@/state/hooks';
+import { useBlockedIds, useMe, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 
 /** Room for a long list without letting the textarea grow without bound. */
@@ -60,13 +60,15 @@ function SongListDialog({ signedIn, onSaved, onClose }: { signedIn: boolean; onS
     return [...ids].join('|');
   });
   const inQueue = new Set(queued.split('|'));
+  const blocked = useBlockedIds();
 
   const parsed = useMemo(() => splitSongList(text), [text]);
   const later = items?.filter((it) => it.status === 'later') ?? [];
   const found = items?.filter((it) => it.track) ?? [];
   // Two lines can land on the same song: act on each song once, in list order.
   const pickedIds = [...new Set(found.map((it) => it.track!.id))].filter((id) => picked.has(id));
-  const toQueue = pickedIds.filter((id) => !inQueue.has(id));
+  // A blocked song can still be kept in a playlist, but never queued here.
+  const toQueue = pickedIds.filter((id) => !inQueue.has(id) && !blocked.has(id));
 
   async function find(lines: string[]) {
     if (!lines.length || busy) return;
@@ -179,6 +181,7 @@ function SongListDialog({ signedIn, onSaved, onClose }: { signedIn: boolean; onS
                 item={it}
                 on={Boolean(it.track && picked.has(it.track.id))}
                 queued={Boolean(it.track && inQueue.has(it.track.id))}
+                blocked={Boolean(it.track && blocked.has(it.track.id))}
                 onToggle={toggle}
               />
             ))}
@@ -218,7 +221,19 @@ function SongListDialog({ signedIn, onSaved, onClose }: { signedIn: boolean; onS
   );
 }
 
-function ResultRow({ item, on, queued, onToggle }: { item: SongListItemView; on: boolean; queued: boolean; onToggle: (id: string) => void }) {
+function ResultRow({
+  item,
+  on,
+  queued,
+  blocked,
+  onToggle,
+}: {
+  item: SongListItemView;
+  on: boolean;
+  queued: boolean;
+  blocked: boolean;
+  onToggle: (id: string) => void;
+}) {
   const t = item.track;
   if (!t)
     return (
@@ -237,7 +252,11 @@ function ResultRow({ item, on, queued, onToggle }: { item: SongListItemView; on:
         <span className="min-w-0 flex-1">
           <span className="line-clamp-2 text-[14px] leading-snug [unicode-bidi:plaintext]">{t.title}</span>
           <span className="mt-0.5 flex gap-2 text-[12px] text-sage">
-            <span className="truncate">{queued ? vi.library.inQueue : vi.songList.line(item.line)}</span>
+            {blocked ? (
+              <span className="truncate text-alert">{vi.block.label}</span>
+            ) : (
+              <span className="truncate">{queued ? vi.library.inQueue : vi.songList.line(item.line)}</span>
+            )}
             {t.durationSec ? <span className="shrink-0 tabular-nums">{formatDuration(t.durationSec)}</span> : null}
           </span>
         </span>

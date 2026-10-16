@@ -9,7 +9,7 @@ import type { TrackSummary } from '@/contracts';
 import { ADD_MANY_MAX } from '@/contracts/constants';
 import { errorMessage, vi } from '@/i18n/vi';
 import { formatDuration } from '@/lib/time';
-import { useMe, useRoom } from '@/state/hooks';
+import { useBlockedIds, useMe, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 
 export type PickerSource = { kind: 'youtube'; url: string } | { kind: 'shared'; code: string };
@@ -36,6 +36,7 @@ export function PlaylistPicker({ source, onClose }: { source: PickerSource; onCl
   const [tracks, setTracks] = useState<TrackSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
+  const blocked = useBlockedIds();
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -123,7 +124,8 @@ export function PlaylistPicker({ source, onClose }: { source: PickerSource; onCl
           <p className="px-1 text-[13px] text-sage">{vi.playlist.slots(slots)}</p>
           <ul aria-label={vi.playlist.listLabel} className="max-h-[50vh] divide-y divide-line/70 overflow-y-auto">
             {tracks.map((t) => {
-              const taken = inQueue.has(t.id);
+              const isBlocked = blocked.has(t.id);
+              const taken = inQueue.has(t.id) || isBlocked;
               const on = picked.includes(t.id);
               return (
                 <li key={t.id}>
@@ -140,7 +142,13 @@ export function PlaylistPicker({ source, onClose }: { source: PickerSource; onCl
                     <span className="min-w-0 flex-1">
                       <span className="line-clamp-2 text-[14px] leading-snug [unicode-bidi:plaintext]">{t.title}</span>
                       <span className="mt-0.5 flex gap-2 text-[12px] text-sage">
-                        {taken ? <span>{vi.library.inQueue}</span> : t.channel && <span className="truncate">{t.channel}</span>}
+                        {isBlocked ? (
+                          <span className="text-alert">{vi.block.label}</span>
+                        ) : taken ? (
+                          <span>{vi.library.inQueue}</span>
+                        ) : (
+                          t.channel && <span className="truncate">{t.channel}</span>
+                        )}
                         {t.durationSec ? <span className="shrink-0 tabular-nums">{formatDuration(t.durationSec)}</span> : null}
                       </span>
                     </span>
