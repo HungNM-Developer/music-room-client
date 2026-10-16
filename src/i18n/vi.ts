@@ -420,6 +420,7 @@ export const vi = {
   people: {
     title: 'Mọi người',
     online: (n: number) => `${n} đang online`,
+    offline: (n: number) => `Offline (${n})`,
     you: '(bạn)',
     badges: {
       admin: 'Quản trị',

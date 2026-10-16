@@ -1,6 +1,6 @@
 'use client';
 
-import { KeyRound, MoreHorizontal } from 'lucide-react';
+import { ChevronDown, KeyRound, MoreHorizontal } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button, IconButton } from '@/components/ui/Button';
@@ -36,17 +36,45 @@ export function PeoplePanel() {
   const sorted = useMemo(
     () =>
       [...applyMembers(members ?? [], pending)].sort(
-        (a, b) => Number(b.online) - Number(a.online) || a.displayName.localeCompare(b.displayName, 'vi'),
+        (a, b) => Number(b.online) - Number(a.online) || a.displayName.localeCompare(b.displayName, 'vi', { numeric: true }),
       ),
     [members, pending],
   );
   const isAdmin = me?.role === 'ADMIN';
-  const online = sorted.filter((m) => m.online).length;
+  const onlineList = sorted.filter((m) => m.online);
+  const offlineList = sorted.filter((m) => !m.online);
+  const online = onlineList.length;
+  // Offline members pile up over days; folded by default so the recap and settings stay close.
+  const [showOffline, setShowOffline] = useState(false);
 
   const setPerm = (m: MemberView, patch: Partial<Pick<MemberView, 'canControl' | 'canDj' | 'canPlay'>> & { role?: 'ADMIN' | 'USER' }) => {
     setMenuFor(null);
     void act('permission:set', { memberId: m.id, ...patch }, { optimistic: { kind: 'perm', memberId: m.id, patch } });
   };
+
+  const row = (m: MemberView) => (
+    <li key={m.id} className="flex items-center gap-3 py-2.5 pl-2.5 pr-1">
+      <Avatar name={m.displayName} color={m.color} online={m.online} />
+      <div className="min-w-0 flex-1">
+        <p className={`truncate font-medium ${m.online ? '' : 'text-sage'}`}>
+          {m.displayName} {m.id === me?.id && <span className="font-normal text-sage">{vi.people.you}</span>}
+          <span className="sr-only">{m.online ? ', online' : ', offline'}</span>
+        </p>
+        <div className="mt-1 flex flex-wrap gap-1 empty:hidden">
+          {m.role === 'ADMIN' && <Badge tone="amber">{vi.people.badges.admin}</Badge>}
+          {(m.canPlay || playerId === m.id) && <Badge tone="onair">{vi.people.badges.player}</Badge>}
+          {m.canControl && m.role !== 'ADMIN' && <Badge tone="plain">{vi.people.badges.control}</Badge>}
+          {m.canDj && m.role !== 'ADMIN' && <Badge tone="plain">{vi.people.badges.dj}</Badge>}
+          {m.listening && m.online && <Badge tone="plain">🎧 {vi.listen.badge}</Badge>}
+        </div>
+      </div>
+      {isAdmin && m.id !== me?.id && (
+        <IconButton label={vi.people.menu(m.displayName)} onClick={() => setMenuFor(m)}>
+          <MoreHorizontal className="h-5 w-5" aria-hidden />
+        </IconButton>
+      )}
+    </li>
+  );
 
   return (
     <section aria-labelledby="people-title">
@@ -62,31 +90,31 @@ export function PeoplePanel() {
         </Button>
       )}
 
-      <ul className="divide-y divide-line/70 rounded-panel bg-panel px-1">
-        {sorted.map((m) => (
-          <li key={m.id} className="flex items-center gap-3 py-2.5 pl-2.5 pr-1">
-            <Avatar name={m.displayName} color={m.color} online={m.online} />
-            <div className="min-w-0 flex-1">
-              <p className={`truncate font-medium ${m.online ? '' : 'text-sage'}`}>
-                {m.displayName} {m.id === me?.id && <span className="font-normal text-sage">{vi.people.you}</span>}
-                <span className="sr-only">{m.online ? ', online' : ', offline'}</span>
-              </p>
-              <div className="mt-1 flex flex-wrap gap-1 empty:hidden">
-                {m.role === 'ADMIN' && <Badge tone="amber">{vi.people.badges.admin}</Badge>}
-                {(m.canPlay || playerId === m.id) && <Badge tone="onair">{vi.people.badges.player}</Badge>}
-                {m.canControl && m.role !== 'ADMIN' && <Badge tone="plain">{vi.people.badges.control}</Badge>}
-                {m.canDj && m.role !== 'ADMIN' && <Badge tone="plain">{vi.people.badges.dj}</Badge>}
-                {m.listening && m.online && <Badge tone="plain">🎧 {vi.listen.badge}</Badge>}
-              </div>
-            </div>
-            {isAdmin && m.id !== me?.id && (
-              <IconButton label={vi.people.menu(m.displayName)} onClick={() => setMenuFor(m)}>
-                <MoreHorizontal className="h-5 w-5" aria-hidden />
-              </IconButton>
-            )}
-          </li>
-        ))}
-      </ul>
+      {onlineList.length > 0 && (
+        <ul className="divide-y divide-line/70 rounded-panel bg-panel px-1">
+          {onlineList.map(row)}
+        </ul>
+      )}
+
+      {offlineList.length > 0 && (
+        <div className="mt-3">
+          <button
+            type="button"
+            aria-expanded={showOffline}
+            aria-controls="people-offline"
+            onClick={() => setShowOffline((v) => !v)}
+            className="flex min-h-11 w-full items-center justify-between rounded-row px-2 text-[14px] font-medium text-sage hover:text-paper"
+          >
+            {vi.people.offline(offlineList.length)}
+            <ChevronDown className={`h-5 w-5 transition-transform ${showOffline ? 'rotate-180' : ''}`} aria-hidden />
+          </button>
+          {showOffline && (
+            <ul id="people-offline" className="mt-1 max-h-[50vh] divide-y divide-line/70 overflow-y-auto rounded-panel bg-panel px-1">
+              {offlineList.map(row)}
+            </ul>
+          )}
+        </div>
+      )}
 
       {menuFor && (
         <Dialog open onClose={() => setMenuFor(null)} title={vi.people.menu(menuFor.displayName)}>
