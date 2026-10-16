@@ -11,6 +11,8 @@ import { addedByLabel } from '@/lib/added-by';
 import { estimatePosition } from '@/lib/time';
 import { useMe, useNowPlaying, useRoom } from '@/state/hooks';
 import { LyricsButton } from './Lyrics';
+import { MiniPlayerButton } from './MiniPlayer';
+import { useNow } from './SkipVote';
 import { SaveButton } from './SaveButton';
 import { LiveDial } from './TuningDial';
 
@@ -21,6 +23,7 @@ export function NowPlayingCard() {
   const me = useMe();
   const act = useAct();
   const [skipping, setSkipping] = useState(false);
+  const now = useNow(1000, Boolean(np?.skip.blockedUntil));
 
   if (!np) {
     return (
@@ -35,7 +38,9 @@ export function NowPlayingCard() {
   const t = np.item.track;
   const playing = np.status === 'PLAYING';
   const canControl = me?.role === 'ADMIN' || me?.canControl;
-  const voted = Boolean(me && np.skip.voters.includes(me.id));
+  const voted = Boolean(me && (np.skip.voters.includes(me.id) || np.skip.againstVoters.includes(me.id)));
+  // V1: a song the room just voted to keep cannot be put to a vote again for a while.
+  const keptSec = np.skip.blockedUntil ? Math.max(0, Math.ceil((np.skip.blockedUntil - (now + offset)) / 1000)) : 0;
   const canVote = me && !me.isDevice;
   const picker = np.item.addedBy?.displayName;
 
@@ -55,8 +60,9 @@ export function NowPlayingCard() {
           {t.channel && <p className="truncate text-[13px] text-sage/80">{t.channel}</p>}
           <LyricsButton trackId={t.id} />
         </div>
-        <div className="-mr-2 -mt-2 shrink-0">
+        <div className="-mr-2 -mt-2 flex shrink-0 flex-col items-center">
           <SaveButton track={t} />
+          <MiniPlayerButton />
         </div>
       </div>
 
@@ -76,13 +82,19 @@ export function NowPlayingCard() {
           {canVote && (
             <Button
               size="sm"
-              disabled={voted}
+              disabled={voted || keptSec > 0}
               aria-pressed={voted}
               onClick={() => act('queue:vote-skip', { queueItemId: np.item.id }, { optimistic: { kind: 'vote', itemId: np.item.id } })}
               className="flex-1 sm:flex-none"
             >
               <SkipForward className="h-4 w-4" aria-hidden />
-              {voted ? vi.nowPlaying.voted(np.skip.votes, np.skip.required) : vi.nowPlaying.voteSkip(np.skip.votes, np.skip.required)}
+              {keptSec > 0
+                ? vi.nowPlaying.kept(keptSec)
+                : np.skip.endsAt !== null && !voted
+                  ? vi.nowPlaying.voting
+                  : voted
+                    ? vi.nowPlaying.voted(np.skip.votes, np.skip.required)
+                    : vi.nowPlaying.voteSkip(np.skip.votes, np.skip.required)}
             </Button>
           )}
           {canControl && (

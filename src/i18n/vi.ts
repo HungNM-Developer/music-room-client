@@ -88,6 +88,8 @@ export const vi = {
     wishFrom: (name: string) => `Lời chúc từ ${name}`,
     voteSkip: (votes: number, required: number) => `Bỏ qua ${votes}/${required}`,
     voted: (votes: number, required: number) => `Đã bỏ phiếu ${votes}/${required}`,
+    voting: 'Đang bỏ phiếu…',
+    kept: (seconds: number) => `Nghe tiếp (${seconds} giây)`,
     skipNow: 'Chuyển bài',
     pause: 'Tạm dừng',
     play: 'Phát',
@@ -243,6 +245,27 @@ export const vi = {
     empty: 'Tài khoản YouTube này chưa có playlist nào.',
     cancelled: 'Chưa cấp quyền YouTube.',
     listLabel: 'Nguồn trên YouTube',
+  },
+
+  miniPlayer: {
+    title: 'Music Room',
+    open: 'Thu nhỏ ra màn hình',
+    react: (emoji: string) => `Thả ${emoji}`,
+  },
+
+  skipVote: {
+    label: 'Bỏ phiếu qua bài',
+    asks: (name: string) => `${name} muốn qua bài`,
+    asksAnon: 'Có người muốn qua bài',
+    you: 'Bạn',
+    seconds: (n: number) => `còn ${n} giây`,
+    yes: 'Qua bài',
+    no: 'Nghe tiếp',
+    later: 'Để sau',
+    youYes: 'Bạn chọn qua bài. Đang chờ cả phòng…',
+    youNo: 'Bạn chọn nghe tiếp. Đang chờ cả phòng…',
+    skipped: 'Đã qua bài',
+    kept: 'Cả phòng muốn nghe tiếp',
   },
 
   songList: {
@@ -408,6 +431,7 @@ export const vi = {
   settings: {
     title: 'Cài đặt phòng',
     skipThreshold: 'Tỉ lệ phiếu để bỏ qua (%)',
+    voteWindow: 'Thời gian bỏ phiếu qua bài (giây)',
     maxQueued: 'Số bài chờ tối đa mỗi người',
     maxDuration: 'Độ dài tối đa mỗi bài (phút, 0 = không giới hạn)',
     fallback: 'Playlist dự phòng (link YouTube)',
@@ -421,6 +445,7 @@ export const vi = {
     save: 'Lưu cài đặt',
     saved: 'Đã lưu cài đặt phòng',
     errThreshold: 'Nhập từ 10 đến 100',
+    errVoteWindow: 'Nhập từ 10 đến 60',
     errQueued: 'Nhập số nguyên từ 1 đến 20',
     errDuration: 'Nhập 0 hoặc số phút nguyên từ 1 đến 120',
     repeatGap: 'Không cho thêm lại bài vừa phát trong (phút, 0 = tắt)',
@@ -544,6 +569,8 @@ const ERRORS: Record<ClientErrorCode, (p: ErrorParams) => string> = {
   QUOTA_EXCEEDED: () => 'Hôm nay đã hết lượt tìm kiếm. Hãy dán link YouTube để thêm bài.',
   RATE_LIMITED: (p) => `Bạn thao tác hơi nhanh. Hãy thử lại sau ${p.seconds} giây.`,
   STALE_ITEM: () => 'Bài này vừa thay đổi. Danh sách đã được cập nhật.',
+  SKIP_BLOCKED: (p) => `Cả phòng vừa chọn nghe tiếp bài này. Thử lại sau ${p.seconds} giây.`,
+  VOTE_CLOSED: () => 'Cuộc bỏ phiếu đã kết thúc.',
   INTERNAL: () => 'Máy chủ đang gặp sự cố. Hãy thử lại sau ít phút.',
   NETWORK: () => 'Không kết nối được máy chủ. Hãy kiểm tra mạng rồi thử lại.',
 };

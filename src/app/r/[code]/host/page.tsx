@@ -10,6 +10,7 @@ import { Banners } from '@/components/room/Banners';
 import { HostChat } from '@/components/room/Chat';
 import { HostLyrics } from '@/components/room/Lyrics';
 import { HeartCanvas, triggerReaction } from '@/components/room/HeartCanvas';
+import { SkipVote } from '@/components/room/SkipVote';
 import { LiveDial } from '@/components/room/TuningDial';
 import { Button } from '@/components/ui/Button';
 import { OnAirLamp } from '@/components/ui/OnAirLamp';
@@ -107,6 +108,7 @@ function HostScreen({ code }: { code: string }) {
     <main className="relative isolate min-h-dvh px-4 py-4 md:px-8 md:py-6">
       <Backdrop height="h-dvh" />
       <HeartCanvas />
+      <SkipVote variant="host" />
       <div className="mx-auto grid max-w-[1600px] gap-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
         <section className="min-w-0 space-y-5">
           {/* Video height follows the screen so title, dial and volume fit on one TV screen. */}

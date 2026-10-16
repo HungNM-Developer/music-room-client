@@ -9,6 +9,8 @@ import { Backdrop } from '@/components/room/Backdrop';
 import { Banners } from '@/components/room/Banners';
 import { ChatOverlay } from '@/components/room/Chat';
 import { HeartCanvas, triggerReaction } from '@/components/room/HeartCanvas';
+import { MiniPlayerPortal } from '@/components/room/MiniPlayer';
+import { SkipVote } from '@/components/room/SkipVote';
 import { NowPlayingCard } from '@/components/room/NowPlayingCard';
 import { PeoplePanel } from '@/components/room/PeoplePanel';
 import { QueueList } from '@/components/room/QueueList';
@@ -82,6 +84,8 @@ export default function RoomPage() {
     <div className="relative isolate min-h-dvh pb-[calc(9rem+env(safe-area-inset-bottom))] lg:pb-28">
       <Backdrop />
       <HeartCanvas />
+      <SkipVote variant="member" />
+      <MiniPlayerPortal />
       <RoomHeader onOpenLog={() => setLogOpen(true)} />
 
       <main className="mx-auto max-w-6xl px-4 pt-4 lg:grid lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-x-8 lg:pt-6">
