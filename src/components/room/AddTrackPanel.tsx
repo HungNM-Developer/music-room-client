@@ -48,7 +48,7 @@ export function AddTrackPanel() {
           { key: 'played', label: vi.library.tabPlayed },
           { key: 'saved', label: vi.library.tabSaved },
           ...(aiEnabled ? [{ key: 'dj' as const, label: vi.djAsk.tab }] : []),
-          ...(isAdmin ? [{ key: 'blocked' as const, label: blockedCount ? vi.block.tabCount(blockedCount) : vi.block.tab }] : []),
+          ...(isAdmin ? [{ key: 'blocked' as const, label: vi.block.tab, badge: blockedCount }] : []),
         ]}
         value={shown}
         onChange={setSource}

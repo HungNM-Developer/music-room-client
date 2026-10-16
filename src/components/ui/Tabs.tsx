@@ -37,6 +37,7 @@ export function TabList<K extends string>({
   className?: string;
 }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  const compact = tabs.length > 4;
   const focusAt = (i: number) => {
     const n = (i + tabs.length) % tabs.length;
     onChange(tabs[n].key);
@@ -54,7 +55,12 @@ export function TabList<K extends string>({
     <div
       role="tablist"
       aria-label={label}
-      className={variant === 'bar' ? `grid ${className}` : `flex gap-1 rounded-[14px] bg-dial-deep p-1 ${className}`}
+      className={
+        variant === 'bar'
+          ? `grid ${className}`
+          : // Too many tabs for the width (the 400 px desktop column): scroll sideways.
+            `flex gap-1 overflow-x-auto rounded-[14px] bg-dial-deep p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${className}`
+      }
       style={variant === 'bar' ? { gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` } : undefined}
     >
       {tabs.map((t, i) => {
@@ -71,14 +77,20 @@ export function TabList<K extends string>({
             aria-selected={selected}
             aria-controls={panelId(panelPrefix, t.key)}
             tabIndex={selected ? 0 : -1}
-            onClick={() => onChange(t.key)}
+            onClick={(e) => {
+              onChange(t.key);
+              e.currentTarget.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+            }}
             onKeyDown={(e) => onKeyDown(e, i)}
             className={
               variant === 'bar'
                 ? `flex min-h-14 flex-col items-center justify-center gap-0.5 text-[12px] font-medium transition-colors ${
                     selected ? 'text-amber' : 'text-sage hover:text-paper'
                   }`
-                : `flex min-h-10 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-[10px] px-2 text-[13px] font-semibold transition-colors sm:px-3 sm:text-[14px] ${
+                : `flex min-h-10 flex-1 shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-[10px] text-[13px] font-semibold transition-colors ${
+                    // Five or more tabs must still fit the 400 px desktop column.
+                    compact ? 'px-2' : 'px-2.5 sm:px-3 sm:text-[14px]'
+                  } ${
                     selected ? 'bg-panel-hi text-paper' : 'text-sage hover:text-paper'
                   }`
             }
@@ -94,6 +106,11 @@ export function TabList<K extends string>({
               </span>
             )}
             {t.label}
+            {variant === 'pill' && Boolean(t.badge) && (
+              <span className="min-w-[18px] rounded-full bg-line px-1 text-center text-[11px] font-bold leading-[18px] text-paper tabular-nums">
+                {t.badge}
+              </span>
+            )}
           </button>
         );
       })}
