@@ -47,6 +47,7 @@ export function SettingsPanel() {
       </summary>
       <form onSubmit={save} className="space-y-4 px-4 pb-4" noValidate>
         <Field label={vi.settings.skipThreshold} inputMode="numeric" value={form.thresholdPct} onChange={(e) => set({ thresholdPct: e.target.value })} hint={vi.settings.errThreshold} invalid={errors.thresholdPct} />
+        <Field label={vi.settings.voteWindow} inputMode="numeric" value={form.voteWindow} onChange={(e) => set({ voteWindow: e.target.value })} hint={vi.settings.errVoteWindow} invalid={errors.voteWindow} />
         <Field label={vi.settings.maxQueued} inputMode="numeric" value={form.maxQueued} onChange={(e) => set({ maxQueued: e.target.value })} hint={vi.settings.errQueued} invalid={errors.maxQueued} />
         <Field label={vi.settings.maxDuration} inputMode="numeric" value={form.maxMinutes} onChange={(e) => set({ maxMinutes: e.target.value })} hint={vi.settings.errDuration} invalid={errors.maxMinutes} />
         <div className="space-y-1.5">

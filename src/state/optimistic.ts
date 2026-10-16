@@ -14,7 +14,7 @@ export type PendingOp =
   | { kind: 'pin'; itemId: string; pinned: boolean }
   | { kind: 'wish'; itemId: string; message: string | null }
   | { kind: 'add'; key: string; title: string | null; thumbnailUrl: string | null }
-  | { kind: 'vote'; itemId: string }
+  | { kind: 'vote'; itemId: string; approve?: boolean }
   | { kind: 'playback'; itemId: string; status: 'PLAYING' | 'PAUSED'; positionSec: number; positionAt: number }
   | { kind: 'perm'; memberId: string; patch: PermPatch }
   | { kind: 'kick'; memberId: string };
@@ -83,8 +83,13 @@ export function applyNowPlaying(
   let next = np;
   for (const op of pending) {
     if (!('itemId' in op) || op.itemId !== np.item.id) continue;
-    if (op.kind === 'vote' && meId && !next.skip.voters.includes(meId)) {
-      next = { ...next, skip: { ...next.skip, votes: next.skip.votes + 1, voters: [...next.skip.voters, meId] } };
+    if (op.kind === 'vote' && meId) {
+      // ✅ or ❌, moving my vote from the other side if I change my mind.
+      const yes = next.skip.voters.filter((id) => id !== meId);
+      const no = next.skip.againstVoters.filter((id) => id !== meId);
+      if (op.approve === false) no.push(meId);
+      else yes.push(meId);
+      next = { ...next, skip: { ...next.skip, votes: yes.length, voters: yes, against: no.length, againstVoters: no } };
     } else if (op.kind === 'playback') {
       next = { ...next, status: op.status, positionSec: op.positionSec, positionAt: op.positionAt };
     }

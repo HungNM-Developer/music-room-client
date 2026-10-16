@@ -46,6 +46,22 @@ html {
     --color-sage 1.6s ease;
 }
 
+/* V1: skip-vote countdown, from the share of time left (--from) down to nothing. */
+.vote-drain {
+  animation-name: vote-drain;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes vote-drain {
+  from {
+    transform: scaleX(var(--from, 1));
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
 @keyframes rise {
   from {
     opacity: 0;
