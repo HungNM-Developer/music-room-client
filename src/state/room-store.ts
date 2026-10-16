@@ -150,6 +150,7 @@ class RoomStore {
 
     s.on('connect', () => {
       this.set((st) => ({ connection: 'connected', connectCount: st.connectCount + 1 }));
+      if (this.state.connectCount > 1) this.refreshHealth();
       // A token the server no longer accepts (expired, revoked) signs this device out.
       if (readAccount())
         void send(s, 'auth:me', {}).then((r) => {
@@ -216,10 +217,22 @@ class RoomStore {
       if (this.state.code && !s.connected) s.connect();
     });
 
-    fetch(healthUrl())
+    this.refreshHealth();
+  };
+
+  /**
+   * Server version and options. Asked again on every (re)connect: a deploy restarts the
+   * server, so the socket reconnects and a version banner clears by itself once both
+   * sides match. Never from the HTTP cache.
+   */
+  private refreshHealth = (): void => {
+    fetch(healthUrl(), { cache: 'no-store' })
       .then((r) => r.json())
       .then((health: Health) => this.set({ health }))
-      .catch(() => this.set({ health: null }));
+      .catch(() => {
+        // Keep what we knew; a reconnect will ask again.
+        if (!this.state.health) this.set({ health: null });
+      });
   };
 
   /** Connects to `code` with the stored token (if any). */
