@@ -1,14 +1,15 @@
 'use client';
 
-import { Crown, LogOut } from 'lucide-react';
+import { Crown, LogOut, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { Button } from '@/components/ui/Button';
+import { Button, IconButton } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import type { MyRoomView } from '@/contracts';
-import { vi } from '@/i18n/vi';
 import { useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
+import { DeleteRoomDialog } from '@/components/room/DeleteRoomDialog';
+import { errorMessage, vi } from '@/i18n/vi';
 import { GoogleButton } from './GoogleButton';
 
 /** L1 / L6 on the home page: sign in, or the account with "Phòng của tôi". */
@@ -17,6 +18,7 @@ export function AccountPanel() {
   const clientId = useRoom((s) => s.health?.googleClientId ?? null);
   const toast = useToast();
   const [rooms, setRooms] = useState<MyRoomView[] | null>(null);
+  const [deleting, setDeleting] = useState<MyRoomView | null>(null);
 
   useEffect(() => room.start(), []);
   useEffect(() => {
@@ -74,8 +76,8 @@ export function AccountPanel() {
         {rooms && rooms.length > 0 && (
           <ul className="divide-y divide-line/70">
             {rooms.map((r) => (
-              <li key={r.code}>
-                <Link href={`/r/${r.code}`} aria-label={vi.account.open(r.name)} className="flex items-center gap-3 py-2.5 hover:text-amber">
+              <li key={r.code} className="flex items-center gap-1">
+                <Link href={`/r/${r.code}`} aria-label={vi.account.open(r.name)} className="flex min-w-0 flex-1 items-center gap-3 py-2.5 hover:text-amber">
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-1.5 font-medium">
                       <span className="truncate">{r.name}</span>
@@ -87,11 +89,35 @@ export function AccountPanel() {
                   </span>
                   <span className="type-display shrink-0 text-[14px] tracking-[0.12em] text-sage">{r.code}</span>
                 </Link>
+                {r.isOwner && (
+                  <IconButton label={vi.deleteRoom.more(r.name)} onClick={() => setDeleting(r)} className="text-sage hover:text-alert">
+                    <Trash2 className="h-[18px] w-[18px]" aria-hidden />
+                  </IconButton>
+                )}
               </li>
             ))}
           </ul>
         )}
       </section>
+      {deleting && (
+        <DeleteRoomDialog
+          name={deleting.name}
+          code={deleting.code}
+          onClose={() => setDeleting(null)}
+          onConfirm={async () => {
+            const r = await room.send('me:room-delete', { code: deleting.code });
+            if (!r.ok) {
+              toast(errorMessage(r.error.code, r.error.params), 'error');
+              return false;
+            }
+            // This browser may still hold a session in that room (Back from the room page).
+            if (room.getState().code === deleting.code) room.forgetDeletedRoom();
+            setRooms((list) => list?.filter((x) => x.code !== deleting.code) ?? null);
+            toast(vi.deleteRoom.done(deleting.name), 'success');
+            return true;
+          }}
+        />
+      )}
     </div>
   );
 }

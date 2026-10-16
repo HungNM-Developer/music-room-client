@@ -1,5 +1,6 @@
 'use client';
 
+import { useRoomDeleted } from '@/hooks/useRoomDeleted';
 import { ListPlus, Radio, Users } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
@@ -46,6 +47,7 @@ export default function RoomPage() {
   const [tab, setTab] = useState<TabKey>('room');
   const [logOpen, setLogOpen] = useState(false);
   useRoomMood();
+  useRoomDeleted();
 
   useEffect(() => room.enter(code, 'member'), [code]);
 

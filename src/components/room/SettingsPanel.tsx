@@ -1,6 +1,7 @@
 'use client';
 
-import { ChevronDown, KeyRound, Settings2 } from 'lucide-react';
+import { ChevronDown, KeyRound, Settings2, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
@@ -10,7 +11,9 @@ import { useAct } from '@/hooks/useAct';
 import { vi } from '@/i18n/vi';
 import { fromForm, type SettingsErrors, type SettingsForm, toForm } from '@/lib/settings-form';
 import { isPin } from '@/lib/validate';
+import { DeleteRoomDialog } from './DeleteRoomDialog';
 import { useMe, useRoom } from '@/state/hooks';
+import { room } from '@/state/room-store';
 
 export function SettingsPanel() {
   const settings = useRoom((s) => s.snapshot?.room.settings);
@@ -83,7 +86,46 @@ export function SettingsPanel() {
         </Button>
       </form>
       <PinSettings />
+      <DeleteRoom />
     </details>
+  );
+}
+
+/** The room's owner only (signed in as the account that owns it): delete the room. */
+function DeleteRoom() {
+  const isOwner = useRoom((s) => Boolean(s.user && s.snapshot?.room.ownerUserId === s.user.id));
+  const name = useRoom((s) => s.snapshot?.room.name ?? '');
+  const code = useRoom((s) => s.snapshot?.room.code ?? '');
+  const act = useAct();
+  const toast = useToast();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  if (!isOwner) return null;
+  return (
+    <div className="space-y-3 border-t border-line/70 px-4 py-4">
+      <h3 className="flex items-center gap-2 font-semibold text-alert">
+        <Trash2 className="h-4 w-4" aria-hidden /> {vi.deleteRoom.section}
+      </h3>
+      <p className="text-[13px] text-sage">{vi.deleteRoom.sectionHint}</p>
+      <Button variant="danger" className="w-full" onClick={() => setOpen(true)}>
+        {vi.deleteRoom.open}
+      </Button>
+      {open && (
+        <DeleteRoomDialog
+          name={name}
+          code={code}
+          onClose={() => setOpen(false)}
+          onConfirm={async () => {
+            const ok = await act('room:delete', { code });
+            if (!ok) return false;
+            room.forgetDeletedRoom();
+            toast(vi.deleteRoom.done(name), 'success');
+            router.replace('/');
+            return true;
+          }}
+        />
+      )}
+    </div>
   );
 }
 

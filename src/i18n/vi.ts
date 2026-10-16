@@ -468,6 +468,19 @@ export const vi = {
     label: 'Đã chặn',
     blockedTrack: (title: string) => `Đã chặn: ${title}`,
   },
+  deleteRoom: {
+    section: 'Xoá phòng',
+    sectionHint: 'Xoá hẳn phòng này cùng hàng chờ, lịch sử và chat. Không khôi phục được.',
+    open: 'Xoá phòng…',
+    menu: 'Xoá phòng…',
+    more: (name: string) => `Tùy chọn cho phòng ${name}`,
+    title: (name: string) => `Xoá phòng "${name}"?`,
+    body: 'Hàng chờ, lịch sử, chat và danh sách chặn của phòng sẽ mất hẳn, không khôi phục được. Mọi người đang trong phòng sẽ được đưa về trang chủ. Kênh Slack đang nối sẽ tự bỏ nối.',
+    typeCode: (code: string) => `Gõ mã phòng ${code} để xác nhận`,
+    confirm: 'Xoá phòng',
+    cancel: 'Huỷ',
+    done: (name: string) => `Đã xoá phòng "${name}"`,
+  },
   settings: {
     title: 'Cài đặt phòng',
     skipThreshold: 'Tỉ lệ phiếu để bỏ qua (%)',
@@ -557,6 +570,9 @@ export const vi = {
   },
 
   banners: {
+    roomDeleted: (name?: string | null) => (name ? `Phòng "${name}" đã bị chủ phòng xoá.` : 'Phòng đã bị chủ phòng xoá.'),
+    orphanNotice: 'Phòng chưa có chủ nên sẽ tự xoá sau 30 ngày không ai dùng. Người tạo phòng đăng nhập Google để giữ phòng.',
+    dismiss: 'Đóng',
     reconnecting: 'Đang kết nối lại…',
     waking: 'Đang kết nối tới máy chủ… Máy chủ miễn phí có thể cần khoảng 1 phút để khởi động.',
     newVersion: 'Có phiên bản mới. Hãy tải lại trang.',
