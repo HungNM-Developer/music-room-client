@@ -11,6 +11,7 @@ import { vi } from '@/i18n/vi';
 import { classifyInput, playlistIn, sharedPlaylistIn } from '@/lib/add-input';
 import { formatDuration } from '@/lib/time';
 import { useMe, useRoom } from '@/state/hooks';
+import { BlockedList } from './BlockedList';
 import { DjAsk } from './DjAsk';
 import { PlayedList, SavedList } from './LibraryLists';
 import { MyPlaylists } from './MyPlaylists';
@@ -19,12 +20,16 @@ import { type PickerSource, PlaylistPicker } from './PlaylistPicker';
 import { SongListImport } from './SongListImport';
 import { TrackRow } from './TrackRow';
 
-type Source = 'search' | 'played' | 'saved' | 'dj';
+type Source = 'search' | 'played' | 'saved' | 'dj' | 'blocked';
 
 export function AddTrackPanel() {
   const me = useMe();
   const [source, setSource] = useState<Source>('search');
   const aiEnabled = useRoom((s) => s.snapshot?.aiEnabled ?? false);
+  const blockedCount = useRoom((s) => s.snapshot?.room.blockedTrackIds.length ?? 0);
+  const isAdmin = me?.role === 'ADMIN';
+  // The tab is admin only: someone who stops being admin falls back to search.
+  const shown = source === 'blocked' && !isAdmin ? 'search' : source;
   const { add, added } = useAddTrack();
 
   if (me?.isDevice) return null;
@@ -43,15 +48,17 @@ export function AddTrackPanel() {
           { key: 'played', label: vi.library.tabPlayed },
           { key: 'saved', label: vi.library.tabSaved },
           ...(aiEnabled ? [{ key: 'dj' as const, label: vi.djAsk.tab }] : []),
+          ...(isAdmin ? [{ key: 'blocked' as const, label: blockedCount ? vi.block.tabCount(blockedCount) : vi.block.tab }] : []),
         ]}
-        value={source}
+        value={shown}
         onChange={setSource}
       />
-      <div id={panelId('add', source)} role="tabpanel" aria-labelledby={tabId('add', source)}>
-        {source === 'search' && <SearchPanel add={add} added={added} />}
-        {source === 'played' && <PlayedList add={add} added={added} />}
-        {source === 'saved' && <MineTab add={add} added={added} />}
-        {source === 'dj' && <DjAsk add={add} added={added} />}
+      <div id={panelId('add', shown)} role="tabpanel" aria-labelledby={tabId('add', shown)}>
+        {shown === 'search' && <SearchPanel add={add} added={added} />}
+        {shown === 'played' && <PlayedList add={add} added={added} />}
+        {shown === 'saved' && <MineTab add={add} added={added} />}
+        {shown === 'dj' && <DjAsk add={add} added={added} />}
+        {shown === 'blocked' && <BlockedList />}
       </div>
     </section>
   );

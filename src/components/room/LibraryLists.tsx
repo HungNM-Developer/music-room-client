@@ -8,8 +8,9 @@ import { LIBRARY_SORTS, LOOKUP_MAX_IDS } from '@/contracts/constants';
 import { vi } from '@/i18n/vi';
 import { readLocalFavorites } from '@/lib/local-favorites';
 import { formatAgo, formatDuration } from '@/lib/time';
-import { useRoom } from '@/state/hooks';
+import { useMe, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
+import { BlockMenu } from './BlockDialog';
 import { TrackRow } from './TrackRow';
 
 type Add = (trackInput: string, known?: TrackSummary) => Promise<boolean>;
@@ -35,6 +36,8 @@ function Status({ loading, failed, empty, onRetry }: { loading: boolean; failed:
 
 /** A1: songs this room has played, to add again in one tap. */
 export function PlayedList({ add, added }: { add: Add; added: Set<string> }) {
+  const isAdmin = useMe()?.role === 'ADMIN';
+  const [blockFor, setBlockFor] = useState<TrackSummary | null>(null);
   const [sort, setSort] = useState<LibrarySort>('recent');
   const [items, setItems] = useState<LibraryItemView[] | null>(null);
   const [failed, setFailed] = useState(false);
@@ -89,6 +92,7 @@ export function PlayedList({ add, added }: { add: Add; added: Set<string> }) {
               done={added.has(it.track.id)}
               addLabel={vi.library.addAgain}
               onAdd={() => void add(it.track.id, it.track)}
+              onMore={isAdmin ? () => setBlockFor(it.track) : undefined}
               meta={
                 <p className="flex flex-wrap gap-x-2">
                   <span className="truncate">{it.lastAddedBy?.displayName ?? vi.library.fallback}</span>
@@ -101,6 +105,7 @@ export function PlayedList({ add, added }: { add: Add; added: Set<string> }) {
           ))}
         </ul>
       )}
+      {blockFor && <BlockMenu track={blockFor} onClose={() => setBlockFor(null)} />}
     </div>
   );
 }

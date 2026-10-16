@@ -1,5 +1,5 @@
-import { Check, Plus } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Ban, Check, MoreHorizontal, Plus } from 'lucide-react';
+import { Button, IconButton } from '@/components/ui/Button';
 import { Thumb } from '@/components/ui/Thumb';
 import type { TrackSummary } from '@/contracts';
 import { vi } from '@/i18n/vi';
@@ -13,6 +13,7 @@ export function TrackRow({
   done,
   addLabel = vi.add.addResult,
   onAdd,
+  onMore,
 }: {
   track: TrackSummary;
   /** Second line (channel and length, who played it last, …). */
@@ -21,6 +22,8 @@ export function TrackRow({
   done: boolean;
   addLabel?: string;
   onAdd: () => void;
+  /** Admin's ⋯ (block the song); omitted for everyone else. */
+  onMore?: () => void;
 }) {
   // A6: a song already waiting or on air cannot be added again.
   const inQueue = useRoom(
@@ -28,6 +31,8 @@ export function TrackRow({
       s.snapshot?.nowPlaying?.item.track.id === track.id ||
       Boolean(s.snapshot?.queue.some((q) => q.track.id === track.id)),
   );
+  // Blocked by the admin: nobody can add it (the server refuses it too).
+  const blocked = useRoom((s) => Boolean(s.snapshot?.room.blockedTrackIds.includes(track.id)));
   return (
     <li className="flex items-center gap-3 py-2.5 pl-2.5 pr-1">
       <Thumb url={track.thumbnailUrl} size={72} ratio="wide" />
@@ -38,16 +43,28 @@ export function TrackRow({
         <div className="mt-0.5 text-[12px] text-sage">{meta}</div>
       </div>
       <SaveButton track={track} />
-      <Button
-        size="sm"
-        disabled={done || inQueue}
-        onClick={onAdd}
-        aria-label={inQueue ? `${vi.library.inQueue}: ${track.title}` : vi.library.addTrack(track.title)}
-        title={inQueue ? vi.library.inQueue : undefined}
-      >
-        {done || inQueue ? <Check className="h-4 w-4 text-amber" aria-hidden /> : <Plus className="h-4 w-4" aria-hidden />}
-        <span className="hidden sm:inline">{inQueue ? vi.library.inQueue : addLabel}</span>
-      </Button>
+      {blocked ? (
+        <Button size="sm" disabled aria-label={vi.block.blockedTrack(track.title)} title={vi.block.label}>
+          <Ban className="h-4 w-4 text-alert" aria-hidden />
+          <span className="hidden sm:inline">{vi.block.label}</span>
+        </Button>
+      ) : (
+        <Button
+          size="sm"
+          disabled={done || inQueue}
+          onClick={onAdd}
+          aria-label={inQueue ? `${vi.library.inQueue}: ${track.title}` : vi.library.addTrack(track.title)}
+          title={inQueue ? vi.library.inQueue : undefined}
+        >
+          {done || inQueue ? <Check className="h-4 w-4 text-amber" aria-hidden /> : <Plus className="h-4 w-4" aria-hidden />}
+          <span className="hidden sm:inline">{inQueue ? vi.library.inQueue : addLabel}</span>
+        </Button>
+      )}
+      {onMore && !blocked && (
+        <IconButton label={vi.block.more(track.title)} onClick={onMore}>
+          <MoreHorizontal className="h-5 w-5" aria-hidden />
+        </IconButton>
+      )}
     </li>
   );
 }
