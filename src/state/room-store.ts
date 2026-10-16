@@ -279,6 +279,15 @@ class RoomStore {
     this.set({ ...ROOM_RESET, code: null });
   };
 
+  /** This browser deleted the room: forget its session (the server already detached it). */
+  forgetDeletedRoom = (): void => {
+    const s = this.socket;
+    const { code, kind } = this.state;
+    if (code) clearToken(code, kind);
+    if (s) setSocketAuth(s, null);
+    this.set({ ...ROOM_RESET, code: null });
+  };
+
   clearPlayerRevoked = (): void => this.set({ playerRevoked: null });
 
   private opSeq = 0;

@@ -1,10 +1,11 @@
 'use client';
 
-import { Hourglass, RefreshCw, Speaker, WifiOff } from 'lucide-react';
+import { Hourglass, RefreshCw, Speaker, Trash2, WifiOff } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useOrigin } from '@/hooks/useOrigin';
 import { useSlow } from '@/hooks/useSlow';
 import { vi } from '@/i18n/vi';
-import { useRoom, useVersionSkew } from '@/state/hooks';
+import { useMe, useRoom, useVersionSkew } from '@/state/hooks';
 
 /** Connection / version / player banners (TC-123, TC-192, TC-200). */
 export function Banners() {
@@ -19,6 +20,18 @@ export function Banners() {
     return Boolean(id && s.snapshot?.members.some((m) => m.id === id && m.online));
   });
   const skew = useVersionSkew();
+  // A room nobody signed in for is deleted after 30 days unused: tell its admins how to keep it.
+  const me = useMe();
+  const orphan = useRoom((s) => Boolean(s.snapshot && s.snapshot.room.ownerUserId === null));
+  const [orphanSeen, setOrphanSeen] = useState(true);
+  useEffect(() => {
+    try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sessionStorage is only readable in the browser
+      setOrphanSeen(sessionStorage.getItem(`orphan-notice:${code}`) === '1');
+    } catch {
+      setOrphanSeen(false);
+    }
+  }, [code]);
   const origin = useOrigin();
   // A first connection that takes this long usually means a free-tier server waking up.
   const waking = useSlow(connection === 'connecting', 2500);
@@ -54,6 +67,29 @@ export function Banners() {
         : playerPageOpen
           ? vi.banners.playerWaiting
           : vi.banners.playerOffline,
+    });
+  }
+  if (orphan && me?.role === 'ADMIN' && kind === 'member' && !orphanSeen) {
+    items.push({
+      key: 'orphan',
+      icon: <Trash2 className="h-4 w-4" aria-hidden />,
+      text: vi.banners.orphanNotice,
+      action: (
+        <button
+          type="button"
+          className="shrink-0 font-semibold text-amber underline-offset-2 hover:underline"
+          onClick={() => {
+            setOrphanSeen(true);
+            try {
+              sessionStorage.setItem(`orphan-notice:${code}`, '1');
+            } catch {
+              // Private mode: the notice simply comes back next time.
+            }
+          }}
+        >
+          {vi.banners.dismiss}
+        </button>
+      ),
     });
   }
   if (!items.length) return null;

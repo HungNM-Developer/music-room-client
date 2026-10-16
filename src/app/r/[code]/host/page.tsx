@@ -1,5 +1,6 @@
 'use client';
 
+import { useRoomDeleted } from '@/hooks/useRoomDeleted';
 import { Radio } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
@@ -43,6 +44,7 @@ export default function HostPage() {
   const [attempt, setAttempt] = useState(0);
   const needsLogin = connection === 'connected' && !memberId;
 
+  useRoomDeleted();
   useEffect(() => room.enter(code, 'host'), [code]);
   useEffect(
     () => room.onReaction((e) => triggerReaction(window.innerWidth * (0.1 + Math.random() * 0.8), window.innerHeight - 80, e.emoji)),
