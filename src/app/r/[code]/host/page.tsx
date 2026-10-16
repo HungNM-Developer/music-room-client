@@ -9,6 +9,7 @@ import { Backdrop } from '@/components/room/Backdrop';
 import { Banners } from '@/components/room/Banners';
 import { HostChat } from '@/components/room/Chat';
 import { HostLyrics } from '@/components/room/Lyrics';
+import { ListenersStrip } from '@/components/player/ListenAlong';
 import { HeartCanvas, triggerReaction } from '@/components/room/HeartCanvas';
 import { SkipVote } from '@/components/room/SkipVote';
 import { LiveDial } from '@/components/room/TuningDial';
@@ -168,6 +169,7 @@ function HostScreen({ code }: { code: string }) {
             <p className="type-display mt-4 text-[40px] font-extrabold leading-none tracking-[0.12em]">{code}</p>
             <p className="mt-2 text-[13px] text-dial/70 [overflow-wrap:anywhere]">{joinUrl}</p>
           </div>
+          <ListenersStrip size="lg" />
 
           <div>
             <h2 className="type-display mb-2 text-[22px] font-bold">{vi.host.next}</h2>

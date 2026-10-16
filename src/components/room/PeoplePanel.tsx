@@ -76,6 +76,7 @@ export function PeoplePanel() {
                 {(m.canPlay || playerId === m.id) && <Badge tone="onair">{vi.people.badges.player}</Badge>}
                 {m.canControl && m.role !== 'ADMIN' && <Badge tone="plain">{vi.people.badges.control}</Badge>}
                 {m.canDj && m.role !== 'ADMIN' && <Badge tone="plain">{vi.people.badges.dj}</Badge>}
+                {m.listening && m.online && <Badge tone="plain">🎧 {vi.listen.badge}</Badge>}
               </div>
             </div>
             {isAdmin && m.id !== me?.id && (

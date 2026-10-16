@@ -12,7 +12,7 @@ import { useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 
 /** Minimal player surface the engine drives (implemented by the YouTube iframe). */
-interface PlayerAdapter {
+export interface PlayerAdapter {
   load(videoId: string, startSec: number, autoplay: boolean): void;
   play(): void;
   pause(): void;
@@ -21,8 +21,8 @@ interface PlayerAdapter {
   setVolume(v: number): void;
 }
 
-const DRIFT_SEC = 2.5;
-const DUCK_VOLUME = 20; // R-34
+export const DRIFT_SEC = 2.5;
+export const DUCK_VOLUME = 20; // R-34
 
 const VOICE: Record<VoicePreset, { pitch: number; rate: number }> = {
   radio: { pitch: 0.9, rate: 1.2 },
@@ -33,7 +33,7 @@ const VOICE: Record<VoicePreset, { pitch: number; rate: number }> = {
   sleepy: { pitch: 0.8, rate: 0.5 },
 };
 
-const DJ_FILES: Record<string, string> = {
+export const DJ_FILES: Record<string, string> = {
   build: '/sounds/build.m4a',
   drop: '/sounds/drop.m4a',
   clap: '/sounds/clap.m4a',
@@ -48,7 +48,7 @@ const DJ_FILES: Record<string, string> = {
  * playing is cloned so rapid taps overlap instead of restarting.
  */
 const djPool = new Map<string, HTMLAudioElement>();
-function preloadDj(): void {
+export function preloadDj(): void {
   for (const src of Object.values(DJ_FILES)) {
     if (djPool.has(src)) continue;
     const a = new Audio(src);
@@ -57,7 +57,7 @@ function preloadDj(): void {
     djPool.set(src, a);
   }
 }
-function playDj(src: string): void {
+export function playDj(src: string): void {
   const base = djPool.get(src) ?? new Audio(src);
   const a = base.paused ? base : (base.cloneNode() as HTMLAudioElement);
   a.volume = 0.8;
@@ -68,8 +68,8 @@ function playDj(src: string): void {
 /** Chrome may garbage-collect a pending utterance and never fire onend; keep a reference. */
 let currentUtterance: SpeechSynthesisUtterance | null = null;
 
-/** Reads the wish aloud on the speaker device only (R-34). Returns false when TTS is unavailable. */
-function speak(text: string, preset: VoicePreset | null, onDone: () => void): boolean {
+/** Reads the wish aloud on the speaker (R-34) and on "Nghe cùng" devices. Returns false when TTS is unavailable. */
+export function speak(text: string, preset: VoicePreset | null, onDone: () => void): boolean {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
     console.warn('[player] speechSynthesis not supported — wish skipped');
     return false;
@@ -301,7 +301,7 @@ export function PlayerEngine({ volume = 100 }: { volume?: number }) {
   );
 }
 
-interface AdapterProps {
+export interface AdapterProps {
   adapterRef: React.RefObject<PlayerAdapter | null>;
   onReady: () => void;
   onPlaying: () => void;
@@ -310,7 +310,7 @@ interface AdapterProps {
 }
 
 /** Visible YouTube iframe (≥ 200×200, never hidden — YouTube API policy, TC-131). */
-function YouTubeAdapter({ adapterRef, onReady, onPlaying, onEnded, onError }: AdapterProps) {
+export function YouTubeAdapter({ adapterRef, onReady, onPlaying, onEnded, onError }: AdapterProps) {
   const ytRef = useRef<YouTubePlayer | null>(null);
   // A destroyed player (unmount, StrictMode remount) throws on every call: forget it.
   useEffect(

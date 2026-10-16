@@ -11,6 +11,7 @@ import { addedByLabel } from '@/lib/added-by';
 import { estimatePosition } from '@/lib/time';
 import { useMe, useNowPlaying, useRoom } from '@/state/hooks';
 import { LyricsButton } from './Lyrics';
+import { ListenButton, ListenersStrip } from '@/components/player/ListenAlong';
 import { MiniPlayerButton } from './MiniPlayer';
 import { useNow } from './SkipVote';
 import { SaveButton } from './SaveButton';
@@ -78,7 +79,7 @@ export function NowPlayingCard() {
       </div>
 
       {(canVote || canControl) && (
-        <div className="mt-4 flex items-center gap-2">
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           {canVote && (
             <Button
               size="sm"
@@ -97,6 +98,7 @@ export function NowPlayingCard() {
                     : vi.nowPlaying.voteSkip(np.skip.votes, np.skip.required)}
             </Button>
           )}
+          {canVote && !me?.canPlay && <ListenButton />}
           {canControl && (
             <>
               <Button
@@ -136,6 +138,10 @@ export function NowPlayingCard() {
           )}
         </div>
       )}
+
+      <div className="mt-3 empty:hidden">
+        <ListenersStrip />
+      </div>
     </section>
   );
 }
