@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import YouTube, { type YouTubeEvent, type YouTubePlayer } from 'react-youtube';
-import { Volume2 } from 'lucide-react';
+import { Hand } from 'lucide-react';
 import type { PlayerCommand, VoicePreset } from '@/contracts';
 import { PLAYER_ERROR_CODES } from '@/contracts/constants';
 import { PLAYER_PROGRESS_INTERVAL_MS } from '@/contracts/events';
@@ -91,13 +91,14 @@ export function speak(text: string, preset: VoicePreset | null, onDone: () => vo
   return currentUtterance !== null;
 }
 
-export function PlayerEngine({ volume = 100 }: { volume?: number }) {
+/** `caption`: a line above the video saying this device is the room's speaker (room page). */
+export function PlayerEngine({ volume = 100, caption = false }: { volume?: number; caption?: boolean }) {
   const playerCommand = useRoom((s) => s.playerCommand);
   const offset = useRoom((s) => s.offset);
   const connection = useRoom((s) => s.connection);
   const connectCount = useRoom((s) => s.connectCount);
   const memberId = useRoom((s) => s.memberId);
-  const cover = useRoom((s) => s.snapshot?.nowPlaying?.item.track.thumbnailUrl ?? null);
+  const preview = useRoom((s) => s.snapshot?.nowPlaying ?? null);
   const send = room.send;
   const adapterRef = useRef<PlayerAdapter | null>(null);
   const [ready, setReady] = useState(false);
@@ -115,14 +116,23 @@ export function PlayerEngine({ volume = 100 }: { volume?: number }) {
     offsetRef.current = offset;
   }, [offset]);
 
-  // Sticky user activation (e.g. "Phát ở máy này") already allows autoplay: skip the overlay.
+  // Phones start a YouTube video only from a tap on the video itself; a tap elsewhere on the
+  // page does not count there. Known after hydration only.
+  const [touch, setTouch] = useState(false);
+
+  // Sticky user activation (e.g. "Phát ở máy này") already allows autoplay on a computer.
   // Runs after hydration because the server render cannot know it.
   useEffect(() => {
     const activation = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } })
       .userActivation;
+    const coarse = window.matchMedia('(pointer: coarse)').matches;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (activation?.hasBeenActive) setStarted(true);
+    setTouch(coarse);
+    if (activation?.hasBeenActive && !coarse) setStarted(true);
   }, []);
+
+  // The room plays but the browser blocked this video after starting. Shown under the video.
+  const [needsTap, setNeedsTap] = useState(false);
 
   // R-27: take the lease only once playback is actually possible, and again after every reconnect.
   useEffect(() => {
@@ -150,8 +160,9 @@ export function PlayerEngine({ volume = 100 }: { volume?: number }) {
     const a = adapterRef.current;
     if (!a || !ready || !started) return;
     if (!playerCommand) {
-      // Lease revoked or not yet granted: this device must be silent (review P2-6).
-      a.pause();
+      // Lease revoked: this device must be silent (review P2-6). Not yet granted (just started
+      // from ▶ on the waiting video): keep it playing, the room's command follows in a moment.
+      if (itemRef.current) a.pause();
       itemRef.current = null;
       return;
     }
@@ -193,6 +204,33 @@ export function PlayerEngine({ volume = 100 }: { volume?: number }) {
       a.play();
     }
   }, [playerCommand, ready, started]);
+
+  // ---------------------------------------------------------------- before starting
+  // Until this device really plays it holds no lease (R-27: the room keeps its own clock and
+  // tells everyone the speaker waits). Its video loads the room's song at the room's position
+  // and, if the room is playing, simply tries to play it: Chrome often allows that (a visited
+  // site, an installed app), and then onPlaying takes the lease. When the browser says no, the
+  // ▶ stays there to press — the one tap phones accept — with a hint under the video.
+  const previewRef = useRef(preview);
+  useEffect(() => {
+    previewRef.current = preview;
+  }, [preview]);
+  const previewId = preview?.item.id ?? null;
+  const previewPlaying = preview?.status === 'PLAYING';
+  useEffect(() => {
+    const a = adapterRef.current;
+    const np = previewRef.current;
+    if (!a || !ready || started || !np) return;
+    const at = estimatePosition({ ...np, durationSec: np.item.track.durationSec }, offsetRef.current, Date.now());
+    a.load(np.item.track.externalId, at, previewPlaying);
+    if (!previewPlaying) return;
+    // Blocked without a word (no onAutoplayBlocked): still not playing after a moment.
+    const t = setTimeout(() => {
+      const s = adapterRef.current?.state();
+      if (s !== 1 && s !== 3) setNeedsTap(true);
+    }, 2500);
+    return () => clearTimeout(t);
+  }, [ready, started, previewId, previewPlaying]);
 
   useEffect(() => {
     volumeRef.current = volume;
@@ -237,6 +275,11 @@ export function PlayerEngine({ volume = 100 }: { volume?: number }) {
     if (!started) return;
     const t = setInterval(() => {
       const a = adapterRef.current;
+      const cmd = cmdRef.current;
+      if (a && cmd?.status === 'PLAYING' && cmd.queueItemId === itemRef.current && !reported.current.ended) {
+        const s = a.state();
+        setNeedsTap(s === -1 || s === 5);
+      }
       if (a && itemRef.current && cmdRef.current?.status === 'PLAYING') {
         report('progress', { positionSec: Math.max(0, a.currentTime()) });
       } else {
@@ -283,15 +326,31 @@ export function PlayerEngine({ volume = 100 }: { volume?: number }) {
     });
   }, [started]);
 
+  const keepAlive = useRef(false);
+  const start = useCallback(() => {
+    setStarted(true);
+    itemRef.current = null; // re-apply the current command now that playback is allowed
+    if (keepAlive.current) return;
+    keepAlive.current = true;
+    // Keep-alive: a silent looping <audio> stops background-tab throttling (kept from v1).
+    const keep = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFRm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==');
+    keep.loop = true;
+    keep.play().catch(() => undefined);
+  }, []);
+
   // ---------------------------------------------------------------- player events
   const onPlaying = useCallback(() => {
     playingRef.current = true;
+    setNeedsTap(false);
+    // ▶ pressed on the waiting video: playback is allowed now. Take the lease; the room's
+    // command then reloads the song at the room's position.
+    if (!started) return start();
     if (cmdRef.current?.status !== 'PLAYING') return void fromVideo('PLAYING'); // ▶ on the video of a paused room
     if (!reported.current.started) {
       reported.current.started = true;
       report('started', { positionSec: adapterRef.current?.currentTime() ?? 0 });
     }
-  }, [report, fromVideo]);
+  }, [report, fromVideo, started, start]);
   const onEnded = useCallback(() => {
     playingRef.current = false;
     if (!reported.current.ended) {
@@ -309,23 +368,11 @@ export function PlayerEngine({ volume = 100 }: { volume?: number }) {
     [report],
   );
 
-  const keepAlive = useRef(false);
-  const start = useCallback(() => {
-    setStarted(true);
-    itemRef.current = null; // re-apply the current command now that playback is allowed
-    if (keepAlive.current) return;
-    keepAlive.current = true;
-    // Keep-alive: a silent looping <audio> stops background-tab throttling (kept from v1).
-    const keep = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFRm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==');
-    keep.loop = true;
-    keep.play().catch(() => undefined);
-  }, []);
-
-  // Any click or key press on the page is the one interaction the browser asks for: start
-  // right then, so whoever is at this device (adding a song, chatting) never has to find the
-  // start hint. Mount-time activation is handled above.
+  // On a computer any click or key press on the page is the one interaction the browser asks
+  // for: start right then, so whoever is at this device (adding a song, chatting) never has to
+  // look for anything. Not on phones: there it would take the lease without sound.
   useEffect(() => {
-    if (started) return;
+    if (started || touch) return;
     const go = () => start();
     window.addEventListener('click', go, true);
     window.addEventListener('keydown', go, true);
@@ -333,36 +380,46 @@ export function PlayerEngine({ volume = 100 }: { volume?: number }) {
       window.removeEventListener('click', go, true);
       window.removeEventListener('keydown', go, true);
     };
-  }, [started, start]);
+  }, [started, start, touch]);
+
+  const waitingHint = touch
+    ? preview
+      ? vi.host.startTouch
+      : vi.host.startTouchIdle
+    : preview
+      ? vi.host.start
+      : vi.host.startIdle;
 
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-panel bg-dial-deep">
-      <YouTubeAdapter
-        adapterRef={adapterRef}
-        onReady={() => setReady(true)}
-        onPlaying={onPlaying}
-        onPaused={() => void fromVideo('PAUSED')}
-        onEnded={onEnded}
-        onError={onError}
-      />
-      {!started && (
-        <button
-          type="button"
-          onClick={start}
-          className="absolute inset-0 z-20 flex items-center justify-center bg-dial-deep p-4"
-        >
-          {/* A gentle hint over the song's cover: any tap on the page works, not just this one. */}
-          {cover && (
-            // eslint-disable-next-line @next/next/no-img-element -- remote YouTube artwork
-            <img src={cover} alt="" className="absolute inset-0 h-full w-full object-cover opacity-35" />
-          )}
-          <span className="relative inline-flex items-center gap-2 rounded-full bg-amber px-4 py-2.5 text-[15px] font-semibold text-amber-ink shadow-lg">
-            <Volume2 className="h-5 w-5 shrink-0" aria-hidden />
-            {vi.host.start}
-          </span>
-        </button>
+    <div className="space-y-2">
+      {caption && (
+        <p className="px-1 text-[13px] font-medium text-amber">{started ? vi.host.thisDevicePlays : vi.host.thisDeviceWaits}</p>
       )}
+      <div className="relative aspect-video w-full overflow-hidden rounded-panel bg-dial-deep">
+        <YouTubeAdapter
+          adapterRef={adapterRef}
+          onReady={() => setReady(true)}
+          onPlaying={onPlaying}
+          onPaused={() => void fromVideo('PAUSED')}
+          onEnded={onEnded}
+          onError={onError}
+          onAutoplayBlocked={() => setNeedsTap(true)}
+        />
+      </div>
+      {!started
+        ? (!previewPlaying || needsTap) && <TapVideoHint text={waitingHint} />
+        : needsTap && <TapVideoHint text={vi.host.tapVideo} />}
     </div>
+  );
+}
+
+/** Below the video, never over it (its controls and links must stay reachable). */
+export function TapVideoHint({ text }: { text: string }) {
+  return (
+    <p role="status" className="flex items-center gap-2 px-1 text-[14px] font-medium text-amber">
+      <Hand className="h-4 w-4 shrink-0" aria-hidden />
+      {text}
+    </p>
   );
 }
 
@@ -372,13 +429,19 @@ export interface AdapterProps {
   onPlaying: () => void;
   /** Paused, by us or by the video's own controls. */
   onPaused?: () => void;
+  /** The browser refused to start the video without a tap on it (YouTube's onAutoplayBlocked). */
+  onAutoplayBlocked?: () => void;
   onEnded: () => void;
   onError: (code: number) => void;
 }
 
 /** Visible YouTube iframe (≥ 200×200, never hidden — YouTube API policy, TC-131). */
-export function YouTubeAdapter({ adapterRef, onReady, onPlaying, onPaused, onEnded, onError }: AdapterProps) {
+export function YouTubeAdapter({ adapterRef, onReady, onPlaying, onPaused, onEnded, onError, onAutoplayBlocked }: AdapterProps) {
   const ytRef = useRef<YouTubePlayer | null>(null);
+  const blockedRef = useRef(onAutoplayBlocked);
+  useEffect(() => {
+    blockedRef.current = onAutoplayBlocked;
+  }, [onAutoplayBlocked]);
   // A destroyed player (unmount, StrictMode remount) throws on every call: forget it.
   useEffect(
     () => () => {
@@ -406,6 +469,8 @@ export function YouTubeAdapter({ adapterRef, onReady, onPlaying, onPaused, onEnd
       onReady={(e: YouTubeEvent) => {
         const p = e.target;
         ytRef.current = p;
+        // Not wrapped by react-youtube: listen on the YouTube player itself.
+        (p as unknown as { addEventListener?: (name: string, fn: () => void) => void }).addEventListener?.('onAutoplayBlocked', () => blockedRef.current?.());
         // The iframe can disappear under us (navigation, remount); never let that crash an effect.
         const safe = <A extends unknown[], R>(fn: (...a: A) => R, fallback: R) => (...a: A): R => {
           try {

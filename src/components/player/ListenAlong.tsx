@@ -8,7 +8,7 @@ import { vi } from '@/i18n/vi';
 import { estimatePosition } from '@/lib/time';
 import { useMe, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
-import { DJ_FILES, DRIFT_SEC, DUCK_VOLUME, type PlayerAdapter, playDj, preloadDj, speak, YouTubeAdapter } from './PlayerEngine';
+import { DJ_FILES, DRIFT_SEC, DUCK_VOLUME, type PlayerAdapter, playDj, preloadDj, speak, TapVideoHint, YouTubeAdapter } from './PlayerEngine';
 
 // N1 "Nghe cùng": this device plays the room's song in sync, for itself only. It follows
 // the room snapshot (song, play / pause, position on the server clock) — the same clock
@@ -123,6 +123,8 @@ function ListenPlayer() {
   // Only that pause is left alone; anything else (autoplay blocked, not loaded yet) is retried.
   const playedRef = useRef(false);
   const userPausedRef = useRef(false);
+  // The room plays but this browser blocked the video (phones: only a tap on ▶ starts it).
+  const [needsTap, setNeedsTap] = useState(false);
   const offsetRef = useRef(offset);
   const volRef = useRef(vol);
   const duckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -188,6 +190,7 @@ function ListenPlayer() {
   }, []);
   const onPlaying = useCallback(() => {
     playedRef.current = true;
+    setNeedsTap(false);
     userPausedRef.current = false;
     catchUp();
   }, [catchUp]);
@@ -208,7 +211,9 @@ function ListenPlayer() {
       if (!a || !cur || cur.item.id !== itemRef.current) return;
       const s = a.state();
       if (s === 1) return catchUp();
-      if (cur.status === 'PLAYING' && s !== 3 && s !== 0 && !userPausedRef.current) a.play();
+      const wanted = cur.status === 'PLAYING' && !userPausedRef.current;
+      setNeedsTap(wanted && (s === -1 || s === 5));
+      if (wanted && s !== 3 && s !== 0) a.play();
     }, CHECK_MS);
     return () => clearInterval(t);
   }, [ready, catchUp]);
@@ -250,10 +255,12 @@ function ListenPlayer() {
           onReady={() => setReady(true)}
           onPlaying={onPlaying}
           onPaused={onPaused}
+          onAutoplayBlocked={() => setNeedsTap(true)}
           onEnded={() => {}}
           onError={() => {}}
         />
       </div>
+      {needsTap && <TapVideoHint text={vi.listen.tapVideo} />}
       <ListenVolume />
       {touch && <p className="text-[13px] text-sage">{vi.listen.keepScreenOn}</p>}
     </section>
