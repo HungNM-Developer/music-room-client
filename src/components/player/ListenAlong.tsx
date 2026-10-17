@@ -1,7 +1,7 @@
 'use client';
 
 import { Headphones, Volume2 } from 'lucide-react';
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { vi } from '@/i18n/vi';
@@ -118,6 +118,7 @@ function ListenPlayer() {
   const [ready, setReady] = useState(false);
   const itemRef = useRef<string | null>(null);
   const npRef = useRef(np);
+  const statusRef = useRef<string | null>(null);
   const offsetRef = useRef(offset);
   const volRef = useRef(vol);
   const duckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -138,6 +139,8 @@ function ListenPlayer() {
       return;
     }
     const expected = estimatePosition({ ...np, durationSec: np.item.track.durationSec }, offset, Date.now());
+    const resumed = np.status === 'PLAYING' && statusRef.current !== 'PLAYING';
+    statusRef.current = np.status;
     if (np.item.id !== itemRef.current) {
       itemRef.current = np.item.id;
       if (duckTimer.current) clearTimeout(duckTimer.current);
@@ -158,24 +161,31 @@ function ListenPlayer() {
       return;
     }
     if (np.status === 'PAUSED') a.pause();
-    else {
+    else if (resumed) {
+      // Only when the room starts again: a listener who paused here stays paused until they press ▶.
       if (Math.abs(a.currentTime() - expected) > DRIFT_SEC) a.seek(expected);
       a.play();
     }
   }, [np, offset, ready]);
 
-  // Ads, buffering or a sleepy tab can leave us behind: catch up every few seconds.
+  // Pausing the video here (the iframe must stay clickable, YouTube policy) is this listener's
+  // own choice and is left alone. Whenever it plays — their ▶, or the room starting again —
+  // jump to where the room is. While playing, ads, buffering or a sleepy tab are caught up
+  // every few seconds. ▶ while the room is paused is undone: there is nothing to listen to.
+  const catchUp = useCallback(() => {
+    const a = adapterRef.current;
+    const cur = npRef.current;
+    if (!a || !cur || cur.item.id !== itemRef.current || a.state() !== 1) return;
+    if (cur.status !== 'PLAYING') return a.pause();
+    const expected = estimatePosition({ ...cur, durationSec: cur.item.track.durationSec }, offsetRef.current, Date.now());
+    if (Math.abs(a.currentTime() - expected) > DRIFT_SEC) a.seek(expected);
+  }, []);
+
   useEffect(() => {
     if (!ready) return;
-    const t = setInterval(() => {
-      const a = adapterRef.current;
-      const cur = npRef.current;
-      if (!a || !cur || cur.status !== 'PLAYING' || cur.item.id !== itemRef.current) return;
-      const expected = estimatePosition({ ...cur, durationSec: cur.item.track.durationSec }, offsetRef.current, Date.now());
-      if (Math.abs(a.currentTime() - expected) > DRIFT_SEC) a.seek(expected);
-    }, CHECK_MS);
+    const t = setInterval(catchUp, CHECK_MS);
     return () => clearInterval(t);
-  }, [ready]);
+  }, [ready, catchUp]);
 
   useEffect(() => {
     volRef.current = vol;
@@ -209,7 +219,13 @@ function ListenPlayer() {
       </div>
       {/* Visible and at least 200 px tall: YouTube API policy (TC-131). */}
       <div className="relative aspect-video min-h-[200px] w-full overflow-hidden rounded-row bg-dial-deep">
-        <YouTubeAdapter adapterRef={adapterRef} onReady={() => setReady(true)} onPlaying={() => {}} onEnded={() => {}} onError={() => {}} />
+        <YouTubeAdapter
+          adapterRef={adapterRef}
+          onReady={() => setReady(true)}
+          onPlaying={catchUp}
+          onEnded={() => {}}
+          onError={() => {}}
+        />
       </div>
       <ListenVolume />
       {touch && <p className="text-[13px] text-sage">{vi.listen.keepScreenOn}</p>}

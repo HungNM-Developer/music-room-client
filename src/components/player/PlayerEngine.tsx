@@ -19,6 +19,8 @@ export interface PlayerAdapter {
   seek(sec: number): void;
   currentTime(): number;
   setVolume(v: number): void;
+  /** YouTube state: -1 unstarted, 0 ended, 1 playing, 2 paused, 3 buffering, 5 cued. */
+  state(): number;
 }
 
 export const DRIFT_SEC = 2.5;
@@ -196,6 +198,39 @@ export function PlayerEngine({ volume = 100 }: { volume?: number }) {
     adapterRef.current?.setVolume(volume);
   }, [volume]);
 
+  // ---------------------------------------------------------------- play / pause on the video
+  // The iframe stays clickable (YouTube policy: no blocking its links or controls), so its own
+  // play / pause drives the whole room, like the room's button. Our own pause() / play() never
+  // gets here: the command already says the same. If the server refuses, the room's state wins.
+  const followRoom = useCallback(() => {
+    const a = adapterRef.current;
+    const cmd = cmdRef.current;
+    if (!a || !cmd?.videoId || cmd.queueItemId !== itemRef.current) return;
+    if (cmd.status === 'PAUSED') a.pause();
+    else a.play();
+  }, []);
+  const fromVideo = useCallback(
+    async (status: 'PLAYING' | 'PAUSED') => {
+      const a = adapterRef.current;
+      const cmd = cmdRef.current;
+      const itemId = cmd?.queueItemId;
+      if (!a || !started || !cmd?.videoId || !itemId || itemId !== itemRef.current || reported.current.ended) return;
+      if (cmd.status === status) return;
+      const r = await room.withOptimistic(
+        {
+          kind: 'playback',
+          itemId,
+          status,
+          positionSec: Math.max(0, a.currentTime()),
+          positionAt: Date.now() + offsetRef.current,
+        },
+        () => send('playback:control', { action: status === 'PAUSED' ? 'pause' : 'play', queueItemId: itemId }),
+      );
+      if (!r.ok) followRoom();
+    },
+    [started, send, followRoom],
+  );
+
   // ---------------------------------------------------------------- lease keep-alive (R-27)
   useEffect(() => {
     if (!started) return;
@@ -250,11 +285,12 @@ export function PlayerEngine({ volume = 100 }: { volume?: number }) {
   // ---------------------------------------------------------------- player events
   const onPlaying = useCallback(() => {
     playingRef.current = true;
+    if (cmdRef.current?.status !== 'PLAYING') return void fromVideo('PLAYING'); // ▶ on the video of a paused room
     if (!reported.current.started) {
       reported.current.started = true;
       report('started', { positionSec: adapterRef.current?.currentTime() ?? 0 });
     }
-  }, [report]);
+  }, [report, fromVideo]);
   const onEnded = useCallback(() => {
     playingRef.current = false;
     if (!reported.current.ended) {
@@ -283,7 +319,14 @@ export function PlayerEngine({ volume = 100 }: { volume?: number }) {
 
   return (
     <div className="relative aspect-video w-full overflow-hidden rounded-panel bg-dial-deep">
-      <YouTubeAdapter adapterRef={adapterRef} onReady={() => setReady(true)} onPlaying={onPlaying} onEnded={onEnded} onError={onError} />
+      <YouTubeAdapter
+        adapterRef={adapterRef}
+        onReady={() => setReady(true)}
+        onPlaying={onPlaying}
+        onPaused={() => void fromVideo('PAUSED')}
+        onEnded={onEnded}
+        onError={onError}
+      />
       {!started && (
         <button
           type="button"
@@ -305,12 +348,14 @@ export interface AdapterProps {
   adapterRef: React.RefObject<PlayerAdapter | null>;
   onReady: () => void;
   onPlaying: () => void;
+  /** Paused, by us or by the video's own controls. */
+  onPaused?: () => void;
   onEnded: () => void;
   onError: (code: number) => void;
 }
 
 /** Visible YouTube iframe (≥ 200×200, never hidden — YouTube API policy, TC-131). */
-export function YouTubeAdapter({ adapterRef, onReady, onPlaying, onEnded, onError }: AdapterProps) {
+export function YouTubeAdapter({ adapterRef, onReady, onPlaying, onPaused, onEnded, onError }: AdapterProps) {
   const ytRef = useRef<YouTubePlayer | null>(null);
   // A destroyed player (unmount, StrictMode remount) throws on every call: forget it.
   useEffect(
@@ -357,11 +402,13 @@ export function YouTubeAdapter({ adapterRef, onReady, onPlaying, onEnded, onErro
           seek: safe((s: number) => void p.seekTo(s, true), undefined),
           currentTime: safe(() => Number(p.getCurrentTime?.() ?? 0), 0),
           setVolume: safe((v: number) => void p.setVolume(v), undefined),
+          state: safe(() => Number(p.getPlayerState?.() ?? -1), -1),
         };
         onReady();
       }}
       onStateChange={(e: YouTubeEvent<number>) => {
         if (e.data === 1) onPlaying();
+        if (e.data === 2) onPaused?.();
         if (e.data === 0) onEnded();
       }}
       onError={(e: YouTubeEvent<number>) => onError(e.data)}
