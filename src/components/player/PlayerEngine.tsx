@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import YouTube, { type YouTubeEvent, type YouTubePlayer } from 'react-youtube';
-import { Play } from 'lucide-react';
+import { Volume2 } from 'lucide-react';
 import type { PlayerCommand, VoicePreset } from '@/contracts';
 import { PLAYER_ERROR_CODES } from '@/contracts/constants';
 import { PLAYER_PROGRESS_INTERVAL_MS } from '@/contracts/events';
@@ -46,7 +46,7 @@ export const DJ_FILES: Record<string, string> = {
 };
 
 /**
- * DJ sounds are fetched once (after "Bắt đầu phát") and reused. A sound that is still
+ * DJ sounds are fetched once (once the speaker is started) and reused. A sound that is still
  * playing is cloned so rapid taps overlap instead of restarting.
  */
 const djPool = new Map<string, HTMLAudioElement>();
@@ -97,6 +97,7 @@ export function PlayerEngine({ volume = 100 }: { volume?: number }) {
   const connection = useRoom((s) => s.connection);
   const connectCount = useRoom((s) => s.connectCount);
   const memberId = useRoom((s) => s.memberId);
+  const cover = useRoom((s) => s.snapshot?.nowPlaying?.item.track.thumbnailUrl ?? null);
   const send = room.send;
   const adapterRef = useRef<PlayerAdapter | null>(null);
   const [ready, setReady] = useState(false);
@@ -308,14 +309,31 @@ export function PlayerEngine({ volume = 100 }: { volume?: number }) {
     [report],
   );
 
-  const start = () => {
+  const keepAlive = useRef(false);
+  const start = useCallback(() => {
     setStarted(true);
     itemRef.current = null; // re-apply the current command now that playback is allowed
+    if (keepAlive.current) return;
+    keepAlive.current = true;
     // Keep-alive: a silent looping <audio> stops background-tab throttling (kept from v1).
     const keep = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFRm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==');
     keep.loop = true;
     keep.play().catch(() => undefined);
-  };
+  }, []);
+
+  // Any click or key press on the page is the one interaction the browser asks for: start
+  // right then, so whoever is at this device (adding a song, chatting) never has to find the
+  // start hint. Mount-time activation is handled above.
+  useEffect(() => {
+    if (started) return;
+    const go = () => start();
+    window.addEventListener('click', go, true);
+    window.addEventListener('keydown', go, true);
+    return () => {
+      window.removeEventListener('click', go, true);
+      window.removeEventListener('keydown', go, true);
+    };
+  }, [started, start]);
 
   return (
     <div className="relative aspect-video w-full overflow-hidden rounded-panel bg-dial-deep">
@@ -331,13 +349,17 @@ export function PlayerEngine({ volume = 100 }: { volume?: number }) {
         <button
           type="button"
           onClick={start}
-          className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-dial-deep p-6 text-center"
+          className="absolute inset-0 z-20 flex items-center justify-center bg-dial-deep p-4"
         >
-          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-amber text-amber-ink transition-transform hover:scale-105">
-            <Play className="ml-1 h-9 w-9" fill="currentColor" aria-hidden />
+          {/* A gentle hint over the song's cover: any tap on the page works, not just this one. */}
+          {cover && (
+            // eslint-disable-next-line @next/next/no-img-element -- remote YouTube artwork
+            <img src={cover} alt="" className="absolute inset-0 h-full w-full object-cover opacity-35" />
+          )}
+          <span className="relative inline-flex items-center gap-2 rounded-full bg-amber px-4 py-2.5 text-[15px] font-semibold text-amber-ink shadow-lg">
+            <Volume2 className="h-5 w-5 shrink-0" aria-hidden />
+            {vi.host.start}
           </span>
-          <span className="type-display text-[26px] font-bold">{vi.host.start}</span>
-          <span className="max-w-xs text-[14px] text-sage">{vi.host.startNote}</span>
         </button>
       )}
     </div>

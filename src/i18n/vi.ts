@@ -560,12 +560,16 @@ export const vi = {
 
   log: { title: 'Nhật ký hoạt động', empty: 'Chưa có hoạt động nào.', close: 'Đóng' },
 
+  pwa: {
+    roomName: (room: string) => `${room} | Music Room`,
+    hostName: (room: string) => `Máy phát ${room} | Music Room`,
+  },
+
   host: {
     opening: 'Đang mở máy phát…',
     retry: 'Thử lại',
     pin: 'Mã PIN quản trị',
-    start: 'Bắt đầu phát',
-    startNote: 'Trình duyệt cần một lần bấm để cho phép phát nhạc.',
+    start: 'Chạm vào bất kỳ đâu để bật loa',
     scan: 'Quét để chọn bài',
     onAir: 'ON AIR',
     waiting: 'Chờ bài',
@@ -590,7 +594,7 @@ export const vi = {
     serverUpdating: 'Máy chủ đang cập nhật lên phiên bản mới. Trang sẽ tự kết nối lại khi xong, không cần tải lại.',
     reload: 'Tải lại',
     playerOffline: 'Máy phát đang mất kết nối. Hàng chờ vẫn nhận bài mới.',
-    playerWaiting: 'Máy phát đang mở nhưng chưa phát. Hãy bấm “Bắt đầu phát” trên máy phát.',
+    playerWaiting: 'Máy phát đang mở nhưng chưa bật loa. Chạm vào bất kỳ đâu trên máy phát để phát.',
     noPlayer: (url: string) => `Chưa có máy phát. Mở trang máy phát trên máy nối loa: ${url}`,
     noPlayerMember: 'Chưa có máy phát. Nhờ quản trị viên mở trang máy phát trên máy nối loa.',
     copyHostLink: 'Sao chép link',

@@ -20,6 +20,7 @@ const display = Bricolage_Grotesque({
 export const metadata: Metadata = {
   title: 'Music Room',
   description: 'Cả văn phòng cùng chọn nhạc YouTube, phát chung một loa.',
+  appleWebApp: { capable: true, title: 'Music Room', statusBarStyle: 'black-translucent' },
 };
 
 export const viewport: Viewport = {

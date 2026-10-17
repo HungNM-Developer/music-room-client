@@ -15,7 +15,7 @@ export function Banners() {
   const code = useRoom((s) => s.code);
   const player = useRoom((s) => s.snapshot?.player ?? null);
   // The player's page is still connected but holds no lease: it was reloaded (or the
-  // browser discarded the tab) and waits for someone to press "Bắt đầu phát".
+  // browser discarded the tab) and waits for a first tap on that device.
   const playerPageOpen = useRoom((s) => {
     const id = s.snapshot?.player.memberId;
     return Boolean(id && s.snapshot?.members.some((m) => m.id === id && m.online));
