@@ -1,23 +1,27 @@
+'use client';
+
 import { Radio } from 'lucide-react';
 import Link from 'next/link';
 import { AccountPanel } from '@/components/account/AccountPanel';
 import { HomeForm } from '@/components/home/HomeForm';
 import { HeroDial } from '@/components/room/TuningDial';
-import { vi } from '@/i18n/vi';
+import { LangSwitch } from '@/components/ui/LangSwitch';
+import { useT } from '@/i18n';
 
 export default function HomePage() {
+  const t = useT();
   return (
     <main className="flex min-h-dvh items-center px-4 py-10 sm:py-14">
       {/* Phones: headline → form → how it works. Desktop: copy on the left, form on the right. */}
       <div className="mx-auto grid w-full max-w-6xl gap-10 lg:grid-cols-[minmax(0,1fr)_420px] lg:grid-rows-[auto_1fr] lg:gap-x-16 lg:gap-y-0">
         <div className="min-w-0 lg:self-end">
           <p className="flex items-center gap-2 text-[15px] font-semibold text-amber">
-            <Radio className="h-5 w-5" aria-hidden /> {vi.appName}
+            <Radio className="h-5 w-5" aria-hidden /> {t.appName}
           </p>
           <h1 className="type-display mt-5 max-w-[15ch] text-balance text-[clamp(44px,7.5vw,88px)] font-extrabold leading-[0.95]">
-            {vi.home.headline}
+            {t.home.headline}
           </h1>
-          <p className="mt-5 max-w-md text-[17px] text-sage">{vi.appTagline}</p>
+          <p className="mt-5 max-w-md text-[17px] text-sage">{t.appTagline}</p>
         </div>
 
         <div className="min-w-0 space-y-4 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
@@ -30,21 +34,22 @@ export default function HomePage() {
             <HeroDial />
           </div>
           <ol className="mt-8 max-w-xl space-y-3">
-            {vi.home.steps.map((s, i) => (
+            {t.home.steps.map((s, i) => (
               <li key={s} className="flex gap-4">
                 <span className="type-display w-5 shrink-0 text-[20px] font-bold leading-6 text-amber">{i + 1}</span>
                 <span className="text-paper/90">{s}</span>
               </li>
             ))}
           </ol>
-          <p className="mt-10 flex gap-4 text-[13px] text-sage">
+          <div className="mt-10 flex flex-wrap items-center gap-4 text-[13px] text-sage">
             <Link href="/privacy" className="hover:text-paper">
-              Quyền riêng tư
+              {t.legal.privacy}
             </Link>
             <Link href="/terms" className="hover:text-paper">
-              Điều khoản
+              {t.legal.terms}
             </Link>
-          </p>
+            <LangSwitch className="ml-auto" />
+          </div>
         </div>
       </div>
     </main>

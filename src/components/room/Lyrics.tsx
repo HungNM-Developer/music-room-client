@@ -5,10 +5,11 @@ import { useEffect, useRef, useState } from 'react';
 import { Dialog } from '@/components/ui/Dialog';
 import type { LyricsView } from '@/contracts';
 import { lineAt, useLyrics, useSongPosition } from '@/hooks/useLyrics';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 
 /** A7, members: "Lời bài hát" under the song title, opening the full lyrics. */
 export function LyricsButton({ trackId }: { trackId: string }) {
+  const t = useT();
   const lyrics = useLyrics(trackId);
   const [open, setOpen] = useState(false);
   if (!lyrics) return null;
@@ -20,7 +21,7 @@ export function LyricsButton({ trackId }: { trackId: string }) {
         className="mt-1.5 inline-flex min-h-8 items-center gap-1.5 text-[13px] font-medium text-amber hover:text-amber-hi"
       >
         <MicVocal className="h-4 w-4" aria-hidden />
-        {vi.lyrics.button}
+        {t.lyrics.button}
       </button>
       {open && <LyricsDialog lyrics={lyrics} onClose={() => setOpen(false)} />}
     </>
@@ -28,10 +29,11 @@ export function LyricsButton({ trackId }: { trackId: string }) {
 }
 
 function LyricsDialog({ lyrics, onClose }: { lyrics: LyricsView; onClose: () => void }) {
+  const t = useT();
   return (
-    <Dialog open onClose={onClose} title={vi.lyrics.title}>
+    <Dialog open onClose={onClose} title={t.lyrics.title}>
       {lyrics.synced ? <SyncedLines lines={lyrics.synced} /> : <p className="whitespace-pre-wrap leading-relaxed text-sage">{lyrics.plain}</p>}
-      <p className="mt-4 text-[12px] text-sage/80">{vi.lyrics.source}</p>
+      <p className="mt-4 text-[12px] text-sage/80">{t.lyrics.source}</p>
     </Dialog>
   );
 }
@@ -68,6 +70,7 @@ function SyncedLines({ lines }: { lines: { t: number; text: string }[] }) {
  * on the device (`storageKey`). `host`: the speaker screen; `stage`: a themed room page.
  */
 export function InlineLyrics({ trackId, size, storageKey, className = '' }: { trackId: string; size: 'host' | 'stage'; storageKey: string; className?: string }) {
+  const t = useT();
   const lyrics = useLyrics(trackId);
   const pos = useSongPosition();
   const [shown, setShown] = useState(true);
@@ -87,10 +90,10 @@ export function InlineLyrics({ trackId, size, storageKey, className = '' }: { tr
   const picks = host ? (at < 0 ? [0, 1, 2] : [at - 1, at, at + 1, at + 2]) : at < 0 ? [0, 1, 2] : [at - 1, at, at + 1];
   const windowLines = picks.map((i) => ({ i, line: lines[i] }));
   return (
-    <section aria-label={vi.lyrics.title} className={`lyrics-inline ${host ? 'max-w-3xl' : ''} ${className}`}>
+    <section aria-label={t.lyrics.title} className={`lyrics-inline ${host ? 'max-w-3xl' : ''} ${className}`}>
       <button type="button" onClick={toggle} className="mb-2 inline-flex items-center gap-1.5 text-[13px] text-sage hover:text-paper">
         {shown ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
-        {shown ? vi.lyrics.hide : vi.lyrics.show}
+        {shown ? t.lyrics.hide : t.lyrics.show}
       </button>
       {shown && (
         <div aria-live="off" className="space-y-1.5">
@@ -111,7 +114,7 @@ export function InlineLyrics({ trackId, size, storageKey, className = '' }: { tr
               {line ? line.text || '♪' : '\u00a0'}
             </p>
           ))}
-          <p className="pt-1 text-[11px] text-sage/60">{vi.lyrics.source}</p>
+          <p className="pt-1 text-[11px] text-sage/60">{t.lyrics.source}</p>
         </div>
       )}
     </section>

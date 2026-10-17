@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { IconButton } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import type { TrackSummary } from '@/contracts';
-import { errorMessage, vi } from '@/i18n/vi';
+import { errorMessage, useT } from '@/i18n';
 import { useMe, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 import { SaveToDialog } from './SaveToDialog';
@@ -16,6 +16,7 @@ import { SaveToDialog } from './SaveToDialog';
  * (L2), it opens "Lưu vào…" to pick favourites and playlists.
  */
 export function SaveButton({ track }: { track: TrackSummary }) {
+  const t = useT();
   const me = useMe();
   const toast = useToast();
   const saved = useRoom((s) => s.favoriteIds.includes(track.id) || s.localFavorites.includes(track.externalId));
@@ -25,7 +26,7 @@ export function SaveButton({ track }: { track: TrackSummary }) {
   return (
     <>
       <IconButton
-        label={user ? vi.playlists.saveTo : vi.library.save}
+        label={user ? t.playlists.saveTo : t.library.save}
         aria-pressed={user ? undefined : saved}
         aria-haspopup={user ? 'dialog' : undefined}
         className={saved ? '!text-amber' : ''}

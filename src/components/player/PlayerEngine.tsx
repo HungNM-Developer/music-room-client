@@ -6,7 +6,8 @@ import { Hand } from 'lucide-react';
 import type { PlayerCommand, VoicePreset } from '@/contracts';
 import { PLAYER_ERROR_CODES } from '@/contracts/constants';
 import { PLAYER_PROGRESS_INTERVAL_MS } from '@/contracts/events';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
+import { memberName } from '@/i18n/activity';
 import { estimatePosition } from '@/lib/time';
 import { Button } from '@/components/ui/Button';
 import { HOST_RECLAIM_MS, useMe, useOtherLivePlayer, useRoom } from '@/state/hooks';
@@ -95,6 +96,7 @@ export function speak(text: string, preset: VoicePreset | null, onDone: () => vo
 
 /** `caption`: a line above the video saying this device is the room's speaker (room page). */
 export function PlayerEngine({ volume = 100, caption = false }: { volume?: number; caption?: boolean }) {
+  const t = useT();
   const playerCommand = useRoom((s) => s.playerCommand);
   const offset = useRoom((s) => s.offset);
   const connection = useRoom((s) => s.connection);
@@ -456,7 +458,7 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
 
   // The video starts on its own when the browser allows it; otherwise (or when the room is
   // paused) its own ▶ starts this speaker. A hint says so — never over the video.
-  const waitingHint = touch ? vi.host.startTouch : vi.host.start;
+  const waitingHint = touch ? t.host.startTouch : t.host.start;
 
   // A tap on "move the sound here": take over from the other speaker right now.
   const takeOver = () => {
@@ -468,7 +470,7 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
   return (
     <div className="space-y-2">
       {caption && (
-        <p className="px-1 text-[13px] font-medium text-amber">{started ? vi.host.thisDevicePlays : vi.host.thisDeviceWaits}</p>
+        <p className="px-1 text-[13px] font-medium text-amber">{started ? t.host.thisDevicePlays : t.host.thisDeviceWaits}</p>
       )}
       <div className="relative aspect-video w-full overflow-hidden rounded-panel bg-dial-deep">
         <YouTubeAdapter
@@ -487,17 +489,17 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
         {/* Nothing is loaded in the player while waiting, so this covers an empty frame. */}
         {waitingForOther && (
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-dial-deep p-6 text-center">
-            <p className="max-w-md text-[18px]">{other ? vi.host.otherPlays(other.name) : vi.host.otherLeft}</p>
+            <p className="max-w-md text-[18px]">{other ? t.host.otherPlays(other.name && memberName({ displayName: other.name, isDevice: other.isDevice }, t)) : t.host.otherLeft}</p>
             <Button variant="primary" onClick={takeOver}>
-              {vi.host.moveHere}
+              {t.host.moveHere}
             </Button>
-            <p className="max-w-md text-[14px] text-sage">{vi.host.autoReturn}</p>
+            <p className="max-w-md text-[14px] text-sage">{t.host.autoReturn}</p>
           </div>
         )}
       </div>
       {!started
         ? !waitingForOther && preview && (!previewPlaying || needsTap) && <TapVideoHint text={waitingHint} />
-        : needsTap && <TapVideoHint text={vi.host.tapVideo} />}
+        : needsTap && <TapVideoHint text={t.host.tapVideo} />}
     </div>
   );
 }

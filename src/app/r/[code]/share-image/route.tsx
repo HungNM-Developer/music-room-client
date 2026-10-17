@@ -3,9 +3,11 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { ImageResponse } from 'next/og';
 import { normalizeRoomCode } from '@/contracts/text';
-import { vi } from '@/i18n/vi';
+import { dictFor } from '@/i18n/dict';
+import { previewLang } from '../room-metadata';
 import { qrSvgDataUri } from '@/lib/qr-svg';
 import { fetchRoomPreview, hasCanonicalOrigin, requestOrigin } from '@/lib/room-preview';
+import { shareUrl } from '@/lib/share-url';
 import { ytThumbLarge } from '@/lib/thumbs';
 
 const SHARE_IMAGE_SIZE = { width: 1200, height: 630 };
@@ -27,6 +29,9 @@ const font = (file: string) => readFile(join(process.cwd(), 'assets/og', file));
  * "Tải ảnh" button of the share dialog.
  */
 export async function GET(req: Request, { params }: { params: Promise<{ code: string }> }) {
+  // `?lang=en`: the card of an English link preview, or the sharer's "Download image".
+  const lang = previewLang(new URL(req.url).searchParams.get('lang'));
+  const t = dictFor(lang);
   const code = normalizeRoomCode((await params).code);
   const [preview, bodyLatin, bodyVi, displayLatin, displayVi] = await Promise.all([
     fetchRoomPreview(code),
@@ -35,7 +40,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ code: st
     font('bricolage-grotesque-latin-800-normal.woff'),
     font('bricolage-grotesque-vietnamese-800-normal.woff'),
   ]);
-  const url = `${requestOrigin(req.headers)}/r/${code}`;
+  const url = shareUrl(requestOrigin(req.headers), code, lang);
   const np = preview?.nowPlaying ?? null;
   const art = ytThumbLarge(np?.thumbnailUrl);
 
@@ -59,18 +64,18 @@ export async function GET(req: Request, { params }: { params: Promise<{ code: st
           <div style={{ ...side, justifyContent: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', color: C.amber, fontSize: 24 }}>
               <div style={{ width: 12, height: 12, borderRadius: 6, background: C.amber, marginRight: 10 }} />
-              {vi.appName}
+              {t.appName}
             </div>
             <div style={{ display: 'flex', marginTop: 18, fontFamily: display, fontSize: 50, lineHeight: 1.04, letterSpacing: -0.5, lineClamp: 4 }}>
-              {preview?.name ?? vi.appName}
+              {preview?.name ?? t.appName}
             </div>
-            <div style={{ display: 'flex', marginTop: 18, fontSize: 22, lineHeight: 1.4, color: C.sage, lineClamp: 3 }}>{vi.home.headline}</div>
+            <div style={{ display: 'flex', marginTop: 18, fontSize: 22, lineHeight: 1.4, color: C.sage, lineClamp: 3 }}>{t.home.headline}</div>
           </div>
 
           <div style={{ ...column, alignItems: 'center', width: 472, height: 566, padding: '28px 36px 24px', background: C.paper, borderRadius: 32, color: C.dial }}>
             <img src={qrSvgDataUri(url, C.dial, C.paper)} alt="" width={400} height={400} />
             <div style={{ display: 'flex', marginTop: 14, fontFamily: display, fontSize: 64, lineHeight: 1, letterSpacing: 10 }}>{code}</div>
-            <div style={{ display: 'flex', marginTop: 10, fontSize: 22, color: '#3f5e57' }}>{vi.share.scan}</div>
+            <div style={{ display: 'flex', marginTop: 10, fontSize: 22, color: '#3f5e57' }}>{t.share.scan}</div>
           </div>
 
           <div style={{ ...side, justifyContent: 'center' }}>
@@ -82,16 +87,16 @@ export async function GET(req: Request, { params }: { params: Promise<{ code: st
                 <div style={{ display: 'flex', marginTop: 18 }}>
                   <div style={{ display: 'flex', alignItems: 'center', background: C.onair, fontSize: 20, padding: '5px 14px', borderRadius: 999 }}>
                     <div style={{ width: 9, height: 9, borderRadius: 5, background: C.paper, marginRight: 8 }} />
-                    {vi.nowPlaying.live}
+                    {t.nowPlaying.live}
                   </div>
                 </div>
                 <div style={{ display: 'flex', marginTop: 12, fontSize: 26, lineHeight: 1.3, lineClamp: 3 }}>{np.title}</div>
                 {np.addedBy ? (
-                  <div style={{ display: 'flex', marginTop: 8, fontSize: 20, color: C.sage }}>{vi.nowPlaying.pickedBy(np.addedBy)}</div>
+                  <div style={{ display: 'flex', marginTop: 8, fontSize: 20, color: C.sage }}>{t.nowPlaying.pickedBy(np.addedBy)}</div>
                 ) : null}
               </div>
             ) : (
-              <div style={{ display: 'flex', fontSize: 24, lineHeight: 1.4, color: C.sage }}>{vi.share.idle}</div>
+              <div style={{ display: 'flex', fontSize: 24, lineHeight: 1.4, color: C.sage }}>{t.share.idle}</div>
             )}
           </div>
         </div>

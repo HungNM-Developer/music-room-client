@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type { TrackSummary } from '@/contracts';
 import { useAct } from '@/hooks/useAct';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 import { addedByLabel } from '@/lib/added-by';
 import { estimatePosition } from '@/lib/time';
 import { useMe, useNowPlaying, useRoom } from '@/state/hooks';
@@ -15,6 +15,7 @@ import { useNow } from '../SkipVote';
  * skip now, the admin's ⋯ (block the song). `null` when nothing is on air.
  */
 export function useNowPlayingActions() {
+  const t = useT();
   const np = useNowPlaying();
   const offset = useRoom((s) => s.offset);
   const me = useMe();
@@ -38,19 +39,19 @@ export function useNowPlayingActions() {
   const picker = np.item.addedBy?.displayName ?? null;
   const voteLabel =
     keptSec > 0
-      ? vi.nowPlaying.kept(keptSec)
+      ? t.nowPlaying.kept(keptSec)
       : np.skip.endsAt !== null && !voted
-        ? vi.nowPlaying.voting
+        ? t.nowPlaying.voting
         : voted
-          ? vi.nowPlaying.voted(np.skip.votes, np.skip.required)
-          : vi.nowPlaying.voteSkip(np.skip.votes, np.skip.required);
+          ? t.nowPlaying.voted(np.skip.votes, np.skip.required)
+          : t.nowPlaying.voteSkip(np.skip.votes, np.skip.required);
 
   return {
     np,
     track,
     playing,
     picker,
-    pickerLabel: picker ? vi.nowPlaying.pickedBy(picker) : addedByLabel(np.item),
+    pickerLabel: picker ? t.nowPlaying.pickedBy(picker) : addedByLabel(np.item),
     canVote,
     canControl,
     isAdmin,

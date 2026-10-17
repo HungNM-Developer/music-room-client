@@ -7,7 +7,7 @@ import { Dialog, SheetAction } from '@/components/ui/Dialog';
 import { useToast } from '@/components/ui/Toast';
 import type { TrackSummary } from '@/contracts';
 import { useAct } from '@/hooks/useAct';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 import { useRoom } from '@/state/hooks';
 
 /**
@@ -15,23 +15,24 @@ import { useRoom } from '@/state/hooks';
  * room: on air → skipped at once; waiting → taken out of the queue; else only "never again".
  */
 export function BlockDialog({ track, onClose }: { track: TrackSummary; onClose: () => void }) {
+  const t = useT();
   const onAir = useRoom((s) => s.snapshot?.nowPlaying?.item.track.id === track.id);
   const waiting = useRoom((s) => Boolean(s.snapshot?.queue.some((q) => q.track.id === track.id)));
   const act = useAct();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
   return (
-    <Dialog open onClose={onClose} title={vi.block.title(track.title)}>
+    <Dialog open onClose={onClose} title={t.block.title(track.title)}>
       <div className="space-y-1.5 text-sage">
         <p>
-          {onAir ? `${vi.block.bodyPlaying} ` : waiting ? `${vi.block.bodyQueued} ` : ''}
-          {vi.block.bodyRest}
+          {onAir ? `${t.block.bodyPlaying} ` : waiting ? `${t.block.bodyQueued} ` : ''}
+          {t.block.bodyRest}
         </p>
-        <p className="text-[13px]">{vi.block.where}</p>
+        <p className="text-[13px]">{t.block.where}</p>
       </div>
       <div className="mt-5 flex gap-2">
         <Button className="flex-1" onClick={onClose}>
-          {vi.block.cancel}
+          {t.block.cancel}
         </Button>
         <Button
           variant="danger"
@@ -43,11 +44,11 @@ export function BlockDialog({ track, onClose }: { track: TrackSummary; onClose: 
             const ok = await act('track:block', { trackId: track.id });
             setBusy(false);
             onClose();
-            if (ok) toast(vi.block.done(track.title), 'success');
+            if (ok) toast(t.block.done(track.title), 'success');
           }}
         >
           <Ban className="h-4 w-4" aria-hidden />
-          {vi.block.confirm}
+          {t.block.confirm}
         </Button>
       </div>
     </Dialog>
@@ -56,13 +57,14 @@ export function BlockDialog({ track, onClose }: { track: TrackSummary; onClose: 
 
 /** The ⋯ menu of a song (on air, or in "Đã phát"): leads to BlockDialog. Admin only. */
 export function BlockMenu({ track, onClose }: { track: TrackSummary; onClose: () => void }) {
+  const t = useT();
   const [confirm, setConfirm] = useState(false);
   if (confirm) return <BlockDialog track={track} onClose={onClose} />;
   return (
     <Dialog open onClose={onClose} title={track.title}>
       <div className="-mx-2 space-y-0.5">
         <SheetAction danger icon={<Ban className="h-5 w-5" />} onClick={() => setConfirm(true)}>
-          {vi.block.menu}
+          {t.block.menu}
         </SheetAction>
       </div>
     </Dialog>

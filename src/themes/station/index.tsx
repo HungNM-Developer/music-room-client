@@ -11,7 +11,7 @@ import { useNowPlayingActions } from '@/components/room/stage/useNowPlayingActio
 import { useSkipVoteState } from '@/components/room/stage/useSkipVoteState';
 import { Suggestions } from '@/components/room/Suggestions';
 import { IconButton } from '@/components/ui/Button';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 import { addedByLabel } from '@/lib/added-by';
 import { estimatePosition, formatDuration } from '@/lib/time';
 import { useNowPlaying, useRoom } from '@/state/hooks';
@@ -24,8 +24,10 @@ import { useTopSuggestions } from '../stage/useTopSuggestions';
 import '../stage/stage.css';
 import { etaTimes } from './eta';
 import './theme.css';
+import { tr } from '@/i18n';
 
-const hhmm = (ms: number) => new Date(ms).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false });
+const hhmm = (ms: number) =>
+  new Date(ms).toLocaleTimeString(tr().time.locale, { hour: '2-digit', minute: '2-digit', hour12: false });
 
 /** Split-flap letters: each character on its own flap; a new text flaps in letter by letter. */
 export function FlipText({ text, className = '' }: { text: string; className?: string }) {
@@ -58,6 +60,7 @@ function Clock({ large = false }: { large?: boolean }) {
 
 /** The platform line: amber fill and a white marker at the song's position. */
 function Track({ large = false }: { large?: boolean }) {
+  const t = useT();
   const { ref, timeRef, info } = useLiveProgress();
   return (
     <div ref={ref} className="st-track-wrap" data-large={large || undefined}>
@@ -67,7 +70,7 @@ function Track({ large = false }: { large?: boolean }) {
       </div>
       <div className="st-times">
         <span ref={timeRef}>0:00</span>
-        <span>{info ? (info.known ? formatDuration(info.durationSec) : vi.nowPlaying.unknownDuration) : ''}</span>
+        <span>{info ? (info.known ? formatDuration(info.durationSec) : t.nowPlaying.unknownDuration) : ''}</span>
       </div>
     </div>
   );
@@ -75,6 +78,7 @@ function Track({ large = false }: { large?: boolean }) {
 
 /** The departures board: Dự kiến / Bài / Người chọn / Ghi chú, the room's suggestion last. */
 function Board({ openAdd }: { openAdd: () => void }) {
+  const t = useT();
   const { items, adding, me, openMenu, menus } = useQueueView();
   const np = useNowPlaying();
   const offset = useRoom((s) => s.offset);
@@ -85,17 +89,17 @@ function Board({ openAdd }: { openAdd: () => void }) {
   const empty = items.length === 0 && adding.length === 0;
   return (
     <section aria-labelledby="queue-title" className="st-board-wrap">
-      <h3 id="queue-title" aria-label={vi.queue.title} className="stage-h3">
-        Giờ khởi hành
+      <h3 id="queue-title" aria-label={t.queue.title} className="stage-h3">
+        {t.themeText.station.departures}
         {!empty && <span className="stage-count">{items.length + adding.length}</span>}
       </h3>
       {empty && (
         <div className="stage-empty mb-3">
-          <p>{vi.queue.empty}</p>
+          <p>{t.queue.empty}</p>
           {!me?.isDevice && (
             <button type="button" className="stage-btn" data-primary onClick={openAdd}>
               <Plus className="h-4 w-4" aria-hidden />
-              {vi.queue.addFirst}
+              {t.queue.addFirst}
             </button>
           )}
         </div>
@@ -103,16 +107,16 @@ function Board({ openAdd }: { openAdd: () => void }) {
       <table className="st-board">
         <thead>
           <tr>
-            <th scope="col">Dự kiến</th>
-            <th scope="col">Bài</th>
+            <th scope="col">{t.themeText.station.eta}</th>
+            <th scope="col">{t.themeText.station.song}</th>
             <th scope="col" className="max-md:hidden">
-              Người chọn
+              {t.themeText.station.picker}
             </th>
             <th scope="col" className="max-md:hidden">
-              Ghi chú
+              {t.themeText.station.note}
             </th>
             <th scope="col">
-              <span className="sr-only">Thao tác</span>
+              <span className="sr-only">{t.themeText.station.actions}</span>
             </th>
           </tr>
         </thead>
@@ -135,7 +139,7 @@ function Board({ openAdd }: { openAdd: () => void }) {
                 )}
                 {q.wishMessage && (
                   <span className="note">
-                    <Mail className="h-3.5 w-3.5" aria-hidden /> Lời chúc
+                    <Mail className="h-3.5 w-3.5" aria-hidden /> {t.themeText.station.wish}
                   </span>
                 )}
                 {q.track.durationSec ? <span className="note">{formatDuration(q.track.durationSec)}</span> : null}
@@ -145,7 +149,7 @@ function Board({ openAdd }: { openAdd: () => void }) {
                   <HeartButton item={q} me={me} />
                   <SaveButton track={q.track} />
                   {hasItemMenu(q, me) && (
-                    <IconButton label={vi.queue.actions(q.track.title)} onClick={() => openMenu(q)}>
+                    <IconButton label={t.queue.actions(q.track.title)} onClick={() => openMenu(q)}>
                       <MoreHorizontal className="h-5 w-5" aria-hidden />
                     </IconButton>
                   )}
@@ -157,25 +161,25 @@ function Board({ openAdd }: { openAdd: () => void }) {
             <tr key={op.id} aria-busy="true" className="dim">
               <td className="t">…</td>
               <td className="main">
-                <span className="title">{op.title ?? vi.queue.addingTitle}</span>
+                <span className="title">{op.title ?? t.queue.addingTitle}</span>
               </td>
-              <td className="max-md:hidden">{vi.add.adding}</td>
+              <td className="max-md:hidden">{t.add.adding}</td>
               <td className="max-md:hidden" />
               <td />
             </tr>
           ))}
           {top.items.map((s) => (
             <tr key={s.track.id} className="dim">
-              <td className="t">gợi ý</td>
+              <td className="t">{t.themeText.station.suggestTag}</td>
               <td className="main">
                 <span className="title">{s.track.title}</span>
               </td>
-              <td className="max-md:hidden">{vi.suggest.reasons[s.reason] ?? vi.suggest.title}</td>
+              <td className="max-md:hidden">{t.suggest.reasons[s.reason] ?? t.suggest.title}</td>
               <td className="max-md:hidden" />
               <td className="acts">
                 <button type="button" className="stage-btn stage-sb" disabled={top.isAdded(s.track)} onClick={() => top.add(s.track)}>
                   <Plus className="h-4 w-4" aria-hidden />
-                  {vi.add.addResult}
+                  {t.add.addResult}
                 </button>
               </td>
             </tr>
@@ -205,6 +209,7 @@ function Ticker() {
 }
 
 function Stage({ openAdd }: { openAdd: () => void }) {
+  const t = useT();
   const a = useNowPlayingActions();
   const vote = useSkipVoteState();
   if (!a) {
@@ -219,13 +224,13 @@ function Stage({ openAdd }: { openAdd: () => void }) {
   const { track, playing } = a;
   return (
     <div className="stage station">
-      <section aria-label={vi.nowPlaying.title}>
+      <section aria-label={t.nowPlaying.title}>
         <div className="st-now">
           <NowCover className="art" />
           <div className="min-w-0">
             <span className="st-tag">
               <span className="dot" data-live={playing} aria-hidden />
-              {playing ? vi.nowPlaying.live : vi.nowPlaying.paused} · Sân ga 1
+              {playing ? t.nowPlaying.live : t.nowPlaying.paused} · {t.themeText.station.platform}
             </span>
             {/* A new song flaps in. */}
             <h2 key={a.np.item.id} className="stage-title st-flip-in" title={track.title}>

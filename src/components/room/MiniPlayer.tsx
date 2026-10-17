@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 import { IconButton } from '@/components/ui/Button';
 import { Thumb } from '@/components/ui/Thumb';
 import { useAct } from '@/hooks/useAct';
-import { vi } from '@/i18n/vi';
+import { useT, tr } from '@/i18n';
 import { addedByLabel } from '@/lib/added-by';
 import { estimatePosition, formatDuration } from '@/lib/time';
 import { useMe, useNowPlaying, useRoom } from '@/state/hooks';
@@ -42,6 +42,7 @@ export const useMiniPlayerSupported = () => useSyncExternalStore(noSubscribe, ()
 const useMiniPlayerWindow = () => useSyncExternalStore(subscribe, () => pipWindow, () => null);
 
 async function openMiniPlayer(): Promise<void> {
+  const t = tr();
   const api = pipApi();
   if (!api) return;
   if (pipWindow) {
@@ -49,7 +50,7 @@ async function openMiniPlayer(): Promise<void> {
     return;
   }
   const w = await api.requestWindow({ width: 360, height: 270 });
-  w.document.title = vi.miniPlayer.title;
+  w.document.title = t.miniPlayer.title;
   // Same stylesheets, and the room's mood colours and theme, which live on <html>.
   const isSheet = (n: Node): n is HTMLElement => n instanceof HTMLStyleElement || (n instanceof HTMLLinkElement && n.rel === 'stylesheet');
   for (const node of document.querySelectorAll('link[rel="stylesheet"], style')) {
@@ -82,10 +83,11 @@ async function openMiniPlayer(): Promise<void> {
 
 /** The button on the now-playing card; hidden where the browser cannot do it. */
 export function MiniPlayerButton() {
+  const t = useT();
   const supported = useMiniPlayerSupported();
   if (!supported) return null;
   return (
-    <IconButton label={vi.miniPlayer.open} onClick={() => void openMiniPlayer().catch(() => {})}>
+    <IconButton label={t.miniPlayer.open} onClick={() => void openMiniPlayer().catch(() => {})}>
       <PictureInPicture2 className="h-5 w-5" aria-hidden />
     </IconButton>
   );
@@ -108,6 +110,7 @@ export function MiniPlayerPortal() {
 const REACTIONS = ['❤️', '🔥', '👏'] as const;
 
 function MiniPlayerView() {
+  const t = useT();
   const np = useNowPlaying();
   const me = useMe();
   const offset = useRoom((s) => s.offset);
@@ -118,11 +121,11 @@ function MiniPlayerView() {
 
   if (!np) {
     return (
-      <main className="flex min-h-dvh items-center justify-center p-4 text-center text-sage">{vi.nowPlaying.idleTitle}</main>
+      <main className="flex min-h-dvh items-center justify-center p-4 text-center text-sage">{t.nowPlaying.idleTitle}</main>
     );
   }
-  const t = np.item.track;
-  const pos = estimatePosition({ ...np, durationSec: t.durationSec }, offset, now);
+  const item = np.item.track;
+  const pos = estimatePosition({ ...np, durationSec: item.durationSec }, offset, now);
   const picker = np.item.addedBy?.displayName;
   const canVote = Boolean(me && !me.isDevice);
   const voted = Boolean(me && np.skip.voters.includes(me.id));
@@ -132,22 +135,22 @@ function MiniPlayerView() {
   return (
     <main className="flex min-h-dvh flex-col gap-2.5 p-3">
       <div className="flex items-center gap-3">
-        <Thumb url={t.thumbnailUrl} size={56} className="rounded-row" />
+        <Thumb url={item.thumbnailUrl} size={56} className="rounded-row" />
         <div className="min-w-0 flex-1">
-          <p className="type-display line-clamp-2 text-[17px] font-bold leading-tight [unicode-bidi:plaintext]" title={t.title}>
-            {t.title}
+          <p className="type-display line-clamp-2 text-[17px] font-bold leading-tight [unicode-bidi:plaintext]" title={item.title}>
+            {item.title}
           </p>
-          <p className="truncate text-[12px] text-sage">{picker ? vi.nowPlaying.pickedBy(picker) : addedByLabel(np.item)}</p>
+          <p className="truncate text-[12px] text-sage">{picker ? t.nowPlaying.pickedBy(picker) : addedByLabel(np.item)}</p>
         </div>
       </div>
 
-      {t.durationSec ? (
+      {item.durationSec ? (
         <div className="flex items-center gap-2 text-[11px] tabular-nums text-sage">
           <span>{formatDuration(pos)}</span>
           <div className="h-1 flex-1 overflow-hidden rounded-full bg-dial-deep" aria-hidden>
-            <div className="h-full rounded-full bg-amber" style={{ width: `${Math.min(100, (pos / t.durationSec) * 100)}%` }} />
+            <div className="h-full rounded-full bg-amber" style={{ width: `${Math.min(100, (pos / item.durationSec) * 100)}%` }} />
           </div>
-          <span>{formatDuration(t.durationSec)}</span>
+          <span>{formatDuration(item.durationSec)}</span>
         </div>
       ) : null}
 
@@ -166,7 +169,7 @@ function MiniPlayerView() {
             <button
               key={emoji}
               type="button"
-              aria-label={vi.miniPlayer.react(emoji)}
+              aria-label={t.miniPlayer.react(emoji)}
               onClick={() => void act('room:reaction', { emoji }, { silent: true })}
               className="flex h-10 w-10 items-center justify-center rounded-row text-[20px] hover:bg-panel-hi"
             >
@@ -183,7 +186,7 @@ function MiniPlayerView() {
               className="ml-auto inline-flex min-h-10 items-center gap-1.5 whitespace-nowrap rounded-row border border-line px-3 text-[13px] font-semibold hover:bg-panel-hi disabled:opacity-45"
             >
               <SkipForward className="h-4 w-4" aria-hidden />
-              {keptSec > 0 ? vi.nowPlaying.kept(keptSec) : vi.nowPlaying.voteSkip(np.skip.votes, np.skip.required)}
+              {keptSec > 0 ? t.nowPlaying.kept(keptSec) : t.nowPlaying.voteSkip(np.skip.votes, np.skip.required)}
             </button>
           )}
         </div>

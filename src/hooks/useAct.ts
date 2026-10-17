@@ -3,7 +3,7 @@
 import { useCallback } from 'react';
 import { useToast } from '@/components/ui/Toast';
 import type { CommandName, CommandPayload } from '@/contracts';
-import { errorMessage } from '@/i18n/vi';
+import { errorMessage } from '@/i18n';
 import type { CommandResult } from '@/lib/socket';
 import type { PendingOp } from '@/state/optimistic';
 import { room } from '@/state/room-store';

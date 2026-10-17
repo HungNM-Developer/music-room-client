@@ -3,6 +3,7 @@
 import { X } from 'lucide-react';
 import { useEffect, useId, useRef } from 'react';
 import { IconButton } from './Button';
+import { useT } from '@/i18n';
 
 interface DialogProps {
   open: boolean;
@@ -17,7 +18,9 @@ interface DialogProps {
 }
 
 /** Native <dialog> as a bottom sheet (phones) / card (≥640 px). Mount it only while needed. */
-export function Dialog({ open, onClose, title, description, children, dismissable = true, closeLabel = 'Đóng' }: DialogProps) {
+export function Dialog({ open, onClose, title, description, children, dismissable = true, closeLabel }: DialogProps) {
+  const t = useT();
+  closeLabel ??= t.common.close;
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
 

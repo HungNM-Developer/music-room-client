@@ -4,7 +4,7 @@ import { Trash2 } from 'lucide-react';
 import { useId, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 
 /**
  * Deleting a room cannot be undone: the owner types the room code to confirm (any case).
@@ -21,13 +21,14 @@ export function DeleteRoomDialog({
   onConfirm: () => Promise<boolean>;
   onClose: () => void;
 }) {
+  const t = useT();
   const inputId = useId();
   const [typed, setTyped] = useState('');
   const [busy, setBusy] = useState(false);
   const matches = typed.trim().toUpperCase() === code.toUpperCase();
   return (
-    <Dialog open onClose={onClose} title={vi.deleteRoom.title(name)}>
-      <p className="text-sage">{vi.deleteRoom.body}</p>
+    <Dialog open onClose={onClose} title={t.deleteRoom.title(name)}>
+      <p className="text-sage">{t.deleteRoom.body}</p>
       <form
         className="mt-4 space-y-4"
         onSubmit={async (e) => {
@@ -41,7 +42,7 @@ export function DeleteRoomDialog({
       >
         <div className="space-y-1.5">
           <label htmlFor={inputId} className="block text-[14px] font-medium">
-            {vi.deleteRoom.typeCode(code)}
+            {t.deleteRoom.typeCode(code)}
           </label>
           <input
             id={inputId}
@@ -56,11 +57,11 @@ export function DeleteRoomDialog({
         </div>
         <div className="flex gap-2">
           <Button className="flex-1" onClick={onClose}>
-            {vi.deleteRoom.cancel}
+            {t.deleteRoom.cancel}
           </Button>
           <Button type="submit" variant="danger" className="flex-1" disabled={!matches || busy} aria-busy={busy}>
             <Trash2 className="h-4 w-4" aria-hidden />
-            {vi.deleteRoom.confirm}
+            {t.deleteRoom.confirm}
           </Button>
         </div>
       </form>

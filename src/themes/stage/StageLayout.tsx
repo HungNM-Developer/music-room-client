@@ -5,7 +5,7 @@ import { InlineLyrics, LyricsButton } from '@/components/room/Lyrics';
 import { useNowPlayingActions } from '@/components/room/stage/useNowPlayingActions';
 import { useSkipVoteState, type VoteMeterProps } from '@/components/room/stage/useSkipVoteState';
 import { Suggestions } from '@/components/room/Suggestions';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 import { StageIdle, WishBlock } from './parts';
 import { StageControls } from './StageControls';
 import { StageQueue } from './StageQueue';
@@ -43,6 +43,7 @@ export interface StageProps {
  * suggestions. Everything a theme changes comes in as a slot or through CSS.
  */
 export function StageLayout(p: StageProps) {
+  const t = useT();
   const a = useNowPlayingActions();
   const vote = useSkipVoteState();
   const queue = p.queue ?? <StageQueue openAdd={p.openAdd} numbered={p.numbered} title={p.queueTitle} variant={p.queueVariant} />;
@@ -60,13 +61,13 @@ export function StageLayout(p: StageProps) {
   const { track, playing } = a;
   return (
     <div className="stage">
-      <section aria-label={vi.nowPlaying.title} className="stage-now">
+      <section aria-label={t.nowPlaying.title} className="stage-now">
         <div className="stage-hero">
           <div className="stage-cover">{p.cover}</div>
           <div className="stage-info">
             <p className="stage-state">
               <span className="stage-dot" data-live={playing} aria-hidden />
-              {p.kicker ?? (playing ? vi.nowPlaying.live : vi.nowPlaying.paused)}
+              {p.kicker ?? (playing ? t.nowPlaying.live : t.nowPlaying.paused)}
             </p>
             <h2 className="stage-title" title={track.title}>
               {track.title}

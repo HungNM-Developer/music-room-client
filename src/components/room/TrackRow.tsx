@@ -2,7 +2,7 @@ import { Ban, Check, MoreHorizontal, Plus } from 'lucide-react';
 import { Button, IconButton } from '@/components/ui/Button';
 import { Thumb } from '@/components/ui/Thumb';
 import type { TrackSummary } from '@/contracts';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 import { useRoom } from '@/state/hooks';
 import { SaveButton } from './SaveButton';
 
@@ -11,7 +11,7 @@ export function TrackRow({
   track,
   meta,
   done,
-  addLabel = vi.add.addResult,
+  addLabel,
   onAdd,
   onMore,
 }: {
@@ -25,6 +25,8 @@ export function TrackRow({
   /** Admin's ⋯ (block the song); omitted for everyone else. */
   onMore?: () => void;
 }) {
+  const t = useT();
+  addLabel ??= t.add.addResult;
   // A6: a song already waiting or on air cannot be added again.
   const inQueue = useRoom(
     (s) =>
@@ -48,24 +50,24 @@ export function TrackRow({
         <div className="ml-auto flex items-center gap-1">
           <SaveButton track={track} />
           {blocked ? (
-            <Button size="sm" disabled aria-label={vi.block.blockedTrack(track.title)} title={vi.block.label}>
+            <Button size="sm" disabled aria-label={t.block.blockedTrack(track.title)} title={t.block.label}>
               <Ban className="h-4 w-4 text-alert" aria-hidden />
-              {vi.block.label}
+              {t.block.label}
             </Button>
           ) : (
             <Button
               size="sm"
               disabled={done || inQueue}
               onClick={onAdd}
-              aria-label={inQueue ? `${vi.library.inQueue}: ${track.title}` : vi.library.addTrack(track.title)}
-              title={inQueue ? vi.library.inQueue : undefined}
+              aria-label={inQueue ? `${t.library.inQueue}: ${track.title}` : t.library.addTrack(track.title)}
+              title={inQueue ? t.library.inQueue : undefined}
             >
               {done || inQueue ? <Check className="h-4 w-4 text-amber" aria-hidden /> : <Plus className="h-4 w-4" aria-hidden />}
-              {inQueue ? vi.library.inQueue : addLabel}
+              {inQueue ? t.library.inQueue : addLabel}
             </Button>
           )}
           {onMore && !blocked && (
-            <IconButton label={vi.block.more(track.title)} onClick={onMore}>
+            <IconButton label={t.block.more(track.title)} onClick={onMore}>
               <MoreHorizontal className="h-5 w-5" aria-hidden />
             </IconButton>
           )}

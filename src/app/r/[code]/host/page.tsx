@@ -15,6 +15,7 @@ import { HeartCanvas, triggerReaction } from '@/components/room/HeartCanvas';
 import { SkipVote } from '@/components/room/SkipVote';
 import { LiveDial } from '@/components/room/TuningDial';
 import { Button } from '@/components/ui/Button';
+import { LangSwitch } from '@/components/ui/LangSwitch';
 import { OnAirLamp } from '@/components/ui/OnAirLamp';
 import { Thumb } from '@/components/ui/Thumb';
 import { normalizeRoomCode } from '@/contracts/text';
@@ -22,7 +23,7 @@ import { useOrigin } from '@/hooks/useOrigin';
 import { addedByLabel } from '@/lib/added-by';
 import { getToken } from '@/lib/session-store';
 import { useRoomMood } from '@/hooks/useRoomMood';
-import { errorMessage, vi } from '@/i18n/vi';
+import { errorMessage, useT } from '@/i18n';
 import { HOST_RECLAIM_MS, useOtherLivePlayer, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 import { useShownTheme } from '@/themes/load';
@@ -35,6 +36,7 @@ const PlayerEngine = dynamic(() => import('@/components/player/PlayerEngine').th
 
 /** /r/CODE/host — the speaker device (D8, TC-120…TC-131). */
 export default function HostPage() {
+  const t = useT();
   const params = useParams<{ code: string }>();
   const code = normalizeRoomCode(params.code ?? '');
   const memberId = useRoom((s) => s.memberId);
@@ -79,7 +81,7 @@ export default function HostPage() {
               setAttempt((n) => n + 1);
             }}
           >
-            {vi.host.retry}
+            {t.host.retry}
           </Button>
         </div>
       </main>
@@ -89,7 +91,7 @@ export default function HostPage() {
     return (
       <main className="flex min-h-dvh items-center justify-center px-4">
         <p className="flex items-center gap-2 text-sage" role="status">
-          <Radio className="h-5 w-5 text-amber motion-safe:animate-pulse" aria-hidden /> {vi.host.opening}
+          <Radio className="h-5 w-5 text-amber motion-safe:animate-pulse" aria-hidden /> {t.host.opening}
         </p>
       </main>
     );
@@ -98,6 +100,7 @@ export default function HostPage() {
 }
 
 function HostScreen({ code }: { code: string }) {
+  const t = useT();
   const np = useRoom((s) => s.snapshot?.nowPlaying ?? null);
   const queue = useRoom((s) => s.snapshot?.queue);
   const playerRevoked = useRoom((s) => s.playerRevoked);
@@ -134,11 +137,11 @@ function HostScreen({ code }: { code: string }) {
           <div className="w-full max-w-[max(360px,calc((100dvh-27rem)*16/9))]">
             {playerRevoked ? (
               <div className="flex aspect-video flex-col items-center justify-center gap-5 rounded-panel border border-line bg-panel p-6 text-center">
-                <p className="max-w-md text-[18px]">{playerRevoked === 'permission' ? vi.host.movedByAdmin : vi.host.replaced}</p>
+                <p className="max-w-md text-[18px]">{playerRevoked === 'permission' ? t.host.movedByAdmin : t.host.replaced}</p>
                 <Button variant="primary" onClick={() => room.clearPlayerRevoked()}>
-                  {vi.host.takeBack}
+                  {t.host.takeBack}
                 </Button>
-                <p className="max-w-md text-[14px] text-sage">{vi.host.autoReturn}</p>
+                <p className="max-w-md text-[14px] text-sage">{t.host.autoReturn}</p>
               </div>
             ) : (
               <PlayerEngine volume={volume} />
@@ -146,12 +149,12 @@ function HostScreen({ code }: { code: string }) {
           </div>
 
           <div>
-            <OnAirLamp live={live}>{live ? vi.host.onAir : np ? vi.nowPlaying.paused : vi.host.waiting}</OnAirLamp>
+            <OnAirLamp live={live}>{live ? t.host.onAir : np ? t.nowPlaying.paused : t.host.waiting}</OnAirLamp>
             <h1 className="type-display mt-3 line-clamp-2 text-[clamp(28px,4vw,56px)] font-extrabold leading-[1.02] [unicode-bidi:plaintext]">
-              {np ? np.item.track.title : vi.host.idle}
+              {np ? np.item.track.title : t.host.idle}
             </h1>
             {np && (
-              <p className="mt-2 text-[18px] text-sage">{picker ? vi.nowPlaying.pickedBy(picker) : addedByLabel(np.item)}</p>
+              <p className="mt-2 text-[18px] text-sage">{picker ? t.nowPlaying.pickedBy(picker) : addedByLabel(np.item)}</p>
             )}
           </div>
 
@@ -159,25 +162,28 @@ function HostScreen({ code }: { code: string }) {
 
           {np?.item.wishMessage && picker && (
             <figure className="max-w-3xl border-l-[3px] border-amber pl-4">
-              <figcaption className="text-[14px] text-sage">{vi.nowPlaying.wishFrom(picker)}</figcaption>
+              <figcaption className="text-[14px] text-sage">{t.nowPlaying.wishFrom(picker)}</figcaption>
               <blockquote className="mt-1 text-[20px] leading-snug [overflow-wrap:anywhere]">{np.item.wishMessage}</blockquote>
             </figure>
           )}
 
           {np && (HostDial ? <HostDial /> : <LiveDial size="large" />)}
 
-          <label className="flex max-w-sm items-center gap-3 text-[14px] text-sage">
-            {vi.host.volume}
-            <input type="range" min={0} max={100} value={volume} onChange={(e) => setVolume(Number(e.target.value))} className="flex-1" />
-            <span className="w-10 text-right tabular-nums">{vi.host.volumeValue(volume)}</span>
-          </label>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+            <label className="flex w-full max-w-sm items-center gap-3 text-[14px] text-sage">
+              {t.host.volume}
+              <input type="range" min={0} max={100} value={volume} onChange={(e) => setVolume(Number(e.target.value))} className="flex-1" />
+              <span className="w-10 text-right tabular-nums">{t.host.volumeValue(volume)}</span>
+            </label>
+            <LangSwitch compact />
+          </div>
 
           <Banners />
         </section>
 
         <aside className="space-y-7">
           <div className="host-qr rounded-panel bg-paper p-6 text-center text-dial">
-            <h2 className="type-display text-[24px] font-bold">{vi.host.scan}</h2>
+            <h2 className="type-display text-[24px] font-bold">{t.host.scan}</h2>
             <div className="mx-auto mt-4 w-fit">
               {joinUrl ? (
                 // Themed: always dark on white with a quiet zone, so every phone camera reads it.
@@ -196,9 +202,9 @@ function HostScreen({ code }: { code: string }) {
           <ListenersStrip size="lg" />
 
           <div>
-            <h2 className="type-display mb-2 text-[22px] font-bold">{vi.host.next}</h2>
+            <h2 className="type-display mb-2 text-[22px] font-bold">{t.host.next}</h2>
             {next.length === 0 ? (
-              <p className="text-sage">{vi.host.nextEmpty}</p>
+              <p className="text-sage">{t.host.nextEmpty}</p>
             ) : (
               <ol className="divide-y divide-line/70">
                 {next.map((q) => (

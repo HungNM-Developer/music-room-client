@@ -8,6 +8,7 @@ import { NowCover } from '../stage/parts';
 import { StageLayout } from '../stage/StageLayout';
 import { cormorant } from './fonts';
 import './theme.css';
+import { useT } from '@/i18n';
 
 /** Twelve house lines (every 30°) between the two rings. */
 const HOUSES = Array.from({ length: 12 }, (_, i) => {
@@ -45,6 +46,7 @@ function Moon({ leftMs, totalMs }: VoteMeterProps) {
 }
 
 function Stage({ openAdd }: { openAdd: () => void }) {
+  const t = useT();
   return (
     <StageLayout
       openAdd={openAdd}
@@ -53,7 +55,7 @@ function Stage({ openAdd }: { openAdd: () => void }) {
       dialInInfo
       voteMeter={Moon}
       voteMeterAt="start"
-      voteText={(s) => `${s.asksLabel}. ${s.votes}/${s.required} đồng ý, trăng tắt sau ${s.seconds} giây`}
+      voteText={(s) => t.themeText.voteMoon(s.asksLabel, s.votes, s.required, s.seconds)}
     />
   );
 }

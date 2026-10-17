@@ -1,63 +1,16 @@
-'use client';
-
-import { useRoomDeleted } from '@/hooks/useRoomDeleted';
-import { useParams } from 'next/navigation';
-import { useEffect } from 'react';
-import { Backdrop } from '@/components/room/Backdrop';
-import { ListenAlong } from '@/components/player/ListenAlong';
-import { NowPlayingCard } from '@/components/room/NowPlayingCard';
-import { QueueList } from '@/components/room/QueueList';
-import { RoomFrame } from '@/components/room/RoomFrame';
-import { RoomSkeleton } from '@/components/room/RoomSkeleton';
-import { Suggestions } from '@/components/room/Suggestions';
+import type { Metadata } from 'next';
 import { normalizeRoomCode } from '@/contracts/text';
-import { useRoomMood } from '@/hooks/useRoomMood';
-import { room } from '@/state/room-store';
-import { useShownTheme } from '@/themes/load';
-import { useApplyTheme, useEffectiveTheme } from '@/themes/useTheme';
+import { RoomPage } from './RoomPage';
+import { previewLang, roomMetadata } from './room-metadata';
 
-export default function RoomPage() {
-  const params = useParams<{ code: string }>();
-  const code = normalizeRoomCode(params.code ?? '');
-  const { id: theme, mod } = useShownTheme(useEffectiveTheme());
-  useApplyTheme(theme, mod?.fontClass);
-  useRoomMood(theme === 'default');
-  useRoomDeleted();
+type Props = { params: Promise<{ code: string }>; searchParams: Promise<{ lang?: string | string[] }> };
 
-  useEffect(() => room.enter(code, 'member'), [code]);
+/** A shared link carries the sharer's language (`?lang=en`), so its preview is in that language. */
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
+  const [{ code }, { lang }] = await Promise.all([params, searchParams]);
+  return roomMetadata(normalizeRoomCode(code), previewLang(lang));
+}
 
-  if (theme === 'default') {
-    return (
-      <RoomFrame
-        code={code}
-        inlineVote={false}
-        decor={<Backdrop />}
-        stage={(openAdd) => (
-          <>
-            <NowPlayingCard />
-            <ListenAlong />
-            {/* The real queue first; suggestions are extra. */}
-            <QueueList onAdd={openAdd} />
-            <Suggestions />
-          </>
-        )}
-      />
-    );
-  }
-
-  // While the theme's chunk loads, the frame (header, tabs, side column) is already usable.
-  const Stage = mod?.Stage;
-  const Decor = mod?.Decor;
-  const SideTop = mod?.SideTop;
-  return (
-    <RoomFrame
-      code={code}
-      inlineVote
-      header={mod?.header}
-      chat={mod?.chat}
-      decor={Decor && <Decor />}
-      sideTop={SideTop && <SideTop />}
-      stage={(openAdd) => (Stage ? <Stage openAdd={openAdd} /> : <RoomSkeleton />)}
-    />
-  );
+export default function Page() {
+  return <RoomPage />;
 }

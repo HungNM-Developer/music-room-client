@@ -10,7 +10,7 @@ import { AdminNameNotice } from './AdminNameNotice';
 import { PinField } from '@/components/ui/PinField';
 import { panelId, tabId, TabList } from '@/components/ui/Tabs';
 import { useSlow } from '@/hooks/useSlow';
-import { errorMessage, vi } from '@/i18n/vi';
+import { errorMessage, useT } from '@/i18n';
 import { lastName, rememberName } from '@/lib/session-store';
 import { isDisplayName, isPin, isRoomCode, isRoomName } from '@/lib/validate';
 import { useRoom } from '@/state/hooks';
@@ -19,6 +19,7 @@ import { room } from '@/state/room-store';
 type Mode = 'create' | 'join';
 
 export function HomeForm() {
+  const t = useT();
   const router = useRouter();
   const toast = useToast();
   const [mode, setMode] = useState<Mode>('create');
@@ -70,7 +71,7 @@ export function HomeForm() {
       return;
     }
     rememberName(name.trim(), r.data.code);
-    if ('rightsReset' in r.data && r.data.rightsReset) toast(vi.home.rightsReset, 'info');
+    if ('rightsReset' in r.data && r.data.rightsReset) toast(t.home.rightsReset, 'info');
     router.push(`/r/${r.data.code}`);
   }
 
@@ -79,10 +80,10 @@ export function HomeForm() {
       <TabList
         variant="pill"
         idPrefix="home"
-        label={vi.appName}
+        label={t.appName}
         tabs={[
-          { key: 'create', label: vi.home.tabCreate },
-          { key: 'join', label: vi.home.tabJoin },
+          { key: 'create', label: t.home.tabCreate },
+          { key: 'join', label: t.home.tabJoin },
         ]}
         value={mode}
         onChange={(m) => {
@@ -102,8 +103,8 @@ export function HomeForm() {
       >
         <div ref={nameBox}>
           <Field
-            label={vi.home.yourName}
-            placeholder={vi.home.yourNamePlaceholder}
+            label={t.home.yourName}
+            placeholder={t.home.yourNamePlaceholder}
             value={name}
             maxLength={30}
             autoComplete="nickname"
@@ -112,31 +113,31 @@ export function HomeForm() {
               setNeedPin(false);
             }}
             onBlur={() => touch('name')}
-            hint={vi.home.hintName}
+            hint={t.home.hintName}
             invalid={touched.name && !ok.name}
           />
         </div>
         {mode === 'create' ? (
           <>
             <Field
-              label={vi.home.roomName}
-              placeholder={vi.home.roomNamePlaceholder}
+              label={t.home.roomName}
+              placeholder={t.home.roomNamePlaceholder}
               value={roomName}
               maxLength={50}
               onChange={(e) => setRoomName(e.target.value)}
               onBlur={() => touch('roomName')}
-              hint={vi.home.hintRoomName}
+              hint={t.home.hintRoomName}
               invalid={touched.roomName && !ok.roomName}
             />
             <div className="space-y-1.5" onBlur={() => touch('pin')}>
               <PinField value={pin} onChange={setPin} autoComplete="new-password" invalid={touched.pin && !ok.pin} />
-              <p className="text-[13px] text-sage">{vi.home.adminPinNote}</p>
+              <p className="text-[13px] text-sage">{t.home.adminPinNote}</p>
             </div>
           </>
         ) : (
           <Field
-            label={vi.home.roomCode}
-            placeholder={vi.home.roomCodePlaceholder}
+            label={t.home.roomCode}
+            placeholder={t.home.roomCodePlaceholder}
             value={code}
             maxLength={8}
             autoCapitalize="characters"
@@ -147,7 +148,7 @@ export function HomeForm() {
               setNeedPin(false);
             }}
             onBlur={() => touch('code')}
-            hint={vi.home.hintCode}
+            hint={t.home.hintCode}
             invalid={touched.code && !ok.code}
           />
         )}
@@ -164,7 +165,7 @@ export function HomeForm() {
             }}
           />
         )}
-        {mode === 'join' && !needPin && <p className="text-[13px] text-sage">{vi.home.rejoinNote}</p>}
+        {mode === 'join' && !needPin && <p className="text-[13px] text-sage">{t.home.rejoinNote}</p>}
 
         {error && (
           <p role="alert" className="rounded-row border border-onair/50 bg-onair/10 p-3 text-[14px]">
@@ -174,11 +175,11 @@ export function HomeForm() {
 
         <Button type="submit" variant="primary" disabled={!canSubmit} aria-busy={busy} className="w-full">
           {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
-          {mode === 'create' ? vi.home.create : vi.home.join}
+          {mode === 'create' ? t.home.create : t.home.join}
         </Button>
         {slow && (
           <p role="status" className="text-center text-[13px] text-sage">
-            {vi.home.slow}
+            {t.home.slow}
           </p>
         )}
       </form>

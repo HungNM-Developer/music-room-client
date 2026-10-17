@@ -11,7 +11,7 @@ import { Dialog, SheetAction } from '@/components/ui/Dialog';
 import { Thumb } from '@/components/ui/Thumb';
 import type { MemberView, QueueItemView } from '@/contracts';
 import { useAct } from '@/hooks/useAct';
-import { vi } from '@/i18n/vi';
+import { useT, tr } from '@/i18n';
 import { formatDuration } from '@/lib/time';
 import { useMe, useRoom } from '@/state/hooks';
 import { type AddOp, applyQueue } from '@/state/optimistic';
@@ -27,11 +27,12 @@ interface Group {
 
 /** Pinned items first, then the rest (the queue is already in play order: hearts, then who added first). */
 function groupQueue(queue: QueueItemView[]): Group[] {
+  const t = tr();
   const pinned = queue.filter((q) => q.pinned);
   const rest = queue.filter((q) => !q.pinned);
   const groups: Group[] = [];
-  if (pinned.length) groups.push({ key: 'pinned', title: vi.queue.pinnedGroup, items: pinned });
-  if (rest.length) groups.push({ key: 'rest', title: pinned.length ? vi.queue.restGroup : null, items: rest });
+  if (pinned.length) groups.push({ key: 'pinned', title: t.queue.pinnedGroup, items: pinned });
+  if (rest.length) groups.push({ key: 'rest', title: pinned.length ? t.queue.restGroup : null, items: rest });
   return groups;
 }
 
@@ -79,13 +80,14 @@ export function hasItemMenu(item: QueueItemView, me: MemberView | null): boolean
 
 /** ♥ for a waiting song (count beside it); a read-only count for the speaker device. */
 export function HeartButton({ item, me, className = '' }: { item: QueueItemView; me: MemberView | null; className?: string }) {
+  const t = useT();
   const act = useAct();
   const hearted = Boolean(me && item.heartedBy.includes(me.id));
-  if (!me || me.isDevice) return item.hearts > 0 ? <span className={`px-2 text-[13px] text-sage ${className}`}>{vi.queue.hearts(item.hearts)}</span> : null;
+  if (!me || me.isDevice) return item.hearts > 0 ? <span className={`px-2 text-[13px] text-sage ${className}`}>{t.queue.hearts(item.hearts)}</span> : null;
   return (
     <button
       type="button"
-      aria-label={hearted ? vi.queue.unheart : vi.queue.heart}
+      aria-label={hearted ? t.queue.unheart : t.queue.heart}
       aria-pressed={hearted}
       onClick={() => act('queue:heart', { queueItemId: item.id }, { optimistic: { kind: 'heart', itemId: item.id, hearted: !hearted } })}
       className={`flex h-11 min-w-11 items-center justify-center gap-1 rounded-row px-2 text-[13px] tabular-nums transition-colors hover:bg-panel-hi ${
@@ -99,24 +101,25 @@ export function HeartButton({ item, me, className = '' }: { item: QueueItemView;
 }
 
 export function QueueList({ onAdd }: { onAdd?: () => void }) {
+  const t = useT();
   const { items, adding, me, openMenu, menus } = useQueueView();
 
   return (
     <section aria-labelledby="queue-title">
       <div className="mb-2 flex items-baseline justify-between px-1">
         <h2 id="queue-title" className="type-display text-[20px] font-bold">
-          {vi.queue.title}
+          {t.queue.title}
         </h2>
         {items.length + adding.length > 0 && <span className="text-[13px] text-sage tabular-nums">{items.length + adding.length}</span>}
       </div>
 
       {items.length === 0 && adding.length === 0 ? (
         <div className="rounded-panel border border-dashed border-line px-5 py-8 text-center">
-          <p className="text-sage">{vi.queue.empty}</p>
+          <p className="text-sage">{t.queue.empty}</p>
           {onAdd && !me?.isDevice && (
             <Button size="sm" variant="primary" className="mt-4" onClick={onAdd}>
               <Plus className="h-4 w-4" aria-hidden />
-              {vi.queue.addFirst}
+              {t.queue.addFirst}
             </Button>
           )}
         </div>
@@ -134,7 +137,7 @@ export function QueueList({ onAdd }: { onAdd?: () => void }) {
           ))}
           {adding.length > 0 && (
             <div>
-              <h3 className="mb-1 px-1 text-[13px] font-medium text-sage">{vi.queue.addingGroup}</h3>
+              <h3 className="mb-1 px-1 text-[13px] font-medium text-sage">{t.queue.addingGroup}</h3>
               <ol className="divide-y divide-line/70 rounded-panel bg-panel px-1">
                 {adding.map((a) => (
                   <AddingRow key={a.id} op={a} />
@@ -159,6 +162,7 @@ const QueueRow = memo(function QueueRow({
   me: MemberView | null;
   onMenu: (item: QueueItemView) => void;
 }) {
+  const t = useT();
   const mine = Boolean(me && item.addedBy?.id === me.id);
   const hasMenu = hasItemMenu(item, me);
 
@@ -172,16 +176,16 @@ const QueueRow = memo(function QueueRow({
         <p className="flex items-center gap-2 text-[13px] text-sage">
           <span className="truncate">
             {addedByLabel(item)}
-            {mine && ` (${vi.queue.you})`}
+            {mine && ` (${t.queue.you})`}
           </span>
           {item.track.durationSec ? <span className="shrink-0 tabular-nums">{formatDuration(item.track.durationSec)}</span> : null}
-          {item.wishMessage && <Mail className="h-3.5 w-3.5 shrink-0 text-amber" aria-label={vi.queue.hasWish} />}
+          {item.wishMessage && <Mail className="h-3.5 w-3.5 shrink-0 text-amber" aria-label={t.queue.hasWish} />}
         </p>
       </div>
       <SaveButton track={item.track} />
       <HeartButton item={item} me={me} />
       {hasMenu && (
-        <IconButton label={vi.queue.actions(item.track.title)} onClick={() => onMenu(item)}>
+        <IconButton label={t.queue.actions(item.track.title)} onClick={() => onMenu(item)}>
           <MoreHorizontal className="h-5 w-5" aria-hidden />
         </IconButton>
       )}
@@ -191,12 +195,13 @@ const QueueRow = memo(function QueueRow({
 
 /** A song the server is still fetching (title and duration come from YouTube). */
 function AddingRow({ op }: { op: AddOp }) {
+  const t = useT();
   return (
     <li className="flex animate-rise items-center gap-3 py-2.5 pl-2.5 pr-3 opacity-80" aria-busy="true">
       <Thumb url={op.thumbnailUrl} size={44} />
       <div className="min-w-0 flex-1">
-        <p className="truncate font-medium">{op.title ?? vi.queue.addingTitle}</p>
-        <p className="text-[13px] text-sage">{vi.add.adding}</p>
+        <p className="truncate font-medium">{op.title ?? t.queue.addingTitle}</p>
+        <p className="text-[13px] text-sage">{t.add.adding}</p>
       </div>
       <Loader2 className="h-4 w-4 shrink-0 animate-spin text-amber" aria-hidden />
     </li>
@@ -216,6 +221,7 @@ function ItemMenu({
   onWish: () => void;
   onBlock: () => void;
 }) {
+  const t = useT();
   const act = useAct();
   const mine = Boolean(me && item.addedBy?.id === me.id);
   const isAdmin = me?.role === 'ADMIN';
@@ -233,12 +239,12 @@ function ItemMenu({
             icon={item.pinned ? <PinOff className="h-5 w-5" /> : <Pin className="h-5 w-5" />}
             onClick={() => run(() => act('queue:pin-next', { queueItemId: item.id }, { optimistic: { kind: 'pin', itemId: item.id, pinned: !item.pinned } }))}
           >
-            {item.pinned ? vi.queue.unpin : vi.queue.pin}
+            {item.pinned ? t.queue.unpin : t.queue.pin}
           </SheetAction>
         )}
         {mine && (
           <SheetAction icon={<Mail className="h-5 w-5" />} onClick={onWish}>
-            {item.wishMessage ? vi.queue.editWish : vi.queue.wish}
+            {item.wishMessage ? t.queue.editWish : t.queue.wish}
           </SheetAction>
         )}
         {(mine || isAdmin) && (
@@ -247,12 +253,12 @@ function ItemMenu({
             icon={<Trash2 className="h-5 w-5" />}
             onClick={() => run(() => act('queue:remove', { queueItemId: item.id }, { optimistic: { kind: 'remove', itemId: item.id } }))}
           >
-            {vi.queue.remove}
+            {t.queue.remove}
           </SheetAction>
         )}
         {isAdmin && (
           <SheetAction danger icon={<Ban className="h-5 w-5" />} onClick={onBlock}>
-            {vi.block.menu}
+            {t.block.menu}
           </SheetAction>
         )}
       </div>

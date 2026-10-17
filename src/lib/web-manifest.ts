@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { dictFor } from '@/i18n/dict';
 
 /**
  * Installable app ("Cài đặt ứng dụng" / "Thêm vào màn hình chính"). Besides the icon and the
@@ -10,7 +11,7 @@ export function webManifest(opts: { id: string; name: string; startUrl: string }
     id: opts.id,
     name: opts.name,
     short_name: 'Music Room',
-    description: 'Cả văn phòng cùng chọn nhạc YouTube, phát chung một loa.',
+    description: dictFor('vi').meta.description,
     lang: 'vi',
     start_url: opts.startUrl,
     scope: '/',

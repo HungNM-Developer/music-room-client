@@ -5,11 +5,12 @@ import { useEffect, useState } from 'react';
 import { useToast } from '@/components/ui/Toast';
 import { useOrigin } from '@/hooks/useOrigin';
 import { useSlow } from '@/hooks/useSlow';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 import { useMe, useRoom, useVersionSkew } from '@/state/hooks';
 
 /** Connection / version / player banners (TC-123, TC-192, TC-200). */
 export function Banners() {
+  const t = useT();
   const connection = useRoom((s) => s.connection);
   const kind = useRoom((s) => s.kind);
   const code = useRoom((s) => s.code);
@@ -40,25 +41,25 @@ export function Banners() {
   const items: { key: string; icon: React.ReactNode; text: string; action?: React.ReactNode }[] = [];
 
   if (skew === 'serverOlder') {
-    items.push({ key: 'version', icon: <Hourglass className="h-4 w-4" aria-hidden />, text: vi.banners.serverUpdating });
+    items.push({ key: 'version', icon: <Hourglass className="h-4 w-4" aria-hidden />, text: t.banners.serverUpdating });
   }
   if (skew === 'serverNewer') {
     items.push({
       key: 'version',
       icon: <RefreshCw className="h-4 w-4" aria-hidden />,
-      text: vi.banners.newVersion,
+      text: t.banners.newVersion,
       action: (
         <button type="button" className="font-semibold text-amber underline-offset-2 hover:underline" onClick={() => window.location.reload()}>
-          {vi.banners.reload}
+          {t.banners.reload}
         </button>
       ),
     });
   }
   if (waking) {
-    items.push({ key: 'waking', icon: <Hourglass className="h-4 w-4" aria-hidden />, text: vi.banners.waking });
+    items.push({ key: 'waking', icon: <Hourglass className="h-4 w-4" aria-hidden />, text: t.banners.waking });
   }
   if (connection === 'reconnecting') {
-    items.push({ key: 'conn', icon: <WifiOff className="h-4 w-4" aria-hidden />, text: vi.banners.reconnecting });
+    items.push({ key: 'conn', icon: <WifiOff className="h-4 w-4" aria-hidden />, text: t.banners.reconnecting });
   }
   const hostUrl = `${origin}/r/${code}/host`;
   if (player && kind === 'member' && connection === 'connected' && !player.online) {
@@ -68,11 +69,11 @@ export function Banners() {
       // Only the admin sets up the speaker: the link is for them, a short line for everyone else.
       text: !player.memberId
         ? me?.role === 'ADMIN'
-          ? vi.banners.noPlayer(hostUrl)
-          : vi.banners.noPlayerMember
+          ? t.banners.noPlayer(hostUrl)
+          : t.banners.noPlayerMember
         : playerPageOpen
-          ? vi.banners.playerWaiting
-          : vi.banners.playerOffline,
+          ? t.banners.playerWaiting
+          : t.banners.playerOffline,
       action:
         !player.memberId && me?.role === 'ADMIN' ? (
           <button
@@ -81,13 +82,13 @@ export function Banners() {
             onClick={async () => {
               try {
                 await navigator.clipboard.writeText(hostUrl);
-                toast(vi.banners.hostLinkCopied, 'success');
+                toast(t.banners.hostLinkCopied, 'success');
               } catch {
                 toast(hostUrl);
               }
             }}
           >
-            {vi.banners.copyHostLink}
+            {t.banners.copyHostLink}
           </button>
         ) : undefined,
     });
@@ -96,7 +97,7 @@ export function Banners() {
     items.push({
       key: 'orphan',
       icon: <Trash2 className="h-4 w-4" aria-hidden />,
-      text: vi.banners.orphanNotice,
+      text: t.banners.orphanNotice,
       action: (
         <button
           type="button"
@@ -110,7 +111,7 @@ export function Banners() {
             }
           }}
         >
-          {vi.banners.dismiss}
+          {t.banners.dismiss}
         </button>
       ),
     });

@@ -1,7 +1,7 @@
 'use client';
 
 import { useLiveProgress } from '@/components/room/stage/useLiveProgress';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 import { formatDuration } from '@/lib/time';
 
 /**
@@ -9,8 +9,9 @@ import { formatDuration } from '@/lib/time';
  * the length. `layout`: times beside the line, or under it. Themes restyle it by `variant`.
  */
 export function LineDial({ variant, layout = 'below', className = '' }: { variant?: string; layout?: 'beside' | 'below'; className?: string }) {
+  const t = useT();
   const { ref, timeRef, info } = useLiveProgress();
-  const total = info ? (info.known ? formatDuration(info.durationSec) : vi.nowPlaying.unknownDuration) : '';
+  const total = info ? (info.known ? formatDuration(info.durationSec) : t.nowPlaying.unknownDuration) : '';
   return (
     <div ref={ref} className={`line-dial ${className}`} data-variant={variant} data-layout={layout} aria-hidden={!info}>
       <span ref={timeRef} className="line-dial-t">
@@ -26,13 +27,14 @@ export function LineDial({ variant, layout = 'below', className = '' }: { varian
 
 /** "0:52 trên 4:42" — the time as words, for themes whose artwork already shows progress. */
 export function TimeText({ icon, className = '' }: { icon?: React.ReactNode; className?: string }) {
+  const t = useT();
   const { ref, timeRef, info } = useLiveProgress();
   if (!info) return null;
   return (
     <p ref={ref as unknown as React.Ref<HTMLParagraphElement>} className={`stage-time ${className}`}>
       {icon}
       <span ref={timeRef}>0:00</span>
-      {info.known ? ` trên ${formatDuration(info.durationSec)}` : ` · ${vi.nowPlaying.unknownDuration}`}
+      {info.known ? t.themeText.ofDuration(formatDuration(info.durationSec)) : ` · ${t.nowPlaying.unknownDuration}`}
     </p>
   );
 }

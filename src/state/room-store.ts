@@ -17,7 +17,7 @@ import type {
   RevokeReason,
   RoomSnapshot,
 } from '@/contracts';
-import type { ClientErrorCode } from '@/i18n/vi';
+import type { ClientErrorCode } from '@/i18n';
 import { applySnapshot } from '@/lib/room-store';
 import type { Pending, PendingOp } from './optimistic';
 import { readAccount, writeAccount } from '@/lib/account-store';

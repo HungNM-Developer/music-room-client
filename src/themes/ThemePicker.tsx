@@ -2,7 +2,7 @@
 
 import { Check } from 'lucide-react';
 import { Dialog } from '@/components/ui/Dialog';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 import { setPersonalTheme, usePersonalTheme } from './personal';
 import { THEME_GROUPS, THEMES, type ThemeId, type ThemeMeta, themeMeta } from './registry';
 import { useRoomTheme } from './useTheme';
@@ -46,24 +46,25 @@ function Card({ meta, label, selected, onPick }: { meta: ThemeMeta; label: strin
  * "Theo phòng (<room theme>)" (a person's own choice); without it, the room's own picker.
  */
 export function ThemeGrid({ value, onPick, followRoom }: { value: Choice; onPick: (v: Choice) => void; followRoom?: { roomTheme: ThemeId } }) {
+  const t = useT();
   return (
     <div className="space-y-4">
       {followRoom && (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           <Card
             meta={themeMeta(followRoom.roomTheme)}
-            label={vi.theme.followRoom(themeMeta(followRoom.roomTheme).name)}
+            label={t.theme.followRoom(t.themes.names[themeMeta(followRoom.roomTheme).id])}
             selected={value === 'room'}
             onPick={() => onPick('room')}
           />
         </div>
       )}
       {THEME_GROUPS.map((group) => (
-        <section key={group} aria-label={group}>
-          <h3 className="mb-1.5 px-0.5 text-[13px] font-medium text-sage">{group}</h3>
+        <section key={group} aria-label={t.themes.groups[group]}>
+          <h3 className="mb-1.5 px-0.5 text-[13px] font-medium text-sage">{t.themes.groups[group]}</h3>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {THEMES.filter((t) => t.group === group).map((t) => (
-              <Card key={t.id} meta={t} label={t.name} selected={value === t.id} onPick={() => onPick(t.id)} />
+            {THEMES.filter((m) => m.group === group).map((m) => (
+              <Card key={m.id} meta={m} label={t.themes.names[m.id]} selected={value === m.id} onPick={() => onPick(m.id)} />
             ))}
           </div>
         </section>
@@ -74,10 +75,11 @@ export function ThemeGrid({ value, onPick, followRoom }: { value: Choice; onPick
 
 /** "Giao diện" in the room header: this browser's own theme, applied at once. */
 export function ThemeDialog({ onClose }: { onClose: () => void }) {
+  const t = useT();
   const personal = usePersonalTheme();
   const roomTheme = useRoomTheme();
   return (
-    <Dialog open onClose={onClose} title={vi.theme.title} description={vi.theme.personalHint}>
+    <Dialog open onClose={onClose} title={t.theme.title} description={t.theme.personalHint}>
       <ThemeGrid value={personal} onPick={setPersonalTheme} followRoom={{ roomTheme }} />
     </Dialog>
   );

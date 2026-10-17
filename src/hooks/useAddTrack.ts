@@ -5,7 +5,7 @@ import { useToast } from '@/components/ui/Toast';
 import type { TrackSummary } from '@/contracts';
 import { parseYouTubeVideo } from '@/contracts/youtube';
 import { useAct } from '@/hooks/useAct';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 
 /**
  * Optimistic add: the row appears in the queue at once ("Đang thêm…", with the video's
@@ -13,6 +13,7 @@ import { vi } from '@/i18n/vi';
  * sent, so its button turns into a check; a refused add clears the mark.
  */
 export function useAddTrack() {
+  const t = useT();
   const act = useAct();
   const toast = useToast();
   const [added, setAdded] = useState<Set<string>>(() => new Set());
@@ -34,7 +35,7 @@ export function useAddTrack() {
         },
       );
       if (r) {
-        toast(vi.add.added(r.title), 'success');
+        toast(t.add.added(r.title), 'success');
         return true;
       }
       setAdded((s) => {
@@ -44,7 +45,7 @@ export function useAddTrack() {
       });
       return false;
     },
-    [act, toast],
+    [act, toast, t],
   );
 
   return { add, added };

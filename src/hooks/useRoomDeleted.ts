@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { useToast } from '@/components/ui/Toast';
-import { vi } from '@/i18n/vi';
+import { tr } from '@/i18n';
 import { useRoom } from '@/state/hooks';
 
 /**
@@ -23,7 +23,7 @@ export function useRoomDeleted(): void {
 
   useEffect(() => {
     if (revoked !== 'room_deleted') return;
-    toast(vi.banners.roomDeleted(lastName.current), 'info');
+    toast(tr().banners.roomDeleted(lastName.current), 'info');
     router.replace('/');
   }, [revoked, router, toast]);
 }

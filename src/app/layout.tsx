@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import { Be_Vietnam_Pro, Bricolage_Grotesque } from 'next/font/google';
 import './globals.css';
 import { ToastProvider } from '@/components/ui/Toast';
+import { dictFor } from '@/i18n/dict';
+import { LangRuntime } from '@/i18n/LangRuntime';
 import { RoomRuntime } from '@/state/hooks';
 
 const body = Be_Vietnam_Pro({
@@ -19,7 +21,7 @@ const display = Bricolage_Grotesque({
 
 export const metadata: Metadata = {
   title: 'Music Room',
-  description: 'Cả văn phòng cùng chọn nhạc YouTube, phát chung một loa.',
+  description: dictFor('vi').meta.description,
   appleWebApp: { capable: true, title: 'Music Room', statusBarStyle: 'black-translucent' },
 };
 
@@ -35,6 +37,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="vi" className={`${body.variable} ${display.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <RoomRuntime />
+        <LangRuntime />
         <ToastProvider>{children}</ToastProvider>
       </body>
     </html>

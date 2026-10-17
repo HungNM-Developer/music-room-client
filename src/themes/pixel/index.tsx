@@ -2,7 +2,7 @@
 
 import { useLiveProgress } from '@/components/room/stage/useLiveProgress';
 import type { VoteMeterProps } from '@/components/room/stage/useSkipVoteState';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 import { formatDuration } from '@/lib/time';
 import { useRoom } from '@/state/hooks';
 import type { ThemeModule } from '../load';
@@ -15,6 +15,7 @@ const CELLS = 16;
 
 /** Time as a health bar: 16 cells, lit up to the song's position. */
 function HealthBar({ large = false }: { large?: boolean }) {
+  const t = useT();
   const { ref, timeRef, info } = useLiveProgress();
   return (
     <div ref={ref} className="pix-hp" data-large={large || undefined}>
@@ -24,7 +25,7 @@ function HealthBar({ large = false }: { large?: boolean }) {
           <i key={i} style={{ ['--i' as string]: i }} />
         ))}
       </span>
-      <span>{info ? (info.known ? formatDuration(info.durationSec) : vi.nowPlaying.unknownDuration) : ''}</span>
+      <span>{info ? (info.known ? formatDuration(info.durationSec) : t.nowPlaying.unknownDuration) : ''}</span>
     </div>
   );
 }
@@ -47,15 +48,17 @@ function BossBar({ votes, required, seconds }: VoteMeterProps) {
 
 /** "x 8 người": how many are in the room right now, like lives left. */
 function Lives() {
+  const t = useT();
   const n = useRoom((s) => s.snapshot?.members.filter((m) => m.online && !m.isDevice).length ?? 0);
   return (
-    <span className="pix-lives" aria-label={`${n} người đang trong phòng`}>
-      x {n} người
+    <span className="pix-lives" aria-label={t.themeText.pixel.lives(n)}>
+      {t.themeText.pixel.livesShort(n)}
     </span>
   );
 }
 
 function Stage({ openAdd }: { openAdd: () => void }) {
+  const t = useT();
   return (
     <StageLayout
       openAdd={openAdd}
@@ -66,12 +69,12 @@ function Stage({ openAdd }: { openAdd: () => void }) {
       }
       dial={<HealthBar />}
       dialInInfo
-      kicker="Màn 1: đang phát"
+      kicker={t.themeText.pixel.stage}
       controls="pixel"
       voteMeter={BossBar}
       voteMeterAt="middle"
       voteText={(s) => `Boss: ${s.asksLabel}`}
-      queueTitle="Màn tiếp theo"
+      queueTitle={t.themeText.pixel.next}
     />
   );
 }
