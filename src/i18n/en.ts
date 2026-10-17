@@ -644,7 +644,7 @@ export const en: Dict = {
     moveHere: 'Play here',
     autoReturn: 'Takes over when the other one stops',
     volume: 'Volume',
-    thisDeviceWaits: "This device is the room's player · speaker not on yet",
+    roomSpeaker: "This device is the room's speaker.",
   },
 
   banners: {

@@ -64,8 +64,11 @@ export function playDj(src: string): void {
   a.play().catch(() => console.warn('[player] DJ sound blocked'));
 }
 
-/** `caption`: room page — until the sound starts, a line above the video saying this device is the room's speaker. */
-export function PlayerEngine({ volume = 100, caption = false }: { volume?: number; caption?: boolean }) {
+/**
+ * `caption`: room page — the start hint under the video also says this device is the room's speaker.
+ * `frameClass`: room page — the theme's frame around the video box (its speaker-screen frame, ThemeModule.host.videoClass).
+ */
+export function PlayerEngine({ volume = 100, caption = false, frameClass }: { volume?: number; caption?: boolean; frameClass?: string }) {
   const t = useT();
   // The room has no song at all (not merely paused): the cover replaces the empty video.
   const idle = useRoom((s) => !s.snapshot?.nowPlaying);
@@ -433,7 +436,8 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
 
   // The video starts on its own when the browser allows it; otherwise (or when the room is
   // paused) its own ▶ starts this speaker. A hint says so — never over the video.
-  const waitingHint = touch ? t.host.startTouch : t.host.start;
+  // The room page also says why this page plays: it is the room's speaker.
+  const waitingHint = `${caption ? `${t.host.roomSpeaker} ` : ''}${touch ? t.host.startTouch : t.host.start}`;
 
   // A tap on "move the sound here": take over from the other speaker right now.
   const takeOver = () => {
@@ -442,38 +446,42 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
     start();
   };
 
+  const screen = (
+    <div className="relative aspect-video w-full overflow-hidden rounded-panel bg-dial-deep">
+      <YouTubeAdapter
+        adapterRef={adapterRef}
+        onReady={() => {
+          itemRef.current = null; // a new, empty player: load the current song into it
+          loadedVideo.current = null;
+          setReady((n) => n + 1);
+        }}
+        onPlaying={onPlaying}
+        onPaused={() => void fromVideo('PAUSED')}
+        onEnded={onEnded}
+        onError={onError}
+        onAutoplayBlocked={() => setNeedsTap(true)}
+      />
+      {/* No song in the room: nothing is loaded, and YouTube's own ▶ would only show an error. */}
+      {idle && !waitingForOther && <IdleCover forHost={!caption} />}
+      {/* Nothing is loaded in the player while waiting, so this covers an empty frame. */}
+      {waitingForOther && (
+        <PlayerCover
+          icon={<Speaker />}
+          title={other ? t.host.otherPlays(other.name && memberName({ displayName: other.name, isDevice: other.isDevice }, t)) : t.host.otherLeft}
+          note={t.host.autoReturn}
+        >
+          <Button size="sm" variant="primary" onClick={takeOver} className="pc-primary">
+            {t.host.moveHere}
+          </Button>
+        </PlayerCover>
+      )}
+    </div>
+  );
+
   return (
     <div className="space-y-2">
-      {caption && !started && <p className="px-1 text-[13px] font-medium text-amber">{t.host.thisDeviceWaits}</p>}
-      <div className="relative aspect-video w-full overflow-hidden rounded-panel bg-dial-deep">
-        <YouTubeAdapter
-          adapterRef={adapterRef}
-          onReady={() => {
-            itemRef.current = null; // a new, empty player: load the current song into it
-            loadedVideo.current = null;
-            setReady((n) => n + 1);
-          }}
-          onPlaying={onPlaying}
-          onPaused={() => void fromVideo('PAUSED')}
-          onEnded={onEnded}
-          onError={onError}
-          onAutoplayBlocked={() => setNeedsTap(true)}
-        />
-        {/* No song in the room: nothing is loaded, and YouTube's own ▶ would only show an error. */}
-        {idle && !waitingForOther && <IdleCover forHost={!caption} />}
-        {/* Nothing is loaded in the player while waiting, so this covers an empty frame. */}
-        {waitingForOther && (
-          <PlayerCover
-            icon={<Speaker />}
-            title={other ? t.host.otherPlays(other.name && memberName({ displayName: other.name, isDevice: other.isDevice }, t)) : t.host.otherLeft}
-            note={t.host.autoReturn}
-          >
-            <Button size="sm" variant="primary" onClick={takeOver} className="pc-primary">
-              {t.host.moveHere}
-            </Button>
-          </PlayerCover>
-        )}
-      </div>
+      {/* Always this wrapper, only its class changes: a theme switch never remounts the iframe. */}
+      <div className={frameClass}>{screen}</div>
       {!started
         ? !waitingForOther && preview && (!previewPlaying || needsTap) && <TapVideoHint text={waitingHint} />
         : needsTap && <TapVideoHint text={t.host.tapVideo} />}

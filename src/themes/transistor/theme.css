@@ -55,7 +55,7 @@ html[data-theme='transistor'] {
   html[data-theme='transistor'] body {
     background: linear-gradient(160deg, #a32628, #7c1a1d) fixed;
   }
-  /* Amber text straight on the red cabinet (the player's caption, the banners' actions)
+  /* Amber text straight on the red cabinet (the hint under the player, the banners' actions)
      is too dim there: a paler amber. !important: text-amber is a utility. */
   html[data-theme='transistor'] .room-stage[data-player] > :first-child > p,
   html[data-theme='transistor'] .room-banners .text-amber {

@@ -55,6 +55,14 @@
   .room-stage[data-player] .stage-title {
     font-size: clamp(28px, 2.1vw, 40px);
   }
+  /* Decor that reaches past the cover (midcentury's sun ~17 % of it, cosmos' orbit ~4 %)
+     stays clear of the video's frame beside it. */
+  html[data-theme='midcentury'] .room-stage[data-player] .stage-now {
+    padding-left: calc(var(--stage-cover) * var(--stage-cover-scale) * 0.17 + 8px);
+  }
+  html[data-theme='cosmos'] .room-stage[data-player] .stage-now {
+    padding-left: calc(var(--stage-cover) * var(--stage-cover-scale) * 0.04 + 10px);
+  }
   /* Transistor's knobs: one row of equal cells, smaller knobs, the labels wrap inside. */
   html[data-theme='transistor'] .room-stage[data-player] .stage-controls[data-variant='knobs'] {
     display: grid;
@@ -140,4 +148,31 @@
     width: 300px;
     height: 300px;
   }
+}
+
+/* Midcentury's sun also rises ~17 % above the cover: room for it under the video's frame
+   (stacked below 1600 px, and beside it). */
+html[data-theme='midcentury'] .room-stage[data-player] .stage-hero {
+  padding-top: calc(var(--stage-cover) * var(--stage-cover-scale) * 0.17 + 8px);
+}
+
+/* This device plays: the theme's speaker-screen frame around the video (ThemeModule.host
+   .videoClass, styled in the theme's host.css). Its sizes are in --u, the speaker canvas's
+   unit; here it follows the window. */
+.room-video-frame {
+  --u: clamp(10px, 0.75vw, 20px);
+  /* Room for the frame's shadow / glow below it (up to ~1.1 u), clear of what follows. */
+  margin-bottom: calc(var(--u) * 1.2);
+}
+/* Midcentury's offset shadow is the page colour on the room page: the sun's yellow instead. */
+html[data-theme='midcentury'] .room-video-frame.hm-video > * {
+  box-shadow: calc(var(--u) * 1.1) calc(var(--u) * 1.1) 0 #e5b53e;
+}
+/* Cassette's speaker frame applies inside the speaker screen only: a dark tape-shell edge
+   with a cream line, so it shows on the room page's dark wood. */
+html[data-theme='cassette'] .room-video-frame.hc-video > * {
+  border-radius: calc(var(--u) * 0.3);
+  box-shadow:
+    0 0 0 calc(var(--u) * 0.4) #1c1612,
+    0 0 0 calc(var(--u) * 0.4 + 2px) #d9cbb4;
 }
