@@ -444,6 +444,7 @@ export const vi = {
     grantDj: 'Cho dùng DJ',
     revokeDj: 'Bỏ quyền DJ',
     makePlayer: 'Đặt làm máy phát',
+    stopPlayer: 'Thôi làm máy phát',
     grantAdmin: 'Cấp quyền quản trị',
     revokeAdmin: 'Bỏ quyền quản trị',
     kick: 'Mời ra khỏi phòng',
