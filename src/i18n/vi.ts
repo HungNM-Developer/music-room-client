@@ -1,6 +1,6 @@
 // Every user-facing Vietnamese string lives here (requirements §2.6–2.7). `en.ts` has the
 // same shape (type `Dict` in ./index); read them through `useT()` / `tr()`.
-import type { DjSound, ErrorCode, ErrorParams, VoicePreset } from '@/contracts';
+import type { DjSound, ErrorCode, ErrorParams } from '@/contracts';
 import { formatDuration } from '@/lib/duration';
 
 export type ClientErrorCode = ErrorCode | 'NETWORK';
@@ -419,15 +419,10 @@ export const vi = {
     voice: 'Giọng đọc',
     save: 'Lưu lời chúc',
     clear: 'Xóa lời chúc',
-    note: 'Loa đọc lời chúc ngay trước khi bài của bạn phát.',
-    voices: {
-      radio: 'MC đài',
-      drama: 'Kịch tính',
-      baby: 'Em bé',
-      panic: 'Hoảng hốt',
-      chipmunk: 'Sóc chuột',
-      sleepy: 'Buồn ngủ',
-    } satisfies Record<VoicePreset, string>,
+    note: 'Loa đọc lời chúc bằng giọng bạn chọn ngay trước khi bài của bạn phát.',
+    voiceMale: 'Giọng nam',
+    voiceFemale: 'Giọng nữ',
+    pickVoice: 'Chọn giọng đọc',
   },
 
   people: {

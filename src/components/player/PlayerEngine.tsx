@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import YouTube, { type YouTubeEvent, type YouTubePlayer } from 'react-youtube';
 import { Hand } from 'lucide-react';
-import type { PlayerCommand, VoicePreset } from '@/contracts';
+import type { PlayerCommand } from '@/contracts';
 import { PLAYER_ERROR_CODES } from '@/contracts/constants';
 import { PLAYER_PROGRESS_INTERVAL_MS } from '@/contracts/events';
 import { useT } from '@/i18n';
 import { memberName } from '@/i18n/activity';
+import { legacySpeech, playSpeech, stopSpeech } from '@/lib/speech';
 import { estimatePosition } from '@/lib/time';
 import { Button } from '@/components/ui/Button';
 import { HOST_RECLAIM_MS, useMe, useOtherLivePlayer, useRoom } from '@/state/hooks';
@@ -28,15 +29,6 @@ export interface PlayerAdapter {
 export const DRIFT_SEC = 2.5;
 
 export const DUCK_VOLUME = 20; // R-34
-
-const VOICE: Record<VoicePreset, { pitch: number; rate: number }> = {
-  radio: { pitch: 0.9, rate: 1.2 },
-  drama: { pitch: 1.6, rate: 0.8 },
-  baby: { pitch: 2.0, rate: 1.1 },
-  panic: { pitch: 1.7, rate: 2.0 },
-  chipmunk: { pitch: 1.9, rate: 1.3 },
-  sleepy: { pitch: 0.8, rate: 0.5 },
-};
 
 export const DJ_FILES: Record<string, string> = {
   build: '/sounds/build.m4a',
@@ -68,30 +60,6 @@ export function playDj(src: string): void {
   a.volume = 0.8;
   a.currentTime = 0;
   a.play().catch(() => console.warn('[player] DJ sound blocked'));
-}
-
-/** Chrome may garbage-collect a pending utterance and never fire onend; keep a reference. */
-let currentUtterance: SpeechSynthesisUtterance | null = null;
-
-/** Reads the wish aloud on the speaker (R-34) and on "Nghe cùng" devices. Returns false when TTS is unavailable. */
-export function speak(text: string, preset: VoicePreset | null, onDone: () => void): boolean {
-  if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-    console.warn('[player] speechSynthesis not supported — wish skipped');
-    return false;
-  }
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'vi-VN';
-  const viVoice = window.speechSynthesis.getVoices().find((v) => v.lang.startsWith('vi'));
-  if (viVoice) u.voice = viVoice;
-  const cfg = VOICE[preset ?? 'radio'];
-  u.pitch = cfg.pitch;
-  u.rate = cfg.rate;
-  u.onend = onDone;
-  u.onerror = onDone;
-  currentUtterance = u;
-  window.speechSynthesis.speak(u);
-  return currentUtterance !== null;
 }
 
 /** `caption`: a line above the video saying this device is the room's speaker (room page). */
@@ -230,10 +198,9 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
       const resume = wantResume.current && playerCommand.status === 'PAUSED';
       wantResume.current = false;
       const autoplay = playerCommand.status === 'PLAYING' || resume;
-      // A wish first; otherwise the MC's line (AI3), read in the radio voice.
-      const wish =
-        playerCommand.wish ??
-        (playerCommand.intro ? { message: playerCommand.intro, voicePreset: 'radio' as const } : null);
+      // A wish first; otherwise the MC's line (AI3). An older server sends only the text.
+      const speech = playerCommand.speech ?? legacySpeech(playerCommand.wish?.message ?? playerCommand.intro);
+      stopSpeech();
       const s = a.state();
       if (loadedVideo.current === playerCommand.videoId && (s === 1 || s === 3)) {
         // This song already plays here: keep it, only line it up with the room.
@@ -252,15 +219,15 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
           () => room.send('playback:control', { action: 'play', queueItemId: itemId }),
         );
       }
-      if (wish && autoplay && expected < 3) {
+      if (speech && autoplay && expected < 3) {
         const restore = () => {
           if (duckTimer.current) clearTimeout(duckTimer.current);
           a.setVolume(volumeRef.current);
         };
-        if (speak(wish.message, wish.voicePreset, restore)) {
+        if (playSpeech(speech, volumeRef.current, restore)) {
           a.setVolume(DUCK_VOLUME);
-          // Safety net if the browser never fires onend: ~150 ms per character, at least 8 s.
-          duckTimer.current = setTimeout(restore, Math.max(8000, wish.message.length * 150));
+          // Safety net if neither the audio nor the browser voice reports the end: ~150 ms per character, at least 8 s.
+          duckTimer.current = setTimeout(restore, Math.max(8000, speech.text.length * 150));
         }
       }
       return;
