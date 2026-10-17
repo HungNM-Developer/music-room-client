@@ -47,3 +47,16 @@ export function RoomRuntime() {
   useEffect(() => room.start(), []);
   return null;
 }
+
+/** A /host page waiting on another speaker takes over this long after that one went offline. */
+export const HOST_RECLAIM_MS = 15000;
+
+/** Another member or device is the room's speaker and is online right now: its id and name. */
+export function useOtherLivePlayer(): { id: string; name: string } | null {
+  const id = useRoom((s) => {
+    const p = s.snapshot?.player;
+    return p?.online && p.memberId && p.memberId !== s.memberId ? p.memberId : null;
+  });
+  const name = useRoom((s) => (id ? (s.snapshot?.members.find((m) => m.id === id)?.displayName ?? '') : ''));
+  return id ? { id, name } : null;
+}
