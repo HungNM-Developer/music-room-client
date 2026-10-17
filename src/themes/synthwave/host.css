@@ -1,0 +1,213 @@
+/* Speaker screen · Synthwave 80s: a striped sun sinking into a neon grid behind the screen, the
+   video in a hot-pink frame, the title in chrome italics, three cyan neon panels on the right
+   (QR, next, people + chat). Sizes in --u. */
+html[data-theme='synthwave'] .host-synthwave {
+  color: #fbe9ff;
+}
+html[data-theme='synthwave'] .hy-video > * {
+  border-radius: calc(var(--u) * 0.4);
+  overflow: hidden;
+  box-shadow:
+    0 0 0 calc(var(--u) * 0.25) #ff3ea5,
+    0 0 calc(var(--u) * 2.2) #ff3ea5aa;
+}
+html[data-theme='synthwave'] .host-synthwave .host-title {
+  padding-right: 0.1em; /* italic overhang */
+  background: linear-gradient(180deg, #fff 0%, #ffd23f 45%, #ff3ea5 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font: italic 900 calc(var(--u) * 2.5) / 1.02 var(--font-exo2);
+  filter: drop-shadow(0 0 calc(var(--u) * 0.5) #ff3ea566);
+}
+html[data-theme='synthwave'] .host-synthwave .host-meta {
+  color: #c4a3e3;
+}
+html[data-theme='synthwave'] .host-synthwave .host-lamp {
+  font-family: var(--font-exo2);
+  font-style: italic;
+  font-weight: 800;
+}
+html[data-theme='synthwave'] .host-synthwave .host-code {
+  color: #ff3ea5;
+  font: italic 900 calc(var(--u) * 3.2) / 1 var(--font-exo2);
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 calc(var(--u) * 0.8) #ff3ea5;
+}
+
+/* Left. */
+html[data-theme='synthwave'] .hy-now {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: start;
+  gap: calc(var(--u) * 0.35);
+  padding-top: calc(var(--u) * 0.9);
+  /* Keeps text readable over the grid lines. */
+  text-shadow: 0 0 calc(var(--u) * 0.4) #140428, 0 0 calc(var(--u) * 0.8) #140428;
+}
+html[data-theme='synthwave'] .hy-now .host-title {
+  text-shadow: none;
+}
+html[data-theme='synthwave'] .hy-now > :not(.host-lamp) {
+  justify-self: stretch;
+}
+html[data-theme='synthwave'] .host-synthwave .line-dial[data-variant='neon'] {
+  margin: calc(var(--u) * 0.2) 0;
+  gap: calc(var(--u) * 0.8);
+  font-size: calc(var(--u) * 1.3);
+}
+html[data-theme='synthwave'] .host-synthwave .line-dial[data-variant='neon'] .line-dial-track {
+  height: calc(var(--u) * 0.4);
+}
+html[data-theme='synthwave'] .host-synthwave .lyrics-inline p {
+  color: #c4a3e3;
+}
+html[data-theme='synthwave'] .host-synthwave .lyrics-inline p[data-current] {
+  color: #29e7ff;
+  font-family: var(--font-exo2);
+  font-style: italic;
+  font-weight: 800;
+  text-shadow: 0 0 calc(var(--u) * 0.6) #29e7ff88;
+}
+html[data-theme='synthwave'] .host-synthwave .lyrics-source {
+  color: #c4a3e3aa;
+}
+html[data-theme='synthwave'] .hy-wish {
+  padding-left: calc(var(--u) * 1);
+  border-left: calc(var(--u) * 0.3) solid #ff3ea5;
+}
+html[data-theme='synthwave'] .hy-wish blockquote {
+  font-style: italic;
+}
+html[data-theme='synthwave'] .hy-wish figcaption {
+  color: #c4a3e3;
+}
+
+/* Right: cyan neon panels. */
+html[data-theme='synthwave'] .hy-side {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: calc(var(--u) * 1.2);
+}
+html[data-theme='synthwave'] .hy-frame {
+  padding: calc(var(--u) * 1) calc(var(--u) * 1.2);
+  border: calc(var(--u) * 0.22) solid #29e7ff;
+  border-radius: calc(var(--u) * 0.6);
+  background: #140428cc;
+  box-shadow:
+    0 0 calc(var(--u) * 1.2) #29e7ff77,
+    inset 0 0 calc(var(--u) * 1) #29e7ff33;
+}
+html[data-theme='synthwave'] .hy-frame h2 {
+  margin-bottom: calc(var(--u) * 0.4);
+  color: #ff3ea5;
+  font: italic 800 calc(var(--u) * 1.25) var(--font-exo2);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+html[data-theme='synthwave'] .hy-qr {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.4);
+}
+html[data-theme='synthwave'] .hy-qr .host-link {
+  margin-top: calc(var(--u) * 0.4);
+  color: #c4a3e3;
+}
+html[data-theme='synthwave'] .hy-next li {
+  display: grid;
+  grid-template-columns: calc(var(--u) * 2.4) minmax(0, 1fr) minmax(0, 32%);
+  gap: calc(var(--u) * 0.8);
+  padding: calc(var(--u) * 0.25) 0;
+  font-size: calc(var(--u) * 1.3);
+}
+html[data-theme='synthwave'] .hy-next li b {
+  color: #29e7ff;
+  font: italic 800 1em var(--font-exo2);
+}
+html[data-theme='synthwave'] .hy-next li span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-theme='synthwave'] .hy-next li .p {
+  color: #c4a3e3;
+}
+html[data-theme='synthwave'] .hy-next .host-next-empty,
+html[data-theme='synthwave'] .hy-people .host-chat-empty {
+  color: #c4a3e3;
+}
+html[data-theme='synthwave'] .hy-people {
+  display: grid;
+  gap: calc(var(--u) * 0.6);
+}
+html[data-theme='synthwave'] .hy-people .host-chat-name {
+  color: #ff3ea5;
+}
+html[data-theme='synthwave'] .hy-people .host-listeners {
+  color: #c4a3e3;
+}
+html[data-theme='synthwave'] .hy-people .host-faces i {
+  box-shadow: 0 0 0 calc(var(--u) * 0.18) #140428;
+}
+html[data-theme='synthwave'] .hy-people input {
+  accent-color: #ff3ea5;
+}
+
+/* One column: the QR panel may wrap. */
+html[data-theme='synthwave'] .hy-qr {
+  flex-wrap: wrap;
+}
+
+@media (min-width: 960px) and (min-height: 540px) {
+  html[data-theme='synthwave'] .host-synthwave .host-grid {
+    grid-template-columns: calc(var(--u) * 2.4) calc(var(--u) * 51) calc(var(--u) * 2.8) minmax(0, 1fr) calc(var(--u) * 2.4);
+    grid-template-rows: calc(var(--u) * 2.2) auto minmax(0, 1fr) calc(var(--u) * 1.6);
+    grid-template-areas:
+      '. . . . .'
+      '. video . side .'
+      '. below . side .'
+      '. . . . .';
+  }
+  html[data-theme='synthwave'] .hy-qr {
+    flex-wrap: nowrap;
+  }
+  /* The sun between the columns, sinking into the horizon grid. */
+  html[data-theme='synthwave'] .host-synthwave .host-frame::before,
+  html[data-theme='synthwave'] .host-synthwave .host-frame::after {
+    content: '';
+    position: absolute;
+    pointer-events: none;
+  }
+  html[data-theme='synthwave'] .host-synthwave .host-frame::before {
+    left: 64%;
+    top: 30%;
+    width: 24%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(#ffd23f, #ff3ea5 70%);
+    opacity: 0.8;
+    -webkit-mask: linear-gradient(#000, #000) top / 100% 50% no-repeat, repeating-linear-gradient(#000 0 7%, #0000 7% 10%) bottom / 100% 50% no-repeat;
+    mask: linear-gradient(#000, #000) top / 100% 50% no-repeat, repeating-linear-gradient(#000 0 7%, #0000 7% 10%) bottom / 100% 50% no-repeat;
+  }
+  html[data-theme='synthwave'] .host-synthwave .host-frame::after {
+    left: -25%;
+    right: -25%;
+    bottom: -6%;
+    height: 48%;
+    background:
+      repeating-linear-gradient(90deg, #ff3ea540 0 calc(var(--u) * 0.12), #0000 0 calc(var(--u) * 5)),
+      repeating-linear-gradient(#ff3ea540 0 calc(var(--u) * 0.12), #0000 0 calc(var(--u) * 3)),
+      linear-gradient(#2b0f52, #140428);
+    transform: perspective(calc(var(--u) * 30)) rotateX(58deg);
+    transform-origin: top;
+  }
+  html[data-theme='synthwave'] .host-synthwave .host-frame {
+    overflow: hidden;
+  }
+  html[data-theme='synthwave'] .host-synthwave .host-grid {
+    z-index: 1;
+  }
+}

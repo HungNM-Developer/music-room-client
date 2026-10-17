@@ -1,0 +1,233 @@
+/* Speaker screen · Tủ hi-fi gỗ óc chó: a walnut cabinet. The video in a TV with a brass bezel,
+   the deck under it (spinning platter, the song, the VU meter as the time), the QR engraved on a
+   brass plate, the next songs as a stack of sleeves, the guest book. Sizes in --u. */
+html[data-theme='walnut'] .host-walnut {
+  background: repeating-linear-gradient(92deg, #3a2414 0 0.6vw, #2f1d12 0 1.1vw, #43291a 0 1.5vw);
+  color: #ece3cf;
+}
+html[data-theme='walnut'] .hw-bezel {
+  padding: calc(var(--u) * 0.8);
+  border-radius: calc(var(--u) * 1.1);
+  background: #120b06;
+  box-shadow:
+    inset 0 0 0 calc(var(--u) * 0.28) #b8954f,
+    0 calc(var(--u) * 0.5) calc(var(--u) * 1) #0008;
+}
+html[data-theme='walnut'] .hw-bezel > * {
+  border-radius: calc(var(--u) * 0.3);
+  overflow: hidden;
+}
+
+/* The deck. */
+html[data-theme='walnut'] .hw-now {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: calc(var(--u) * 0.6);
+  padding-top: calc(var(--u) * 0.7);
+}
+html[data-theme='walnut'] .hw-deck {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: calc(var(--u) * 1.3);
+  padding: calc(var(--u) * 0.9) calc(var(--u) * 1.3);
+  border-radius: calc(var(--u) * 1);
+  background: #1a110a;
+  box-shadow: inset 0 0 0 calc(var(--u) * 0.15) #4a3322;
+}
+html[data-theme='walnut'] .host-walnut .hw-tt {
+  width: calc(var(--u) * 7.6);
+  height: calc(var(--u) * 7.6);
+}
+html[data-theme='walnut'] .host-walnut .hw-tt .label {
+  box-shadow: 0 0 0 calc(var(--u) * 0.25) #c99a3c;
+}
+html[data-theme='walnut'] .host-walnut .hw-tt .arm {
+  width: calc(var(--u) * 0.5);
+}
+html[data-theme='walnut'] .hw-info {
+  display: grid;
+  justify-items: start;
+  gap: calc(var(--u) * 0.3);
+  min-width: 0;
+}
+html[data-theme='walnut'] .host-walnut .host-title {
+  font: italic 600 calc(var(--u) * 2.4) / 1.05 var(--font-fraunces);
+  justify-self: stretch;
+}
+html[data-theme='walnut'] .host-walnut .host-meta {
+  color: #e8c674;
+  justify-self: stretch;
+}
+html[data-theme='walnut'] .host-walnut .wal-vu {
+  width: calc(var(--u) * 10);
+  margin: 0;
+  padding: calc(var(--u) * 0.6) calc(var(--u) * 0.8) calc(var(--u) * 0.5);
+  border-radius: calc(var(--u) * 0.7);
+  box-shadow:
+    inset 0 0 0 calc(var(--u) * 0.25) #b8954f,
+    inset 0 calc(var(--u) * 0.2) calc(var(--u) * 0.5) #0005;
+}
+html[data-theme='walnut'] .host-walnut .wal-vu .scale {
+  height: calc(var(--u) * 3.2);
+  background: repeating-linear-gradient(90deg, #1d140c 0 calc(var(--u) * 0.08), #0000 calc(var(--u) * 0.08) calc(var(--u) * 0.9));
+}
+html[data-theme='walnut'] .host-walnut .wal-vu .t {
+  margin-top: calc(var(--u) * 0.3);
+  font-size: calc(var(--u) * 1.15);
+}
+html[data-theme='walnut'] .host-walnut .lyrics-inline p {
+  color: #cdbf9f;
+}
+html[data-theme='walnut'] .host-walnut .lyrics-inline p[data-current] {
+  color: #ece3cf;
+  font-family: var(--font-fraunces);
+  font-style: italic;
+}
+html[data-theme='walnut'] .hw-wish {
+  padding-left: calc(var(--u) * 1);
+  border-left: calc(var(--u) * 0.3) solid #e8c674;
+}
+html[data-theme='walnut'] .hw-wish blockquote {
+  font-family: var(--font-fraunces);
+  font-style: italic;
+}
+html[data-theme='walnut'] .hw-wish figcaption {
+  color: #cdbf9f;
+}
+
+/* The shelf. */
+html[data-theme='walnut'] .hw-side {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: calc(var(--u) * 1.2);
+}
+html[data-theme='walnut'] .hw-plate {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.4);
+  padding: calc(var(--u) * 1.1);
+  border-radius: calc(var(--u) * 0.8);
+  background: linear-gradient(135deg, #e8c674, #b8954f 60%, #e8c674);
+  color: #2a1a0a;
+  box-shadow: 0 calc(var(--u) * 0.4) calc(var(--u) * 0.8) #0007;
+}
+html[data-theme='walnut'] .hw-plate .host-qr-code {
+  padding: calc(var(--u) * 0.3);
+  background: #fff;
+  box-sizing: content-box;
+}
+html[data-theme='walnut'] .hw-plate-text {
+  min-width: 0;
+}
+html[data-theme='walnut'] .hw-scan {
+  font: italic 600 calc(var(--u) * 1.55) var(--font-fraunces);
+}
+html[data-theme='walnut'] .hw-plate .host-code {
+  margin: calc(var(--u) * 0.4) 0;
+  font: 600 calc(var(--u) * 3.2) / 1 var(--font-fraunces);
+  letter-spacing: 0.06em;
+}
+html[data-theme='walnut'] .hw-plate .host-link {
+  color: #2a1a0a;
+}
+html[data-theme='walnut'] .hw-crate {
+  padding: calc(var(--u) * 0.9) calc(var(--u) * 1.2);
+  border-radius: calc(var(--u) * 0.8);
+  background: #1a110a;
+  box-shadow: inset 0 0 0 calc(var(--u) * 0.15) #4a3322;
+}
+html[data-theme='walnut'] .hw-crate h2 {
+  margin-bottom: calc(var(--u) * 0.6);
+  color: #e8c674;
+  font: italic 600 calc(var(--u) * 1.5) var(--font-fraunces);
+}
+html[data-theme='walnut'] .hw-crate ol {
+  display: grid;
+  gap: calc(var(--u) * 0.7);
+}
+html[data-theme='walnut'] .hw-crate li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: calc(var(--u) * 1);
+}
+html[data-theme='walnut'] .hw-sleeve {
+  width: calc(var(--u) * 3.4);
+  height: calc(var(--u) * 3.4);
+  border-radius: calc(var(--u) * 0.15);
+  box-shadow:
+    calc(var(--u) * 0.25) calc(var(--u) * -0.25) 0 #0006,
+    calc(var(--u) * 0.5) calc(var(--u) * -0.5) 0 #111;
+}
+html[data-theme='walnut'] .hw-q {
+  display: grid;
+  min-width: 0;
+}
+html[data-theme='walnut'] .hw-q span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-theme='walnut'] .hw-q .t {
+  font-size: calc(var(--u) * 1.3);
+}
+html[data-theme='walnut'] .hw-q .p {
+  color: #cdbf9f;
+  font-size: calc(var(--u) * 1.1);
+}
+html[data-theme='walnut'] .hw-crate .host-next-empty {
+  color: #cdbf9f;
+}
+html[data-theme='walnut'] .hw-book {
+  display: grid;
+  gap: calc(var(--u) * 0.6);
+  padding: calc(var(--u) * 0.9) calc(var(--u) * 1.1);
+  border-radius: calc(var(--u) * 0.6);
+  background: #ece3cf;
+  color: #2a1a0a;
+}
+html[data-theme='walnut'] .hw-book .host-listeners,
+html[data-theme='walnut'] .hw-book .host-volume,
+html[data-theme='walnut'] .hw-book .host-chat-empty {
+  color: #5c4630;
+}
+html[data-theme='walnut'] .hw-book .host-faces i {
+  box-shadow: 0 0 0 calc(var(--u) * 0.18) #ece3cf;
+}
+html[data-theme='walnut'] .hw-book .host-listeners-text svg {
+  color: #a3262a;
+}
+html[data-theme='walnut'] .hw-book .host-controls button {
+  color: #5c4630;
+}
+html[data-theme='walnut'] .hw-book input {
+  accent-color: #8a5a2b;
+}
+
+/* One column: the deck may wrap. */
+html[data-theme='walnut'] .host-walnut .hw-deck {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+html[data-theme='walnut'] .host-walnut .hw-plate {
+  flex-wrap: wrap;
+}
+
+@media (min-width: 960px) and (min-height: 540px) {
+  html[data-theme='walnut'] .host-walnut .host-grid {
+    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 51) calc(var(--u) * 2.4) minmax(0, 1fr) calc(var(--u) * 2);
+    grid-template-rows: calc(var(--u) * 1.8) auto minmax(0, 1fr) calc(var(--u) * 1.4);
+    grid-template-areas:
+      '. . . . .'
+      '. video . side .'
+      '. below . side .'
+      '. . . . .';
+  }
+  html[data-theme='walnut'] .host-walnut .hw-deck {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  html[data-theme='walnut'] .host-walnut .hw-plate {
+    flex-wrap: nowrap;
+  }
+}

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import YouTube, { type YouTubeEvent, type YouTubePlayer } from 'react-youtube';
-import { Hand } from 'lucide-react';
+import { Hand, Speaker } from 'lucide-react';
 import type { PlayerCommand } from '@/contracts';
 import { PLAYER_ERROR_CODES } from '@/contracts/constants';
 import { PLAYER_PROGRESS_INTERVAL_MS } from '@/contracts/events';
@@ -10,6 +10,7 @@ import { useT } from '@/i18n';
 import { memberName } from '@/i18n/activity';
 import { legacySpeech, SpeechCue } from '@/lib/speech';
 import { IdleCover } from './IdleCover';
+import { PlayerCover } from './PlayerCover';
 import { estimatePosition } from '@/lib/time';
 import { Button } from '@/components/ui/Button';
 import { HOST_RECLAIM_MS, useMe, useOtherLivePlayer, useRoom } from '@/state/hooks';
@@ -464,13 +465,15 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
         {idle && !waitingForOther && <IdleCover forHost={!caption} />}
         {/* Nothing is loaded in the player while waiting, so this covers an empty frame. */}
         {waitingForOther && (
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-dial-deep p-6 text-center">
-            <p className="max-w-md text-[18px]">{other ? t.host.otherPlays(other.name && memberName({ displayName: other.name, isDevice: other.isDevice }, t)) : t.host.otherLeft}</p>
-            <Button variant="primary" onClick={takeOver}>
+          <PlayerCover
+            icon={<Speaker />}
+            title={other ? t.host.otherPlays(other.name && memberName({ displayName: other.name, isDevice: other.isDevice }, t)) : t.host.otherLeft}
+            note={t.host.autoReturn}
+          >
+            <Button size="sm" variant="primary" onClick={takeOver} className="pc-primary">
               {t.host.moveHere}
             </Button>
-            <p className="max-w-md text-[14px] text-sage">{t.host.autoReturn}</p>
-          </div>
+          </PlayerCover>
         )}
       </div>
       {!started

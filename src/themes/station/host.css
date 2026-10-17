@@ -1,0 +1,353 @@
+/* Speaker screen · Bảng giờ tàu: the station hall. Flap header with the clock, the video and the
+   song on the left, the boarding pass (QR) and the departures board on the right, chat running
+   along the bottom like announcements. Sizes in --u (see components/host/host.css). */
+html[data-theme='station'] .host-station {
+  background: #0f1d17;
+  color: #f2efe6;
+}
+html[data-theme='station'] .host-station .host-title {
+  font: 700 calc(var(--u) * 2.4) / 1 var(--font-barlow-condensed);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+html[data-theme='station'] .host-station .host-code {
+  font-family: var(--font-barlow-condensed);
+  font-weight: 700;
+}
+html[data-theme='station'] .host-station .host-lamp {
+  border-radius: 0;
+  font-family: var(--font-barlow-condensed);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Header: room name and code on flaps, the clock. */
+html[data-theme='station'] .hs-head {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.4);
+  height: 100%;
+  padding: 0 calc(var(--u) * 2);
+  background: #0a1410;
+  border-bottom: calc(var(--u) * 0.25) solid #ffb23f;
+}
+html[data-theme='station'] .hs-head .st-flaps {
+  gap: calc(var(--u) * 0.2);
+  min-width: 0;
+  overflow: hidden;
+}
+html[data-theme='station'] .hs-head .st-flaps i {
+  width: calc(var(--u) * 1.75);
+  height: calc(var(--u) * 2.5);
+  border-radius: calc(var(--u) * 0.2);
+  font-size: calc(var(--u) * 1.8);
+  color: #ffb23f;
+}
+html[data-theme='station'] .hs-head .hs-name i {
+  width: calc(var(--u) * 1.3);
+  height: calc(var(--u) * 2.1);
+  font-size: calc(var(--u) * 1.35);
+  color: #f2efe6;
+}
+html[data-theme='station'] .hs-grow {
+  flex: 1;
+}
+html[data-theme='station'] .hs-head .st-clock {
+  margin: 0;
+  font-size: calc(var(--u) * 2.8);
+  line-height: 1;
+}
+
+/* Left: the song. */
+html[data-theme='station'] .hs-now {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: calc(var(--u) * 0.2);
+  padding-top: calc(var(--u) * 0.4);
+}
+html[data-theme='station'] .hs-row {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1);
+}
+html[data-theme='station'] .hs-platform {
+  color: #b9c4bd;
+  font: 700 calc(var(--u) * 1.15) var(--font-barlow-condensed);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+html[data-theme='station'] .hs-meta-row {
+  display: grid;
+  gap: calc(var(--u) * 0.2);
+  min-width: 0;
+}
+html[data-theme='station'] .hs-meta-row .host-meta {
+  color: #b9c4bd;
+}
+html[data-theme='station'] .hs-wish {
+  min-width: 0;
+  color: #ffb23f;
+}
+html[data-theme='station'] .hs-wish blockquote {
+  display: block;
+  overflow: hidden;
+  font-size: calc(var(--u) * 1.25);
+  font-style: italic;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-theme='station'] .hs-wish blockquote::before {
+  content: '“';
+}
+html[data-theme='station'] .hs-wish blockquote::after {
+  content: '”';
+}
+/* The platform line with its times on the same row. */
+html[data-theme='station'] .hs-now .st-track-wrap {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: calc(var(--u) * 1);
+  margin: 0;
+}
+html[data-theme='station'] .hs-now .st-times {
+  display: contents;
+  font-size: calc(var(--u) * 1.3);
+}
+html[data-theme='station'] .hs-now .st-times > :first-child {
+  order: -1;
+}
+html[data-theme='station'] .hs-now .st-track {
+  height: calc(var(--u) * 0.7);
+}
+html[data-theme='station'] .hs-now .st-track b {
+  top: calc(var(--u) * -0.35);
+  width: calc(var(--u) * 0.3);
+  height: calc(var(--u) * 1.4);
+}
+html[data-theme='station'] .host-station .lyrics-inline p {
+  color: #9fb0a7;
+}
+html[data-theme='station'] .host-station .lyrics-inline p[data-current] {
+  color: #ffb23f;
+  font-family: var(--font-barlow-condensed);
+  font-weight: 700;
+}
+
+/* Right: boarding pass, departures, passengers. */
+html[data-theme='station'] .hs-side {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: calc(var(--u) * 1.3);
+}
+html[data-theme='station'] .hs-ticket {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.6);
+  padding: calc(var(--u) * 1.2) calc(var(--u) * 1.6);
+  background: #f2efe6;
+  color: #0f1d17;
+}
+/* The ticket's punched notches. */
+html[data-theme='station'] .hs-ticket::before,
+html[data-theme='station'] .hs-ticket::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: calc(var(--u) * 1.6);
+  height: calc(var(--u) * 1.6);
+  border-radius: 50%;
+  background: #0f1d17;
+  transform: translateY(-50%);
+}
+html[data-theme='station'] .hs-ticket::before {
+  left: calc(var(--u) * -0.8);
+}
+html[data-theme='station'] .hs-ticket::after {
+  right: calc(var(--u) * -0.8);
+}
+html[data-theme='station'] .hs-ticket-text {
+  min-width: 0;
+}
+html[data-theme='station'] .hs-ticket h2 {
+  font: 700 calc(var(--u) * 1.2) var(--font-barlow-condensed);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+html[data-theme='station'] .hs-scan {
+  margin: calc(var(--u) * 0.2) 0 calc(var(--u) * 0.5);
+  font-size: calc(var(--u) * 1.3);
+}
+html[data-theme='station'] .hs-ticket .host-code {
+  font-size: calc(var(--u) * 3.6);
+}
+html[data-theme='station'] .hs-ticket .host-link {
+  margin-top: calc(var(--u) * 0.4);
+  color: #0f1d17bf;
+}
+html[data-theme='station'] .hs-board {
+  padding: calc(var(--u) * 0.9) calc(var(--u) * 1.2);
+  background: #0a1410;
+  border: calc(var(--u) * 0.15) solid #2c3b33;
+}
+html[data-theme='station'] .hs-board h2 {
+  margin-bottom: calc(var(--u) * 0.4);
+  color: #ffb23f;
+  font: 700 calc(var(--u) * 1.4) var(--font-barlow-condensed);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+html[data-theme='station'] .hs-board li {
+  display: grid;
+  grid-template-columns: calc(var(--u) * 5) minmax(0, 1fr) minmax(0, 30%);
+  gap: calc(var(--u) * 1);
+  padding: calc(var(--u) * 0.5) 0;
+  border-top: calc(var(--u) * 0.1) solid #2c3b33;
+  font: 600 calc(var(--u) * 1.45) / 1.2 var(--font-barlow-condensed);
+}
+html[data-theme='station'] .hs-board li b {
+  color: #ffb23f;
+  font-variant-numeric: tabular-nums;
+}
+html[data-theme='station'] .hs-board li span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-theme='station'] .hs-board li .p {
+  color: #b9c4bd;
+}
+html[data-theme='station'] .hs-board .host-next-empty {
+  color: #b9c4bd;
+}
+html[data-theme='station'] .hs-pax {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1);
+  color: #b9c4bd;
+  font: 700 calc(var(--u) * 1.15) var(--font-barlow-condensed);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+html[data-theme='station'] .hs-pax .host-listeners {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* Bottom: the announcement strip, volume and language at its end. */
+html[data-theme='station'] .hs-foot {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  background: #ffb23f;
+  color: #0f1d17;
+}
+html[data-theme='station'] .hs-ticker {
+  flex: 1;
+  min-width: 0;
+  padding: 0 calc(var(--u) * 2);
+  font-size: calc(var(--u) * 1.4);
+}
+/* The chat lines: hidden from view (screen readers only) unless motion is reduced. */
+html[data-theme='station'] .hs-still {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme='station'] .hs-ticker {
+    display: none;
+  }
+  /* The 3 newest messages, still, on one line. */
+  html[data-theme='station'] .hs-foot .hs-still {
+    position: static;
+    flex: 1;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    padding: 0 calc(var(--u) * 2);
+    clip-path: none;
+    font-size: calc(var(--u) * 1.3);
+    font-weight: 600;
+  }
+  html[data-theme='station'] .hs-foot .hs-still ol {
+    display: flex;
+    gap: calc(var(--u) * 1.6);
+    overflow: hidden;
+  }
+  html[data-theme='station'] .hs-foot .hs-still li {
+    display: block;
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+html[data-theme='station'] .hs-ctl {
+  flex: none;
+  flex-wrap: nowrap;
+  padding: 0 calc(var(--u) * 1.6);
+  border-left: calc(var(--u) * 0.15) solid #0f1d1755;
+  color: #0f1d17;
+}
+html[data-theme='station'] .hs-ctl .host-volume,
+html[data-theme='station'] .hs-ctl button {
+  color: #0f1d17;
+}
+html[data-theme='station'] .hs-ctl .host-volume {
+  width: calc(var(--u) * 20);
+}
+html[data-theme='station'] .hs-ctl input {
+  accent-color: #0f1d17;
+}
+
+/* One column (small screens). */
+html[data-theme='station'] .host-station .hs-head .hs-name {
+  max-width: 100%;
+}
+html[data-theme='station'] .host-station .hs-head {
+  flex-wrap: wrap;
+  padding: calc(var(--u) * 0.8) calc(var(--u) * 1.2);
+}
+html[data-theme='station'] .host-station .hs-foot {
+  flex-wrap: wrap;
+  padding: calc(var(--u) * 0.6) 0;
+}
+html[data-theme='station'] .host-station .hs-ticket {
+  flex-wrap: wrap;
+}
+
+@media (min-width: 960px) and (min-height: 540px) {
+  html[data-theme='station'] .host-station .host-grid {
+    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 46) calc(var(--u) * 2.4) minmax(0, 1fr) calc(var(--u) * 2);
+    grid-template-rows: calc(var(--u) * 4.6) calc(var(--u) * 0.5) auto minmax(0, 1fr) calc(var(--u) * 0.3) calc(var(--u) * 3.4);
+    grid-template-areas:
+      'header header header header header'
+      '. . . . .'
+      '. video . side .'
+      '. below . side .'
+      '. . . . .'
+      'footer footer footer footer footer';
+  }
+  html[data-theme='station'] .host-station .hs-head {
+    flex-wrap: nowrap;
+    padding: 0 calc(var(--u) * 2);
+  }
+  html[data-theme='station'] .host-station .hs-foot {
+    flex-wrap: nowrap;
+    padding: 0;
+  }
+  html[data-theme='station'] .host-station .hs-ticket {
+    flex-wrap: nowrap;
+  }
+  html[data-theme='station'] .host-station .host-side {
+    overflow: hidden;
+  }
+}

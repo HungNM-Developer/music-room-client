@@ -2,7 +2,7 @@
 
 import { Mail, MoreHorizontal, Pin, Plus } from 'lucide-react';
 import { ListenAlong, ListenersStrip } from '@/components/player/ListenAlong';
-import { InlineLyrics, LyricsButton } from '@/components/room/Lyrics';
+import { HostLyrics, InlineLyrics, LyricsButton } from '@/components/room/Lyrics';
 import { HeartButton, hasItemMenu, useQueueView } from '@/components/room/QueueList';
 import { SaveButton } from '@/components/room/SaveButton';
 import { useNow } from '@/components/room/SkipVote';
@@ -16,7 +16,23 @@ import { addedByLabel } from '@/lib/added-by';
 import { estimatePosition, formatDuration } from '@/lib/time';
 import { useNowPlaying, useRoom } from '@/state/hooks';
 import { barlowCondensed } from '../hifi82/fonts';
-import type { ThemeModule } from '../load';
+import { useHost } from '@/components/host/HostContext';
+import {
+  HostChatLines,
+  HostCode,
+  HostControls,
+  HostLamp,
+  HostLink,
+  HostListeners,
+  HostMeta,
+  HostNextEmpty,
+  HostQr,
+  HostTitle,
+  HostWish,
+  useHostChat,
+  useListeners,
+} from '@/components/host/parts';
+import type { HostSkin, ThemeModule } from '../load';
 import { NowCover, StageIdle, WishBlock } from '../stage/parts';
 import { StageControls } from '../stage/StageControls';
 import { StageVote } from '../stage/StageVote';
@@ -24,6 +40,7 @@ import { useTopSuggestions } from '../stage/useTopSuggestions';
 import '../stage/stage.css';
 import { etaTimes } from './eta';
 import './theme.css';
+import './host.css';
 import { tr } from '@/i18n';
 
 const hhmm = (ms: number) =>
@@ -260,14 +277,119 @@ function Stage({ openAdd }: { openAdd: () => void }) {
   );
 }
 
-function HostClockTrack() {
+/* ---- Speaker screen: the station hall ---- */
+
+function HostHead() {
+  const { roomName } = useHost();
   return (
-    <div className="st-host">
+    <div className="hs-head">
+      <FlipText text={roomName.toLocaleUpperCase().slice(0, 28)} className="hs-name" />
+      <span className="hs-grow" />
+      <CodeFlaps />
       <Clock large />
-      <Track large />
     </div>
   );
 }
+
+function HostNow() {
+  const t = useT();
+  const { np } = useHost();
+  return (
+    <div className="hs-now">
+      <div className="hs-row">
+        <HostLamp />
+        <span className="hs-platform">{t.themeText.station.platform}</span>
+      </div>
+      <HostTitle />
+      <div className="hs-meta-row">
+        <HostMeta />
+        <HostWish className="hs-wish" />
+      </div>
+      {np && <Track large />}
+      {np && <HostLyrics trackId={np.item.track.id} />}
+    </div>
+  );
+}
+
+/** "Dự kiến" times for the next songs, as on the room page's board. */
+function HostBoard() {
+  const t = useT();
+  const { np, next } = useHost();
+  const offset = useRoom((s) => s.offset);
+  const now = useNow(30_000, true);
+  const pos = np ? estimatePosition({ ...np, durationSec: np.item.track.durationSec }, offset, now) : 0;
+  const etas = etaTimes(now, np ? { positionSec: pos, durationSec: np.item.track.durationSec ?? 0 } : null, next);
+  return (
+    <section className="hs-board" aria-label={t.host.next}>
+      <h2>{t.themeText.station.departures}</h2>
+      {next.length === 0 ? (
+        <HostNextEmpty />
+      ) : (
+        <ol>
+          {next.map((q, i) => (
+            <li key={q.id}>
+              <b>{etas[i] !== null ? hhmm(etas[i] as number) : '—'}</b>
+              <span className="t">{q.track.title}</span>
+              <span className="p">{addedByLabel(q)}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
+  );
+}
+
+function HostHall() {
+  const t = useT();
+  const listening = useListeners().length > 0;
+  return (
+    <div className="hs-side">
+      <div className="hs-ticket">
+        <HostQr />
+        <div className="hs-ticket-text">
+          <h2>{t.themeText.station.ticket}</h2>
+          <p className="hs-scan">{t.host.scan}</p>
+          <HostCode />
+          <HostLink />
+        </div>
+      </div>
+      <HostBoard />
+      {listening && (
+        <div className="hs-pax">
+          <span>{t.themeText.station.passengers}</span>
+          <HostListeners />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Chat as the station's running announcement; still lines when motion is reduced. */
+function HostAnnounce() {
+  const t = useT();
+  const recent = useHostChat(5);
+  const line = recent.map((m) => `${m.displayName}: ${m.content}`).join('   ·   ');
+  return (
+    <div className="hs-foot">
+      <div className="st-ticker hs-ticker" aria-hidden>
+        {recent.length ? (
+          <span className="run">
+            {line}
+            <span className="gap" />
+            {line}
+          </span>
+        ) : (
+          <span>{t.chat.hostEmpty}</span>
+        )}
+      </div>
+      {/* Screen readers always; on screen instead of the running strip when motion is reduced. */}
+      <HostChatLines n={3} className="hs-still" />
+      <HostControls className="hs-ctl" />
+    </div>
+  );
+}
+
+const host: HostSkin = { className: 'host-station', Header: HostHead, Below: HostNow, Side: HostHall, Footer: HostAnnounce };
 
 const station: ThemeModule = {
   Stage,
@@ -275,6 +397,6 @@ const station: ThemeModule = {
   header: { code: <CodeFlaps />, extra: <Clock />, variant: 'station' },
   chat: { variant: 'station' },
   SideTop: Ticker,
-  HostDial: HostClockTrack,
+  host,
 };
 export default station;

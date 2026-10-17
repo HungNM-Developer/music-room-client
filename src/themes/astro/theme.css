@@ -96,15 +96,6 @@ html[data-theme='astro'] {
     box-shadow: inset calc((1 - var(--left, 1)) * -30px) 0 0 0 var(--color-panel);
     transition: box-shadow 1s linear;
   }
-  .astro-host {
-    display: flex;
-    align-items: center;
-    gap: 22px;
-    font-size: 22px;
-  }
-  .astro-host .stage-time {
-    font-size: 24px;
-  }
   html[data-theme='astro'] .chat-inline {
     background: var(--color-panel);
   }

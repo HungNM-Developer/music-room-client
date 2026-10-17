@@ -1,0 +1,334 @@
+/* The card over the video area (PlayerCover): no song, the sound on another device, the
+   player moved away. Plain tokens by default; each theme dresses it below (scoped by
+   html[data-theme], so only the active theme's block applies). Unlayered on purpose: it
+   overrides the Button utilities inside the card. */
+.player-cover {
+  background: var(--color-dial-deep);
+  color: var(--color-paper);
+}
+.player-cover .pc-icon svg {
+  width: 26px;
+  height: 26px;
+  color: var(--color-amber);
+}
+.player-cover .pc-title {
+  max-width: 28rem;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.player-cover .pc-note {
+  max-width: 28rem;
+  color: var(--color-sage);
+  font-size: 13px;
+}
+@media (min-width: 640px) {
+  .player-cover .pc-icon svg {
+    width: 32px;
+    height: 32px;
+  }
+  .player-cover .pc-title {
+    font-size: 22px;
+  }
+  .player-cover .pc-note {
+    font-size: 14px;
+  }
+}
+
+/* listening: a quiet bar, serif italics. */
+html[data-theme='listening'] .player-cover {
+  background: radial-gradient(circle at 50% 30%, #2c261f, #13110e 70%);
+}
+html[data-theme='listening'] .player-cover .pc-title {
+  font-family: var(--font-fraunces), serif;
+  font-style: italic;
+  font-weight: 500;
+}
+html[data-theme='listening'] .player-cover .pc-primary {
+  border-radius: 999px;
+}
+
+/* hifi82: the amber LCD with an orange key. */
+html[data-theme='hifi82'] .player-cover {
+  background: #1b1712;
+  color: #ffb347;
+  box-shadow: inset 0 0 24px #000;
+}
+html[data-theme='hifi82'] .player-cover .pc-icon svg {
+  color: #e0552b;
+}
+html[data-theme='hifi82'] .player-cover .pc-title {
+  font-family: var(--font-barlow-condensed);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px #ffb34788;
+}
+html[data-theme='hifi82'] .player-cover .pc-note {
+  color: #c99a4c;
+}
+html[data-theme='hifi82'] .player-cover .pc-primary {
+  border-radius: 4px;
+  background: #b53c16;
+  color: #fff;
+  box-shadow: 0 3px 0 #8f2f12;
+}
+html[data-theme='hifi82'] .player-cover .pc-ghost {
+  color: #ffd79a;
+}
+
+/* midcentury: a yellow sun behind the icon, narrow caps. */
+html[data-theme='midcentury'] .player-cover {
+  background: #0e2329;
+}
+html[data-theme='midcentury'] .player-cover .pc-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #e5b53e;
+}
+html[data-theme='midcentury'] .player-cover .pc-icon svg {
+  color: #14303a;
+}
+html[data-theme='midcentury'] .player-cover .pc-title {
+  font-family: var(--font-archivo);
+  font-stretch: 75%;
+  text-transform: uppercase;
+}
+html[data-theme='midcentury'] .player-cover .pc-primary {
+  border-radius: 999px;
+}
+
+/* walnut: a dark cabinet, brass. */
+html[data-theme='walnut'] .player-cover {
+  background: repeating-linear-gradient(92deg, #24170d 0 8px, #1d120a 8px 14px);
+}
+html[data-theme='walnut'] .player-cover .pc-icon svg {
+  color: #e8c674;
+}
+html[data-theme='walnut'] .player-cover .pc-title {
+  font-family: var(--font-fraunces), serif;
+  font-style: italic;
+  font-weight: 600;
+}
+html[data-theme='walnut'] .player-cover .pc-note {
+  color: #cdbf9f;
+}
+html[data-theme='walnut'] .player-cover .pc-primary {
+  border-radius: 999px;
+  background: linear-gradient(135deg, #f2d68e, #b8954f 60%, #e8c674);
+  color: #2a1a0a;
+  box-shadow: 0 2px 0 #6b4e1f;
+}
+html[data-theme='walnut'] .player-cover .pc-ghost {
+  color: #e8c674;
+}
+
+/* transistor: the speaker grille, a cream preset key. */
+html[data-theme='transistor'] .player-cover {
+  background:
+    radial-gradient(circle, #2a2420 34%, transparent 36%) 0 0 / 12px 12px,
+    #171513;
+}
+html[data-theme='transistor'] .player-cover .pc-icon svg {
+  color: #f0b23a;
+}
+html[data-theme='transistor'] .player-cover .pc-title {
+  font-family: var(--font-big-shoulders);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+html[data-theme='transistor'] .player-cover .pc-note {
+  color: #e2d2bb;
+}
+html[data-theme='transistor'] .player-cover .pc-primary {
+  border-radius: 6px;
+  background: #f6efe3;
+  color: #8f1f22;
+  box-shadow: 0 4px 0 #b9ad99;
+}
+html[data-theme='transistor'] .player-cover .pc-ghost {
+  color: #f6efe3;
+}
+
+/* cassette: a handwritten label, a Dymo key. */
+html[data-theme='cassette'] .player-cover {
+  background: #1c1612;
+}
+html[data-theme='cassette'] .player-cover .pc-icon svg {
+  color: #e3a62b;
+}
+html[data-theme='cassette'] .player-cover .pc-title {
+  padding: 4px 14px;
+  background: #f1ead9;
+  color: #2b1c12;
+  font-family: var(--font-patrick-hand);
+  font-weight: 400;
+  transform: rotate(-1deg);
+}
+html[data-theme='cassette'] .player-cover .pc-note {
+  color: #d9cbb4;
+  font-family: var(--font-patrick-hand);
+}
+html[data-theme='cassette'] .player-cover .pc-primary {
+  border-radius: 2px;
+  background: #111;
+  color: #eee;
+  font-family: var(--font-bungee);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  box-shadow: 0 2px 0 #000;
+}
+html[data-theme='cassette'] .player-cover .pc-ghost {
+  color: #f1ead9;
+}
+
+/* station: the departures board. */
+html[data-theme='station'] .player-cover {
+  background: #0a1410;
+}
+html[data-theme='station'] .player-cover .pc-icon svg {
+  color: #ffb23f;
+}
+html[data-theme='station'] .player-cover .pc-title {
+  color: #ffb23f;
+  font-family: var(--font-barlow-condensed);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+html[data-theme='station'] .player-cover .pc-note {
+  color: #b9c4bd;
+}
+html[data-theme='station'] .player-cover .pc-primary {
+  border-radius: 0;
+  font-family: var(--font-barlow-condensed);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+html[data-theme='station'] .player-cover .pc-ghost {
+  color: #f2efe6;
+}
+
+/* astro: the night sky, gold. */
+html[data-theme='astro'] .player-cover {
+  background:
+    radial-gradient(1px 1px at 20% 30%, #fff9 50%, #0000),
+    radial-gradient(1px 1px at 75% 20%, #fff8 50%, #0000),
+    radial-gradient(1.5px 1.5px at 60% 75%, #fffa 50%, #0000),
+    radial-gradient(circle at 50% 40%, #22264d, #0d0f26 70%);
+}
+html[data-theme='astro'] .player-cover .pc-title {
+  font-family: var(--font-cormorant), serif;
+  font-style: italic;
+  font-weight: 600;
+}
+html[data-theme='astro'] .player-cover .pc-primary {
+  border: 1px solid #d6b25e;
+  border-radius: 999px;
+  background: transparent;
+  color: #d6b25e;
+}
+html[data-theme='astro'] .player-cover .pc-ghost {
+  color: #ece6d6;
+}
+
+/* cosmos: deep space, a cyan signal. */
+html[data-theme='cosmos'] .player-cover {
+  background:
+    radial-gradient(ellipse at 80% 20%, #3a1f5c88, transparent 50%),
+    radial-gradient(ellipse at 15% 85%, #0e4a6a77, transparent 50%),
+    #050813;
+}
+html[data-theme='cosmos'] .player-cover .pc-icon svg {
+  color: #7fd4ff;
+  filter: drop-shadow(0 0 6px #7fd4ff);
+}
+html[data-theme='cosmos'] .player-cover .pc-primary {
+  border-radius: 12px;
+}
+html[data-theme='cosmos'] .player-cover .pc-ghost {
+  color: #e6ecff;
+}
+
+/* saigon: a chalkboard in a wooden frame. */
+html[data-theme='saigon'] .player-cover {
+  background: #23302c;
+  color: #f4efe1;
+  box-shadow: inset 0 0 0 8px #6b4a2b;
+}
+html[data-theme='saigon'] .player-cover .pc-icon svg {
+  color: #e8c547;
+}
+html[data-theme='saigon'] .player-cover .pc-title {
+  font-family: var(--font-patrick-hand);
+  font-weight: 400;
+  text-transform: none;
+}
+html[data-theme='saigon'] .player-cover .pc-note {
+  color: #e8dfc8;
+  font-family: var(--font-patrick-hand);
+}
+html[data-theme='saigon'] .player-cover .pc-primary {
+  border-radius: 4px;
+  background: #e8c547;
+  color: #23302c;
+}
+html[data-theme='saigon'] .player-cover .pc-ghost {
+  color: #f4efe1;
+}
+
+/* pixel: a game dialog. */
+html[data-theme='pixel'] .player-cover {
+  background: #14132a;
+}
+html[data-theme='pixel'] .player-cover .pc-icon svg {
+  color: #f8b800;
+}
+html[data-theme='pixel'] .player-cover .pc-title {
+  color: #f8b800;
+  font-family: var(--font-vt323);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+html[data-theme='pixel'] .player-cover .pc-note {
+  color: #b2afdc;
+}
+html[data-theme='pixel'] .player-cover .pc-primary {
+  border-radius: 0;
+  background: #00d000;
+  color: #14132a;
+  box-shadow: 3px 3px 0 #000;
+}
+html[data-theme='pixel'] .player-cover .pc-ghost {
+  border-radius: 0;
+  color: #fcfcfc;
+}
+
+/* synthwave: neon over the sunset. */
+html[data-theme='synthwave'] .player-cover {
+  background: linear-gradient(#0e021e, #2b0f52 70%, #140428);
+}
+html[data-theme='synthwave'] .player-cover .pc-icon svg {
+  color: #29e7ff;
+  filter: drop-shadow(0 0 6px #29e7ff);
+}
+html[data-theme='synthwave'] .player-cover .pc-title {
+  padding-right: 0.1em;
+  background: linear-gradient(180deg, #fff 0%, #ffd23f 45%, #ff3ea5 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-family: var(--font-exo2);
+  font-style: italic;
+  font-weight: 900;
+}
+html[data-theme='synthwave'] .player-cover .pc-primary {
+  border-radius: 8px;
+  box-shadow: 0 0 14px #ff3ea5aa;
+}
+html[data-theme='synthwave'] .player-cover .pc-ghost {
+  color: #fbe9ff;
+}

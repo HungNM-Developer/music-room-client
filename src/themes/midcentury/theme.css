@@ -93,12 +93,6 @@ html[data-theme='midcentury'] {
   .line-dial[data-variant='mc'] .line-dial-track > i {
     background: var(--color-amber);
   }
-  .line-dial.mc-host {
-    font-size: 20px;
-  }
-  .line-dial.mc-host .line-dial-track {
-    height: 6px;
-  }
   /* Buttons: pills on deep teal, the main one sun yellow. */
   html[data-theme='midcentury'] .stage-btn,
   html[data-theme='midcentury'] .stage-controls > button:not(.stage-btn) {

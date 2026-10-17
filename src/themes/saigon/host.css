@@ -1,0 +1,193 @@
+/* Speaker screen · Sài Gòn xưa (light): a cement-tile border around the screen, the room name as
+   a shop sign, the video in a wooden frame, "Tiếp theo" chalked on a board, the wish on a
+   handwritten card. Sizes in --u. */
+html[data-theme='saigon'] .host-saigon {
+  background: #f3ead6;
+  color: #1f2a28;
+}
+html[data-theme='saigon'] .hg-video > * {
+  outline: calc(var(--u) * 0.7) solid #7a4a2a;
+  box-shadow: 0 0 0 calc(var(--u) * 0.9) #3a2414;
+}
+html[data-theme='saigon'] .host-saigon .host-title {
+  font: 700 calc(var(--u) * 2.4) / 1.08 var(--font-body);
+}
+html[data-theme='saigon'] .host-saigon .host-code {
+  color: #b8442f;
+  font: 400 calc(var(--u) * 2.8) / 1 var(--font-bungee);
+  letter-spacing: 0.06em;
+}
+
+/* The shop sign. */
+html[data-theme='saigon'] .hg-sign {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.2);
+  height: 100%;
+  padding: calc(var(--u) * 0.6) calc(var(--u) * 1.6);
+  border-radius: calc(var(--u) * 0.4);
+  background: #1d6b66;
+  color: #fff8e6;
+  box-shadow: inset 0 0 0 calc(var(--u) * 0.25) #e3b93b;
+}
+html[data-theme='saigon'] .hg-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font: 400 calc(var(--u) * 2.2) / 1.1 var(--font-bungee);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-theme='saigon'] .hg-sign .host-lamp {
+  flex: none;
+}
+html[data-theme='saigon'] .hg-sign .host-lamp.text-sage {
+  border-color: #fff8e688;
+  color: #fff8e6;
+}
+html[data-theme='saigon'] .hg-sign .host-listeners {
+  flex: none;
+  color: #fff8e6;
+}
+html[data-theme='saigon'] .hg-sign .host-listeners-text svg {
+  color: #e3b93b;
+}
+html[data-theme='saigon'] .hg-sign .host-faces i {
+  box-shadow: 0 0 0 calc(var(--u) * 0.18) #1d6b66;
+}
+
+/* Left. */
+html[data-theme='saigon'] .hg-now {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: calc(var(--u) * 0.3);
+  padding-top: calc(var(--u) * 1.1);
+}
+html[data-theme='saigon'] .hg-now .host-meta {
+  color: #4f5c58;
+}
+html[data-theme='saigon'] .host-saigon .line-dial[data-variant='tape'] {
+  margin: 0;
+  gap: calc(var(--u) * 1);
+  font-size: calc(var(--u) * 1.5);
+}
+html[data-theme='saigon'] .host-saigon .line-dial[data-variant='tape'] .line-dial-track {
+  height: calc(var(--u) * 0.8);
+  border-radius: calc(var(--u) * 0.4);
+}
+html[data-theme='saigon'] .host-saigon .lyrics-inline p {
+  color: #4f5c58;
+}
+html[data-theme='saigon'] .host-saigon .lyrics-inline p[data-current] {
+  color: #1d6b66;
+  font-weight: 700;
+}
+
+/* Right. */
+html[data-theme='saigon'] .hg-side {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: calc(var(--u) * 1.1);
+}
+html[data-theme='saigon'] .hg-qr {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.3);
+  padding: calc(var(--u) * 0.9);
+  background: #fbf5e7;
+  box-shadow: inset 0 0 0 calc(var(--u) * 0.12) #d7cbb0;
+}
+html[data-theme='saigon'] .hg-scan {
+  font-size: calc(var(--u) * 1.3);
+  font-weight: 600;
+}
+html[data-theme='saigon'] .hg-qr .host-code {
+  margin: calc(var(--u) * 0.4) 0;
+}
+html[data-theme='saigon'] .hg-qr .host-link {
+  color: #4f5c58;
+}
+html[data-theme='saigon'] .hg-chalk {
+  padding: calc(var(--u) * 0.8) calc(var(--u) * 1.2);
+  border: calc(var(--u) * 0.6) solid #7a4a2a;
+  border-radius: calc(var(--u) * 0.3);
+  background: #23302c;
+  color: #f4efe1;
+  font-family: var(--font-patrick-hand);
+}
+html[data-theme='saigon'] .hg-chalk h2 {
+  color: #e3b93b;
+  font: 400 calc(var(--u) * 1.8) / 1.1 var(--font-patrick-hand);
+}
+html[data-theme='saigon'] .hg-chalk li,
+html[data-theme='saigon'] .hg-chalk .host-next-empty {
+  overflow: hidden;
+  font-size: calc(var(--u) * 1.55);
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-theme='saigon'] .hg-chalk li span {
+  color: #e8c547;
+}
+html[data-theme='saigon'] .hg-card {
+  padding: calc(var(--u) * 0.6) calc(var(--u) * 1.1);
+  background: #fff8e6;
+  font-family: var(--font-patrick-hand);
+  box-shadow: calc(var(--u) * 0.25) calc(var(--u) * 0.35) 0 #d7cbb0;
+  transform: rotate(-1deg);
+}
+html[data-theme='saigon'] .hg-card blockquote {
+  font-size: calc(var(--u) * 1.55);
+  line-height: 1.2;
+}
+html[data-theme='saigon'] .hg-card figcaption {
+  color: #4f5c58;
+  font-size: calc(var(--u) * 1.15);
+}
+html[data-theme='saigon'] .hg-people {
+  display: grid;
+  gap: calc(var(--u) * 0.5);
+}
+html[data-theme='saigon'] .hg-people .host-chat-name {
+  color: #1d6b66;
+}
+html[data-theme='saigon'] .hg-people input {
+  accent-color: #b8442f;
+}
+
+/* One column. */
+html[data-theme='saigon'] .hg-qr,
+html[data-theme='saigon'] .hg-sign {
+  flex-wrap: wrap;
+}
+
+@media (min-width: 960px) and (min-height: 540px) {
+  /* The tile border around the whole screen; the page's tile strip is not needed here. */
+  html[data-theme='saigon'] .host-saigon > .saigon-tiles {
+    display: none;
+  }
+  html[data-theme='saigon'] .host-saigon .host-frame {
+    background:
+      radial-gradient(circle at 50% 50%, #e3b93b 0 18%, #0000 19%) 0 0 / calc(var(--u) * 3.2) calc(var(--u) * 3.2),
+      conic-gradient(from 45deg, #1d6b66 0 25%, #b8442f 0 50%, #1d6b66 0 75%, #b8442f 0) 0 0 / calc(var(--u) * 3.2) calc(var(--u) * 3.2);
+  }
+  html[data-theme='saigon'] .host-saigon .host-grid {
+    inset: calc(var(--u) * 1.4);
+    background: #f3ead6;
+    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 47) calc(var(--u) * 2.8) minmax(0, 1fr) calc(var(--u) * 2);
+    grid-template-rows: calc(var(--u) * 1) auto calc(var(--u) * 1.4) auto minmax(0, 1fr) calc(var(--u) * 0.9);
+    grid-template-areas:
+      '. . . . .'
+      '. header header header .'
+      '. . . . .'
+      '. video . side .'
+      '. below . side .'
+      '. . . . .';
+  }
+  html[data-theme='saigon'] .hg-qr,
+  html[data-theme='saigon'] .hg-sign {
+    flex-wrap: nowrap;
+  }
+}

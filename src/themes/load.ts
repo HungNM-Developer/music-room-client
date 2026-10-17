@@ -6,6 +6,22 @@ import type { RoomHeaderSlots } from '@/components/room/RoomHeader';
 import type { VoteMeterProps } from '@/components/room/stage/useSkipVoteState';
 import type { ThemeId } from './registry';
 
+/**
+ * The speaker screen's layout for a theme. HostScreen always renders the same slots in the
+ * same order (so the video player never remounts); the theme fills them and places them with
+ * the CSS grid in its host.css.
+ */
+export interface HostSkin {
+  /** On `.host-root`: picks the theme's grid in its host.css. */
+  className: string;
+  /** On the video slot's wrapper (a frame drawn around, never over, the 16:9 video). */
+  videoClass?: string;
+  Header?: React.ComponentType;
+  Below: React.ComponentType;
+  Side: React.ComponentType;
+  Footer?: React.ComponentType;
+}
+
 /** What a theme brings to the room page and the speaker screen; logic stays shared. */
 export interface ThemeModule {
   /** The room column (now playing, queue, suggestions); `openAdd` opens the add-songs tab. */
@@ -16,8 +32,8 @@ export interface ThemeModule {
   Decor?: React.ComponentType;
   /** Desktop side column, above the chat. */
   SideTop?: React.ComponentType;
-  /** Speaker screen: the theme's time indicator, large. */
-  HostDial?: React.ComponentType;
+  /** Speaker screen: the theme's own layout (16:9 canvas); without it, the default layout. */
+  host?: HostSkin;
   /** Speaker screen: the theme's vote countdown inside the vote banner. */
   HostVoteMeter?: React.ComponentType<VoteMeterProps>;
   /** next/font variable classes, put on <html>. */

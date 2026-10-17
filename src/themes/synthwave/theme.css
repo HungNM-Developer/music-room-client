@@ -109,12 +109,6 @@ html[data-theme='synthwave'] {
     background: linear-gradient(90deg, #29e7ff, #ff3ea5);
     box-shadow: 0 0 10px #ff3ea5;
   }
-  .line-dial.synth-host {
-    font-size: 22px;
-  }
-  .line-dial.synth-host .line-dial-track {
-    height: 8px;
-  }
   .synth-led {
     min-width: 2ch;
     font: italic 900 26px/1 var(--font-exo2);

@@ -1,0 +1,230 @@
+/* Speaker screen · Đài bán dẫn: the whole screen is a cherry-red transistor radio with a chrome
+   trim. The video and the song sit in the speaker grille, the QR on a chrome badge, the next
+   songs as preset keys, the listeners' letters on the right, and the tuning glass across the
+   bottom — its red needle is the time. Sizes in --u. */
+html[data-theme='transistor'] .host-transistor {
+  background: #171513;
+  color: #f6efe3;
+}
+html[data-theme='transistor'] .host-transistor .host-title {
+  font: 900 calc(var(--u) * 2.6) / 0.98 var(--font-big-shoulders);
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+html[data-theme='transistor'] .host-transistor .host-code {
+  font: 900 calc(var(--u) * 3.4) / 1 var(--font-big-shoulders);
+  letter-spacing: 0.06em;
+}
+html[data-theme='transistor'] .ht-video > * {
+  border-radius: calc(var(--u) * 0.5);
+  overflow: hidden;
+  box-shadow: 0 0 0 calc(var(--u) * 0.25) #d9d4cc;
+}
+
+/* The grille's content. */
+html[data-theme='transistor'] .ht-now {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: calc(var(--u) * 0.3);
+  padding-top: calc(var(--u) * 0.5);
+}
+html[data-theme='transistor'] .ht-row {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1);
+  min-width: 0;
+}
+html[data-theme='transistor'] .ht-row .host-lamp {
+  flex: none;
+}
+html[data-theme='transistor'] .ht-row .host-meta {
+  min-width: 0;
+  color: #e2d2bb;
+}
+html[data-theme='transistor'] .host-transistor .lyrics-inline p {
+  color: #e2d2bb;
+}
+html[data-theme='transistor'] .host-transistor .lyrics-inline p[data-current] {
+  color: #f0b23a;
+  font-family: var(--font-big-shoulders);
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+/* Right. */
+html[data-theme='transistor'] .ht-side {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: calc(var(--u) * 0.8);
+}
+html[data-theme='transistor'] .ht-badge {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.3);
+  padding: calc(var(--u) * 0.8);
+  border-radius: calc(var(--u) * 1);
+  background: linear-gradient(135deg, #f2f0ec, #bfbab2 50%, #f2f0ec);
+  color: #171513;
+  box-shadow: 0 calc(var(--u) * 0.3) calc(var(--u) * 0.6) #0006;
+}
+html[data-theme='transistor'] .ht-scan {
+  font: 800 calc(var(--u) * 1.4) var(--font-big-shoulders);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+html[data-theme='transistor'] .ht-badge .host-code {
+  margin: calc(var(--u) * 0.3) 0;
+}
+html[data-theme='transistor'] .ht-badge .host-link {
+  color: #3a332b;
+}
+html[data-theme='transistor'] .ht-side h2 {
+  margin-bottom: calc(var(--u) * 0.3);
+  color: #f0b23a;
+  font: 800 calc(var(--u) * 1.4) var(--font-big-shoulders);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+/* On the red body (not the dark letters box): a paler amber. */
+html[data-theme='transistor'] .ht-presets h2 {
+  color: #ffe0a3;
+}
+html[data-theme='transistor'] .ht-presets ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: calc(var(--u) * 0.8);
+}
+html[data-theme='transistor'] .ht-presets li {
+  display: grid;
+  align-content: start;
+  min-height: calc(var(--u) * 5.6);
+  padding: calc(var(--u) * 0.5) calc(var(--u) * 0.7);
+  border-radius: calc(var(--u) * 0.4);
+  background: #f6efe3;
+  color: #2a1a10;
+  box-shadow: 0 calc(var(--u) * 0.35) 0 #b9ad99;
+  font-size: calc(var(--u) * 1.15);
+}
+html[data-theme='transistor'] .ht-presets li b {
+  color: #8f1f22;
+  font: 900 calc(var(--u) * 1.7) / 1 var(--font-big-shoulders);
+}
+html[data-theme='transistor'] .ht-presets li .t {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+html[data-theme='transistor'] .ht-presets li .p {
+  overflow: hidden;
+  color: #6b5a48;
+  font-size: calc(var(--u) * 1.1);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-theme='transistor'] .ht-presets .host-next-empty {
+  color: #e2d2bb;
+}
+html[data-theme='transistor'] .ht-wish {
+  padding-left: calc(var(--u) * 0.9);
+  border-left: calc(var(--u) * 0.3) solid #f0b23a;
+}
+html[data-theme='transistor'] .ht-wish blockquote {
+  font-style: italic;
+}
+html[data-theme='transistor'] .ht-wish figcaption {
+  color: #e2d2bb;
+}
+html[data-theme='transistor'] .ht-letters {
+  display: grid;
+  gap: calc(var(--u) * 0.45);
+  padding: calc(var(--u) * 0.8) calc(var(--u) * 1);
+  border-radius: calc(var(--u) * 0.6);
+  background: #171513e6;
+}
+html[data-theme='transistor'] .ht-letters h2 {
+  margin: 0;
+}
+html[data-theme='transistor'] .ht-letters .host-chat li {
+  -webkit-line-clamp: 1;
+}
+html[data-theme='transistor'] .ht-letters .host-chat-name {
+  color: #f0b23a;
+}
+html[data-theme='transistor'] .ht-letters .host-listeners {
+  color: #e2d2bb;
+}
+html[data-theme='transistor'] .ht-letters .host-faces i {
+  box-shadow: 0 0 0 calc(var(--u) * 0.18) #171513;
+}
+html[data-theme='transistor'] .ht-letters input {
+  accent-color: #f0b23a;
+}
+
+/* The tuning glass. */
+html[data-theme='transistor'] .host-transistor .tr-band[data-large] {
+  height: calc(var(--u) * 6);
+  border-radius: calc(var(--u) * 0.7);
+  box-shadow:
+    inset 0 0 0 calc(var(--u) * 0.3) #d9d4cc,
+    inset 0 calc(var(--u) * 0.6) calc(var(--u) * 1) #0008;
+}
+html[data-theme='transistor'] .host-transistor .tr-band .sc {
+  inset: calc(var(--u) * 0.8) calc(var(--u) * 1.2) calc(var(--u) * 2.4);
+  background: repeating-linear-gradient(90deg, #f0b23a 0 calc(var(--u) * 0.1), #0000 0 calc(var(--u) * 1));
+}
+html[data-theme='transistor'] .host-transistor .tr-band .num {
+  left: calc(var(--u) * 1.2);
+  right: calc(var(--u) * 1.2);
+  bottom: calc(var(--u) * 0.5);
+  font-size: calc(var(--u) * 1.5);
+}
+html[data-theme='transistor'] .host-transistor .tr-band .needle {
+  top: calc(var(--u) * 0.4);
+  bottom: calc(var(--u) * 0.4);
+  left: calc(var(--u) * 1.2 + var(--p, 0) * (100% - var(--u) * 2.4));
+  width: calc(var(--u) * 0.3);
+}
+
+/* One column. */
+html[data-theme='transistor'] .ht-badge {
+  flex-wrap: wrap;
+}
+
+@media (min-width: 960px) and (min-height: 540px) {
+  /* The radio body: cherry red with a chrome trim, rounded. */
+  html[data-theme='transistor'] .host-transistor .host-frame {
+    padding: calc(var(--u) * 1.2);
+  }
+  html[data-theme='transistor'] .host-transistor .host-grid {
+    inset: calc(var(--u) * 1.2);
+    border-radius: calc(var(--u) * 2.4);
+    background: linear-gradient(160deg, #a52628, #8f1f22 50%, #6e1719);
+    box-shadow:
+      inset 0 0 0 calc(var(--u) * 0.5) #d9d4cc,
+      inset 0 0 0 calc(var(--u) * 0.8) #5a1214;
+    grid-template-columns: calc(var(--u) * 3.2) calc(var(--u) * 48) calc(var(--u) * 3.6) minmax(0, 1fr) calc(var(--u) * 2.6);
+    grid-template-rows: calc(var(--u) * 2.6) auto minmax(0, 1fr) calc(var(--u) * 1.1) auto calc(var(--u) * 1.5);
+    grid-template-areas:
+      '. . . . .'
+      '. video . side .'
+      '. below . side .'
+      '. . . . .'
+      '. footer footer footer .'
+      '. . . . .';
+  }
+  /* The speaker grille behind the video and the song. */
+  html[data-theme='transistor'] .host-transistor .host-grid::before {
+    content: '';
+    grid-area: video / video / below / below;
+    margin: calc(var(--u) * -1.1);
+    border-radius: calc(var(--u) * 1.2);
+    background:
+      radial-gradient(circle, #2a2420 34%, transparent 36%) 0 0 / calc(var(--u) * 1.1) calc(var(--u) * 1.1),
+      #171513;
+  }
+  html[data-theme='transistor'] .ht-badge {
+    flex-wrap: nowrap;
+  }
+}

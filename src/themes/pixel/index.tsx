@@ -1,15 +1,33 @@
 'use client';
 
+import { Play } from 'lucide-react';
+import { useHost } from '@/components/host/HostContext';
+import {
+  HostChatLines,
+  HostCode,
+  HostControls,
+  HostLamp,
+  HostLink,
+  HostListeners,
+  HostMeta,
+  HostNextEmpty,
+  HostQr,
+  HostTitle,
+  HostWish,
+} from '@/components/host/parts';
+import { HostLyrics } from '@/components/room/Lyrics';
 import { useLiveProgress } from '@/components/room/stage/useLiveProgress';
 import type { VoteMeterProps } from '@/components/room/stage/useSkipVoteState';
 import { useT } from '@/i18n';
+import { addedByLabel } from '@/lib/added-by';
 import { formatDuration } from '@/lib/time';
 import { useRoom } from '@/state/hooks';
-import type { ThemeModule } from '../load';
+import type { HostSkin, ThemeModule } from '../load';
 import { NowCover } from '../stage/parts';
 import { StageLayout } from '../stage/StageLayout';
 import { vt323 } from './fonts';
 import './theme.css';
+import './host.css';
 
 const CELLS = 16;
 
@@ -79,11 +97,86 @@ function Stage({ openAdd }: { openAdd: () => void }) {
   );
 }
 
+/* ---- Speaker screen: an 8-bit game screen ---- */
+
+/** The HUD: the health bar is the time, then the players in the room and the stage. */
+function HostHud() {
+  const t = useT();
+  const { np } = useHost();
+  return (
+    <div className="hp-hud">
+      <span className="hp-label">HP</span>
+      {np ? <HealthBar large /> : <span className="hp-grow" />}
+      <Lives />
+      {np && <span className="hp-stage">{t.themeText.pixel.stage}</span>}
+    </div>
+  );
+}
+
+function HostPlayer() {
+  const { np } = useHost();
+  return (
+    <div className="hp-now">
+      <div className="hp-row">
+        <HostLamp />
+        <HostMeta />
+      </div>
+      <HostTitle />
+      {np && <HostLyrics trackId={np.item.track.id} />}
+    </div>
+  );
+}
+
+/** Dialog boxes: player 2 (QR), the next stages, the wish and chat (in the body font). */
+function HostDialogs() {
+  const t = useT();
+  const { next } = useHost();
+  return (
+    <div className="hp-side">
+      <div className="hp-box hp-join" role="group" aria-label={t.host.scan}>
+        <HostQr />
+        <div className="min-w-0">
+          <p className="hp-say">{t.themeText.pixel.join}</p>
+          <HostCode />
+          <HostLink />
+        </div>
+      </div>
+      <section className="hp-box hp-next" aria-label={t.host.next}>
+        <h2>{t.themeText.pixel.next}</h2>
+        {next.length === 0 ? (
+          <HostNextEmpty />
+        ) : (
+          <ol>
+            {next.map((q, i) => (
+              <li key={q.id}>
+                {i === 0 ? <Play aria-hidden /> : <i aria-hidden />}
+                <b>{t.themeText.pixel.level(i + 2)}</b>
+                <span className="t">{q.track.title}</span>
+                <span className="p">{addedByLabel(q)}</span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+      <div className="hp-box hp-talk">
+        <HostWish withFrom className="host-wish-1" />
+        <HostChatLines n={2} />
+      </div>
+      <div className="hp-foot">
+        <HostListeners max={4} />
+        <HostControls />
+      </div>
+    </div>
+  );
+}
+
+const host: HostSkin = { className: 'host-pixel', videoClass: 'hp-video', Header: HostHud, Below: HostPlayer, Side: HostDialogs };
+
 const pixel: ThemeModule = {
   Stage,
   fontClass: vt323.variable,
   header: { extra: <Lives /> },
-  HostDial: () => <HealthBar large />,
   HostVoteMeter: BossBar,
+  host,
 };
 export default pixel;

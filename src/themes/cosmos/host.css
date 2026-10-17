@@ -1,0 +1,219 @@
+/* Speaker screen · Vũ trụ: the view from a spaceship. The video in a riveted porthole, the cover
+   as a planet whose satellite runs the orbit (the time) beside the title, the next songs as
+   planets getting smaller with distance, the listeners as stars. Sizes in --u. */
+html[data-theme='cosmos'] .host-cosmos {
+  background:
+    radial-gradient(ellipse at 85% 20%, #3a1f5c66, transparent 40%),
+    radial-gradient(ellipse at 10% 90%, #0e4a6a55, transparent 45%),
+    #070b1a;
+  color: #e6ecff;
+}
+/* The porthole: a rounded frame with two rivets, outside the 16:9 picture. */
+html[data-theme='cosmos'] .hc2-port {
+  position: relative;
+  padding: calc(var(--u) * 0.8);
+  border-radius: calc(var(--u) * 2.2);
+  background: #16204a;
+  box-shadow:
+    inset 0 0 0 calc(var(--u) * 0.25) #9aa3c6,
+    0 0 calc(var(--u) * 2) #7fd4ff33;
+}
+html[data-theme='cosmos'] .hc2-port > * {
+  border-radius: calc(var(--u) * 1.5);
+  overflow: hidden;
+}
+html[data-theme='cosmos'] .hc2-port::before,
+html[data-theme='cosmos'] .hc2-port::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: calc(var(--u) * 0.5);
+  height: calc(var(--u) * 0.5);
+  border-radius: 50%;
+  background: #9aa3c6;
+  transform: translateY(-50%);
+}
+html[data-theme='cosmos'] .hc2-port::before {
+  left: calc(var(--u) * 0.15);
+}
+html[data-theme='cosmos'] .hc2-port::after {
+  right: calc(var(--u) * 0.15);
+}
+html[data-theme='cosmos'] .host-cosmos .host-title {
+  font: 700 calc(var(--u) * 2.6) / 1.02 var(--font-space-grotesk);
+}
+html[data-theme='cosmos'] .host-cosmos .host-code {
+  font: 700 calc(var(--u) * 3) / 1 var(--font-space-grotesk);
+  letter-spacing: 0.06em;
+}
+
+/* Left. */
+html[data-theme='cosmos'] .hc2-now {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: calc(var(--u) * 0.35);
+  padding-top: calc(var(--u) * 0.6);
+}
+html[data-theme='cosmos'] .hc2-song {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.2);
+}
+html[data-theme='cosmos'] .hc2-planet {
+  flex: none;
+  width: calc(var(--u) * 8.4);
+  height: calc(var(--u) * 8.4);
+}
+html[data-theme='cosmos'] .hc2-planet .ball {
+  box-shadow:
+    inset calc(var(--u) * -1.4) calc(var(--u) * -1) calc(var(--u) * 2.4) #000c,
+    0 0 calc(var(--u) * 2.4) #7fd4ff33;
+}
+html[data-theme='cosmos'] .hc2-info {
+  display: grid;
+  justify-items: start;
+  gap: calc(var(--u) * 0.3);
+  min-width: 0;
+}
+html[data-theme='cosmos'] .hc2-info > :not(.host-lamp) {
+  justify-self: stretch;
+}
+html[data-theme='cosmos'] .hc2-info .host-meta {
+  color: #9aa3c6;
+}
+html[data-theme='cosmos'] .hc2-info .stage-time {
+  color: #7fd4ff;
+  font-size: calc(var(--u) * 1.2);
+}
+html[data-theme='cosmos'] .host-cosmos .lyrics-inline p {
+  color: #9aa3c6;
+}
+html[data-theme='cosmos'] .host-cosmos .lyrics-inline p[data-current] {
+  color: #7fd4ff;
+  font-weight: 700;
+}
+html[data-theme='cosmos'] .hc2-wish {
+  padding-left: calc(var(--u) * 1);
+  border-left: calc(var(--u) * 0.25) solid #ffb86b;
+}
+html[data-theme='cosmos'] .hc2-wish figcaption {
+  color: #9aa3c6;
+}
+
+/* Right. */
+html[data-theme='cosmos'] .hc2-side {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: calc(var(--u) * 1.1);
+}
+html[data-theme='cosmos'] .hc2-panel {
+  padding: calc(var(--u) * 1) calc(var(--u) * 1.2);
+  border: calc(var(--u) * 0.12) solid #1d2645;
+  border-radius: calc(var(--u) * 1);
+  background: #0c1330cc;
+}
+html[data-theme='cosmos'] .hc2-panel h2 {
+  margin-bottom: calc(var(--u) * 0.5);
+  color: #7fd4ff;
+  font: 700 calc(var(--u) * 1.1) var(--font-space-grotesk);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+html[data-theme='cosmos'] .hc2-qr {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.4);
+}
+html[data-theme='cosmos'] .hc2-qr .host-link {
+  margin-top: calc(var(--u) * 0.4);
+  color: #9aa3c6;
+}
+html[data-theme='cosmos'] .hc2-orbits ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: calc(var(--u) * 1);
+}
+html[data-theme='cosmos'] .hc2-orbits li {
+  display: grid;
+  justify-items: center;
+  min-width: 0;
+  text-align: center;
+}
+html[data-theme='cosmos'] .hc2-world {
+  position: relative;
+  width: calc(var(--u) * var(--s, 4));
+  height: calc(var(--u) * var(--s, 4));
+  margin-bottom: calc(var(--u) * 0.5);
+  border-radius: 50%;
+  box-shadow:
+    inset calc(var(--u) * -0.8) calc(var(--u) * -0.6) calc(var(--u) * 1.4) #000c,
+    0 0 calc(var(--u) * 1.4) #7fd4ff33;
+}
+/* Each planet's night side. */
+html[data-theme='cosmos'] .hc2-world::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 28%, #0000 45%, #000b 100%);
+}
+html[data-theme='cosmos'] .hc2-orbits li .t {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: calc(var(--u) * 1.15);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+html[data-theme='cosmos'] .hc2-orbits li .p {
+  max-width: 100%;
+  overflow: hidden;
+  color: #9aa3c6;
+  font-size: calc(var(--u) * 1.1);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-theme='cosmos'] .hc2-orbits .host-next-empty {
+  color: #9aa3c6;
+}
+html[data-theme='cosmos'] .hc2-people {
+  display: grid;
+  gap: calc(var(--u) * 0.5);
+}
+html[data-theme='cosmos'] .host-cosmos .cosmos-stars {
+  gap: calc(var(--u) * 0.6);
+  font-size: calc(var(--u) * 1.15);
+}
+html[data-theme='cosmos'] .host-cosmos .cosmos-stars i {
+  width: calc(var(--u) * 0.55);
+  height: calc(var(--u) * 0.55);
+  box-shadow: 0 0 calc(var(--u) * 0.5) #7fd4ff;
+}
+html[data-theme='cosmos'] .hc2-people .host-chat-name {
+  color: #7fd4ff;
+}
+html[data-theme='cosmos'] .hc2-people input {
+  accent-color: #7fd4ff;
+}
+
+/* One column. */
+html[data-theme='cosmos'] .hc2-qr {
+  flex-wrap: wrap;
+}
+
+@media (min-width: 960px) and (min-height: 540px) {
+  html[data-theme='cosmos'] .host-cosmos .host-grid {
+    grid-template-columns: calc(var(--u) * 2.4) calc(var(--u) * 51) calc(var(--u) * 3) minmax(0, 1fr) calc(var(--u) * 2.4);
+    grid-template-rows: calc(var(--u) * 2) auto minmax(0, 1fr) calc(var(--u) * 1.4);
+    grid-template-areas:
+      '. . . . .'
+      '. video . side .'
+      '. below . side .'
+      '. . . . .';
+  }
+  html[data-theme='cosmos'] .hc2-qr {
+    flex-wrap: nowrap;
+  }
+}

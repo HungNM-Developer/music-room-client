@@ -106,9 +106,6 @@ html[data-theme='saigon'] {
   .line-dial[data-variant='tape'] .line-dial-track > i {
     background: #b8442f;
   }
-  .line-dial.saigon-host {
-    font-size: 26px;
-  }
   html[data-theme='saigon'] .stage-vote {
     border-color: #b8442f;
   }
@@ -143,7 +140,8 @@ html[data-theme='saigon'] {
   }
   .stage-queue[data-variant='chalk'] .stage-q-actions,
   .stage-queue[data-variant='chalk'] .stage-q-actions button {
-    color: #f4efe1cc;
+    /* !important: IconButton's text-sage utility outranks this layer (dark icons on the chalkboard). */
+    color: #f4efe1cc !important;
   }
   .stage-queue[data-variant='chalk'] .stage-q-actions button[aria-pressed='true'] {
     color: #ff8a73;

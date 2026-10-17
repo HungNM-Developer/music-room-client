@@ -1,0 +1,190 @@
+/* Speaker screen · Áp phích giữa thế kỷ: a 1950s poster. A big yellow sun behind the top-left
+   of the video, an orange ring above its right edge (never behind text), the title in narrow
+   bold capitals, a ruler for the time, the next songs as three round covers. Sizes in --u. */
+html[data-theme='midcentury'] .host-midcentury {
+  background: #14303a;
+  color: #f0ead9;
+}
+html[data-theme='midcentury'] .hm-video > * {
+  box-shadow: calc(var(--u) * 1.1) calc(var(--u) * 1.1) 0 #0e2329;
+}
+html[data-theme='midcentury'] .host-midcentury .host-title {
+  font: 700 calc(var(--u) * 2.9) / 0.98 var(--font-archivo);
+  font-stretch: 75%;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+html[data-theme='midcentury'] .host-midcentury .host-code {
+  font: 700 calc(var(--u) * 3.2) / 1 var(--font-archivo);
+  font-stretch: 75%;
+  letter-spacing: 0.06em;
+}
+
+/* Left. */
+html[data-theme='midcentury'] .hm-now {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: calc(var(--u) * 0.45);
+  padding-top: calc(var(--u) * 1.8);
+}
+html[data-theme='midcentury'] .hm-row {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1);
+  min-width: 0;
+}
+html[data-theme='midcentury'] .hm-row .host-lamp {
+  flex: none;
+}
+html[data-theme='midcentury'] .hm-row .host-meta {
+  min-width: 0;
+  color: #a9bcbc;
+}
+html[data-theme='midcentury'] .host-midcentury .line-dial[data-variant='mc'] {
+  gap: calc(var(--u) * 1);
+  font-size: calc(var(--u) * 1.3);
+}
+html[data-theme='midcentury'] .host-midcentury .line-dial[data-variant='mc'] .line-dial-track {
+  height: calc(var(--u) * 0.35);
+}
+html[data-theme='midcentury'] .host-midcentury .lyrics-inline p {
+  color: #a9bcbc;
+}
+html[data-theme='midcentury'] .host-midcentury .lyrics-inline p[data-current] {
+  color: #e5b53e;
+  font-family: var(--font-archivo);
+  font-weight: 700;
+}
+html[data-theme='midcentury'] .hm-wish {
+  padding-left: calc(var(--u) * 1);
+  border-left: calc(var(--u) * 0.3) solid #cf6a35;
+}
+html[data-theme='midcentury'] .hm-wish figcaption {
+  color: #a9bcbc;
+}
+
+/* Right. */
+html[data-theme='midcentury'] .hm-side {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: calc(var(--u) * 1.3);
+}
+html[data-theme='midcentury'] .hm-qr {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 1.4);
+  padding: calc(var(--u) * 1.3);
+  background: #f0ead9;
+  color: #14303a;
+}
+html[data-theme='midcentury'] .hm-scan {
+  font: 700 calc(var(--u) * 1.3) var(--font-archivo);
+}
+html[data-theme='midcentury'] .hm-qr .host-code {
+  margin: calc(var(--u) * 0.3) 0;
+}
+html[data-theme='midcentury'] .hm-qr .host-link {
+  color: #14303acc;
+}
+html[data-theme='midcentury'] .hm-next h2 {
+  margin-bottom: calc(var(--u) * 0.7);
+  color: #e5b53e;
+  font: 700 calc(var(--u) * 1.5) var(--font-archivo);
+  font-stretch: 75%;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+html[data-theme='midcentury'] .hm-next ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: calc(var(--u) * 1.2);
+}
+html[data-theme='midcentury'] .hm-next li {
+  display: grid;
+  justify-items: center;
+  gap: calc(var(--u) * 0.2);
+  min-width: 0;
+  text-align: center;
+}
+html[data-theme='midcentury'] .hm-round {
+  width: calc(var(--u) * 7);
+  height: calc(var(--u) * 7);
+  margin-bottom: calc(var(--u) * 0.4);
+  border-radius: 50%;
+  box-shadow: calc(var(--u) * 0.45) calc(var(--u) * 0.45) 0 #0e2329;
+}
+html[data-theme='midcentury'] .hm-next li .t {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: calc(var(--u) * 1.2);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+html[data-theme='midcentury'] .hm-next li .p {
+  max-width: 100%;
+  overflow: hidden;
+  color: #a9bcbc;
+  font-size: calc(var(--u) * 1.1);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-theme='midcentury'] .hm-next .host-next-empty {
+  color: #a9bcbc;
+}
+html[data-theme='midcentury'] .hm-people {
+  display: grid;
+  gap: calc(var(--u) * 0.5);
+}
+html[data-theme='midcentury'] .hm-people .host-chat-name {
+  color: #e5b53e;
+}
+html[data-theme='midcentury'] .hm-people .host-faces i {
+  box-shadow: 0 0 0 calc(var(--u) * 0.18) #14303a;
+}
+
+/* One column. */
+html[data-theme='midcentury'] .hm-qr {
+  flex-wrap: wrap;
+}
+
+@media (min-width: 960px) and (min-height: 540px) {
+  html[data-theme='midcentury'] .host-midcentury .host-grid {
+    grid-template-columns: calc(var(--u) * 3) calc(var(--u) * 51) calc(var(--u) * 3.4) minmax(0, 1fr) calc(var(--u) * 2.4);
+    grid-template-rows: calc(var(--u) * 3) auto minmax(0, 1fr) calc(var(--u) * 1.4);
+    grid-template-areas:
+      '. . . . .'
+      '. video . side .'
+      '. below . side .'
+      '. . . . .';
+    z-index: 1;
+  }
+  html[data-theme='midcentury'] .hm-qr {
+    flex-wrap: nowrap;
+  }
+  html[data-theme='midcentury'] .host-midcentury .host-frame {
+    overflow: hidden;
+  }
+  /* The sun behind the top-left corner of the video, the ring above its right edge. */
+  html[data-theme='midcentury'] .host-midcentury .host-frame::before,
+  html[data-theme='midcentury'] .host-midcentury .host-frame::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  html[data-theme='midcentury'] .host-midcentury .host-frame::before {
+    left: calc(var(--u) * -6);
+    top: calc(var(--u) * -12);
+    width: calc(var(--u) * 34);
+    height: calc(var(--u) * 34);
+    background: #e5b53e;
+  }
+  html[data-theme='midcentury'] .host-midcentury .host-frame::after {
+    left: calc(var(--u) * 36);
+    top: calc(var(--u) * -6);
+    width: calc(var(--u) * 14);
+    height: calc(var(--u) * 14);
+    border: calc(var(--u) * 1.3) solid #cf6a35;
+  }
+}
