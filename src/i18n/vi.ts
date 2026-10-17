@@ -1,6 +1,6 @@
 // Every user-facing Vietnamese string lives here (requirements §2.6–2.7). `en.ts` has the
 // same shape (type `Dict` in ./index); read them through `useT()` / `tr()`.
-import type { DjSound, ErrorCode, ErrorParams } from '@/contracts';
+import type { DjSound, ErrorCode, ErrorParams, SuggestionReason } from '@/contracts';
 import { formatDuration } from '@/lib/duration';
 
 export type ClientErrorCode = ErrorCode | 'NETWORK';
@@ -363,6 +363,8 @@ export const vi = {
   suggest: {
     title: 'Gợi ý tiếp theo',
     reasons: {
+      youtube: 'YouTube gợi ý',
+      trending: 'Thịnh hành',
       similar: 'Giống bài đang phát',
       room: 'Phòng hay nghe tiếp',
       artist: 'Cùng nghệ sĩ',
@@ -371,7 +373,7 @@ export const vi = {
       taste: 'Hợp gu bạn',
       'taste-similar': 'Giống gu bạn',
       peers: 'Người cùng gu cũng thích',
-    },
+    } satisfies Record<SuggestionReason, string>,
     because: (artist: string) => `Vì bạn hay nghe ${artist}`,
     likeTaste: (artist: string) => `Giống gu ${artist}`,
     modeLabel: 'Gợi ý cho',

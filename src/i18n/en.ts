@@ -368,6 +368,8 @@ export const en: Dict = {
   suggest: {
     title: 'Suggestions',
     reasons: {
+      youtube: 'Suggested by YouTube',
+      trending: 'Trending',
       similar: 'Like the current song',
       room: 'The room often plays next',
       artist: 'Same artist',
