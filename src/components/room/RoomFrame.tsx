@@ -112,12 +112,7 @@ export function RoomFrame({
         </div>
 
         <div {...panel('room')} className={`room-stage min-w-0 space-y-5 ${tab === 'room' ? '' : 'hidden lg:block'}`}>
-          {isPlayer && (
-            <div className="space-y-2">
-              <p className="px-1 text-[13px] font-medium text-amber">{vi.host.thisDevicePlays}</p>
-              <PlayerEngine />
-            </div>
-          )}
+          {isPlayer && <PlayerEngine caption />}
           {hasSnapshot ? stage(() => setTab('add')) : <RoomSkeleton />}
         </div>
 
