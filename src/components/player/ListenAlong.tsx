@@ -6,7 +6,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { useT } from '@/i18n';
 import { estimatePosition } from '@/lib/time';
-import { legacySpeech, playSpeech, stopSpeech } from '@/lib/speech';
+import { legacySpeech, SpeechCue } from '@/lib/speech';
 import { useMe, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 import { DJ_FILES, DRIFT_SEC, DUCK_VOLUME, type PlayerAdapter, playDj, preloadDj, TapVideoHint, YouTubeAdapter } from './PlayerEngine';
@@ -138,7 +138,17 @@ function ListenPlayer() {
   const [needsTap, setNeedsTap] = useState(false);
   const offsetRef = useRef(offset);
   const volRef = useRef(vol);
-  const duckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The wish of the song now playing, read here too (the MC line only goes to the speaker).
+  const cueRef = useRef<SpeechCue | null>(null);
+  useEffect(() => {
+    const cue = new SpeechCue({
+      duck: () => adapterRef.current?.setVolume(Math.min(volRef.current, DUCK_VOLUME)),
+      restore: () => adapterRef.current?.setVolume(volRef.current),
+      volume: () => volRef.current,
+    });
+    cueRef.current = cue;
+    return () => cue.stop();
+  }, []);
   const [touch] = useState(() => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches);
 
   useEffect(() => {
@@ -162,24 +172,16 @@ function ListenPlayer() {
       itemRef.current = np.item.id;
       playedRef.current = false;
       userPausedRef.current = false;
-      if (duckTimer.current) clearTimeout(duckTimer.current);
+      cueRef.current?.stop();
       a.setVolume(volRef.current);
       a.load(np.item.track.externalId, expected, np.status === 'PLAYING');
-      // The wish is read here too, like on the speaker (the MC line only goes to the speaker).
-      stopSpeech();
       const speech = np.item.wishSpeech ?? legacySpeech(np.item.wishMessage);
-      if (speech && np.status === 'PLAYING' && expected < 3) {
-        const restore = () => {
-          if (duckTimer.current) clearTimeout(duckTimer.current);
-          a.setVolume(volRef.current);
-        };
-        if (playSpeech(speech, volRef.current, restore)) {
-          a.setVolume(Math.min(volRef.current, DUCK_VOLUME));
-          duckTimer.current = setTimeout(restore, Math.max(8000, speech.text.length * 150));
-        }
-      }
+      cueRef.current?.begin(np.item.id, speech, np.status === 'PLAYING' && expected < 3);
       return;
     }
+    // Same song: its wish's Edge audio may have just arrived; paused meanwhile, it is dropped.
+    if (np.status === 'PAUSED') cueRef.current?.stop();
+    else cueRef.current?.update(np.item.id, np.item.wishSpeech);
     if (np.status === 'PAUSED') a.pause();
     else {
       if (resumed) userPausedRef.current = false; // the room starting again brings everyone back
@@ -244,12 +246,6 @@ function ListenPlayer() {
     });
   }, []);
 
-  useEffect(
-    () => () => {
-      if (duckTimer.current) clearTimeout(duckTimer.current);
-    },
-    [],
-  );
 
   return (
     <section aria-label={t.listen.title} className="space-y-3 rounded-panel border border-amber/40 bg-panel/80 p-3">

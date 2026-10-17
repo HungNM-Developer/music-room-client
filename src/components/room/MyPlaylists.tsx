@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, ChevronRight, Copy, ListMusic, Loader2, MoreHorizontal, Pencil, Plus, Share2, Trash2 } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Copy, ListMusic, Loader2, MessageSquareHeart, MoreHorizontal, Pencil, Plus, Share2, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Button, IconButton } from '@/components/ui/Button';
 import { Dialog, SheetAction } from '@/components/ui/Dialog';
@@ -8,7 +8,7 @@ import { Thumb } from '@/components/ui/Thumb';
 import { useToast } from '@/components/ui/Toast';
 import type { PlaylistSummaryView, PlaylistView, TrackSummary } from '@/contracts';
 import { ADD_MANY_MAX, LIMITS } from '@/contracts/constants';
-import type { useAddTrack } from '@/hooks/useAddTrack';
+import type { AddWithWish, useAddTrack } from '@/hooks/useAddTrack';
 import { errorMessage, useT } from '@/i18n';
 import { playlistName } from '@/i18n/activity';
 import { formatDuration } from '@/lib/time';
@@ -17,9 +17,10 @@ import { room } from '@/state/room-store';
 import { YouTubeImport } from './YouTubeImport';
 
 type Add = ReturnType<typeof useAddTrack>['add'];
+type Lists = { add: Add; added: Set<string>; addWithWish?: AddWithWish };
 
 /** L2: the account's playlists inside "Của tôi"; a tap opens one. */
-export function MyPlaylists({ add, added }: { add: Add; added: Set<string> }) {
+export function MyPlaylists({ add, added, addWithWish }: Lists) {
   const t = useT();
   const [lists, setLists] = useState<PlaylistSummaryView[] | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
@@ -35,7 +36,7 @@ export function MyPlaylists({ add, added }: { add: Add; added: Set<string> }) {
   }, [load, openId, version]);
 
   if (openId)
-    return <PlaylistDetail id={openId} add={add} added={added} onBack={() => setOpenId(null)} />;
+    return <PlaylistDetail id={openId} add={add} added={added} addWithWish={addWithWish} onBack={() => setOpenId(null)} />;
 
   return (
     <section aria-labelledby="pl-title" className="space-y-2">
@@ -77,7 +78,7 @@ export function MyPlaylists({ add, added }: { add: Add; added: Set<string> }) {
 }
 
 /** One playlist: rename, share, delete, reorder, and add its songs to the queue. */
-function PlaylistDetail({ id, add, added, onBack }: { id: string; add: Add; added: Set<string>; onBack: () => void }) {
+function PlaylistDetail({ id, add, added, addWithWish, onBack }: Lists & { id: string; onBack: () => void }) {
   const t = useT();
   const toast = useToast();
   const [pl, setPl] = useState<PlaylistView | null>(null);
@@ -228,6 +229,11 @@ function PlaylistDetail({ id, add, added, onBack }: { id: string; add: Add; adde
                 <Button size="sm" disabled={taken} onClick={() => void add(item.id, item)} aria-label={t.library.addTrack(item.title)}>
                   <Plus className="h-4 w-4" aria-hidden />
                 </Button>
+                {addWithWish && !taken && (
+                  <IconButton label={t.add.withWish(item.title)} title={t.add.withWishShort} onClick={() => void addWithWish(item.id, item)}>
+                    <MessageSquareHeart className="h-5 w-5" aria-hidden />
+                  </IconButton>
+                )}
                 <IconButton label={t.queue.actions(item.title)} onClick={() => setMenuFor(item)}>
                   <MoreHorizontal className="h-5 w-5" aria-hidden />
                 </IconButton>

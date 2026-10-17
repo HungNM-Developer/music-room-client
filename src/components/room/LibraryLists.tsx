@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import type { LibraryItemView, LibrarySort, TrackSummary } from '@/contracts';
 import { LIBRARY_SORTS, LOOKUP_MAX_IDS } from '@/contracts/constants';
+import type { AddWithWish } from '@/hooks/useAddTrack';
 import { useT } from '@/i18n';
 import { readLocalFavorites } from '@/lib/local-favorites';
 import { formatAgo, formatDuration } from '@/lib/time';
@@ -14,6 +15,7 @@ import { BlockMenu } from './BlockDialog';
 import { TrackRow } from './TrackRow';
 
 type Add = (trackInput: string, known?: TrackSummary) => Promise<boolean>;
+type Props = { add: Add; added: Set<string>; addWithWish?: AddWithWish };
 
 function Status({ loading, failed, empty, onRetry }: { loading: boolean; failed: boolean; empty: string | null; onRetry: () => void }) {
   const t = useT();
@@ -36,7 +38,7 @@ function Status({ loading, failed, empty, onRetry }: { loading: boolean; failed:
 }
 
 /** A1: songs this room has played, to add again in one tap. */
-export function PlayedList({ add, added }: { add: Add; added: Set<string> }) {
+export function PlayedList({ add, added, addWithWish }: Props) {
   const t = useT();
   const isAdmin = useMe()?.role === 'ADMIN';
   const [blockFor, setBlockFor] = useState<TrackSummary | null>(null);
@@ -94,6 +96,7 @@ export function PlayedList({ add, added }: { add: Add; added: Set<string> }) {
               done={added.has(it.track.id)}
               addLabel={t.library.addAgain}
               onAdd={() => void add(it.track.id, it.track)}
+              onAddWithWish={addWithWish && (() => void addWithWish(it.track.id, it.track))}
               onMore={isAdmin ? () => setBlockFor(it.track) : undefined}
               meta={
                 <p className="flex flex-wrap gap-x-2">
@@ -118,7 +121,7 @@ export function PlayedList({ add, added }: { add: Add; added: Set<string> }) {
  * Loaded once per visit: an unsaved row stays (with an empty Lưu) until the next visit,
  * so a mis-tap can be undone in place.
  */
-export function SavedList({ add, added }: { add: Add; added: Set<string> }) {
+export function SavedList({ add, added, addWithWish }: Props) {
   const t = useT();
   const signedIn = useRoom((s) => Boolean(s.user));
   const [tracks, setTracks] = useState<TrackSummary[] | null>(null);
@@ -170,6 +173,7 @@ export function SavedList({ add, added }: { add: Add; added: Set<string> }) {
               track={t}
               done={added.has(t.id)}
               onAdd={() => void add(t.id, t)}
+              onAddWithWish={addWithWish && (() => void addWithWish(t.id, t))}
               meta={
                 <p className="flex gap-2">
                   {t.channel && <span className="truncate">{t.channel}</span>}

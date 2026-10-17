@@ -141,6 +141,8 @@ export const vi = {
     searchYouTube: 'Tìm trên YouTube',
     tip: 'Gõ tên bài để tìm, hoặc dán link YouTube để thêm ngay.',
     results: 'Kết quả tìm kiếm',
+    withWishShort: 'Thêm kèm lời chúc',
+    withWish: (title: string) => `Thêm "${title}" kèm lời chúc`,
   },
 
   djAsk: {
@@ -423,6 +425,9 @@ export const vi = {
     voiceMale: 'Giọng nam',
     voiceFemale: 'Giọng nữ',
     pickVoice: 'Chọn giọng đọc',
+    ask: 'Nhờ MC viết',
+    addSave: 'Thêm bài kèm lời chúc',
+    asking: 'MC đang viết…',
   },
 
   people: {

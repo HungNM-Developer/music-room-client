@@ -5,14 +5,22 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import type { SuggestionView } from '@/contracts';
 import { LIMITS } from '@/contracts/constants';
-import type { useAddTrack } from '@/hooks/useAddTrack';
+import type { AddWithWish, useAddTrack } from '@/hooks/useAddTrack';
 import { errorMessage, useT } from '@/i18n';
 import { getLang } from '@/i18n/lang';
 import { room } from '@/state/room-store';
 import { SuggestionList } from './Suggestions';
 
 /** AI2: "Hỏi DJ" — describe the music, get songs to add. */
-export function DjAsk({ add, added }: { add: ReturnType<typeof useAddTrack>['add']; added: Set<string> }) {
+export function DjAsk({
+  add,
+  added,
+  addWithWish,
+}: {
+  add: ReturnType<typeof useAddTrack>['add'];
+  added: Set<string>;
+  addWithWish?: AddWithWish;
+}) {
   const t = useT();
   const [prompt, setPrompt] = useState('');
   const [items, setItems] = useState<SuggestionView[] | null>(null);
@@ -84,7 +92,7 @@ export function DjAsk({ add, added }: { add: ReturnType<typeof useAddTrack>['add
           {error}
         </p>
       )}
-      {items && !busy && (items.length ? <SuggestionList items={items} label={t.djAsk.listLabel} add={add} added={added} /> : <p className="px-1 text-sage">{t.djAsk.empty}</p>)}
+      {items && !busy && (items.length ? <SuggestionList items={items} label={t.djAsk.listLabel} add={add} added={added} addWithWish={addWithWish} /> : <p className="px-1 text-sage">{t.djAsk.empty}</p>)}
     </div>
   );
 }
