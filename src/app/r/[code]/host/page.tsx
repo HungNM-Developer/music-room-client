@@ -23,7 +23,7 @@ import { addedByLabel } from '@/lib/added-by';
 import { getToken } from '@/lib/session-store';
 import { useRoomMood } from '@/hooks/useRoomMood';
 import { errorMessage, vi } from '@/i18n/vi';
-import { useRoom } from '@/state/hooks';
+import { HOST_RECLAIM_MS, useOtherLivePlayer, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 import { useShownTheme } from '@/themes/load';
 import { useApplyTheme, useRoomTheme } from '@/themes/useTheme';
@@ -101,6 +101,14 @@ function HostScreen({ code }: { code: string }) {
   const np = useRoom((s) => s.snapshot?.nowPlaying ?? null);
   const queue = useRoom((s) => s.snapshot?.queue);
   const playerRevoked = useRoom((s) => s.playerRevoked);
+  const otherPlayer = useOtherLivePlayer();
+  // The sound was moved to another device: once that one has been offline for a while, this
+  // speaker takes the room back by itself (an office TV returns after someone's laptop leaves).
+  useEffect(() => {
+    if (!playerRevoked || otherPlayer) return;
+    const t = setTimeout(() => room.clearPlayerRevoked(), HOST_RECLAIM_MS);
+    return () => clearTimeout(t);
+  }, [playerRevoked, otherPlayer]);
   const [volume, setVolume] = useState(100);
   // The speaker always wears the room's theme (never a personal choice on this browser).
   const { id: theme, mod } = useShownTheme(useRoomTheme());
@@ -130,6 +138,7 @@ function HostScreen({ code }: { code: string }) {
                 <Button variant="primary" onClick={() => room.clearPlayerRevoked()}>
                   {vi.host.takeBack}
                 </Button>
+                <p className="max-w-md text-[14px] text-sage">{vi.host.autoReturn}</p>
               </div>
             ) : (
               <PlayerEngine volume={volume} />

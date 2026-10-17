@@ -8,7 +8,8 @@ import { PLAYER_ERROR_CODES } from '@/contracts/constants';
 import { PLAYER_PROGRESS_INTERVAL_MS } from '@/contracts/events';
 import { vi } from '@/i18n/vi';
 import { estimatePosition } from '@/lib/time';
-import { useRoom } from '@/state/hooks';
+import { Button } from '@/components/ui/Button';
+import { HOST_RECLAIM_MS, useMe, useOtherLivePlayer, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 
 /** Minimal player surface the engine drives (implemented by the YouTube iframe). */
@@ -24,6 +25,7 @@ export interface PlayerAdapter {
 }
 
 export const DRIFT_SEC = 2.5;
+
 export const DUCK_VOLUME = 20; // R-34
 
 const VOICE: Record<VoicePreset, { pitch: number; rate: number }> = {
@@ -99,6 +101,12 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
   const connectCount = useRoom((s) => s.connectCount);
   const memberId = useRoom((s) => s.memberId);
   const preview = useRoom((s) => s.snapshot?.nowPlaying ?? null);
+  const isDevice = Boolean(useMe()?.isDevice);
+  const other = useOtherLivePlayer();
+  const otherRef = useRef(other);
+  useEffect(() => {
+    otherRef.current = other;
+  }, [other]);
   const send = room.send;
   const adapterRef = useRef<PlayerAdapter | null>(null);
   // Counts YouTube players that became ready. The iframe can be rebuilt (React StrictMode in dev,
@@ -123,7 +131,23 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
   // page does not count there. Known after hydration only.
   const [touch, setTouch] = useState(false);
 
-  // Sticky user activation (e.g. "Phát ở máy này") already allows autoplay on a computer.
+  // A /host page never takes the room's sound on its own while another speaker is live (an old
+  // tab, a sleeping TV waking up): it waits with a "move the sound here" button, and takes over
+  // by itself once that speaker has been offline for HOST_RECLAIM_MS. A tap always takes over.
+  const forceClaim = useRef(false);
+  const [yieldTo, setYieldTo] = useState<string | null>(null);
+  useEffect(() => {
+    if (!isDevice || started) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (other) return setYieldTo(other.id);
+    if (!yieldTo) return;
+    const t = setTimeout(() => setYieldTo(null), HOST_RECLAIM_MS);
+    return () => clearTimeout(t);
+  }, [isDevice, started, other, yieldTo]);
+  const waitingForOther = isDevice && !started && Boolean(other || yieldTo);
+
+  // Sticky user activation (e.g. "Phát ở máy này", "Phát ở máy này" after being replaced)
+  // already allows autoplay on a computer, and it came from a tap: take over.
   // Runs after hydration because the server render cannot know it.
   useEffect(() => {
     const activation = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } })
@@ -131,7 +155,10 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
     const coarse = window.matchMedia('(pointer: coarse)').matches;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setTouch(coarse);
-    if (activation?.hasBeenActive && !coarse) setStarted(true);
+    if (activation?.hasBeenActive && !coarse) {
+      forceClaim.current = true;
+      setStarted(true);
+    }
   }, []);
 
   // The room plays but the browser blocked this video after starting. Shown under the video.
@@ -150,9 +177,18 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
     if (!started || connection !== 'connected' || !memberId) return;
     const key = `${memberId}:${connectCount}`;
     if (claimedKey.current === key) return;
+    // A /host page that reconnects after another speaker took over steps back instead.
+    if (isDevice && otherRef.current && !forceClaim.current) {
+      adapterRef.current?.pause();
+      itemRef.current = null;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setStarted(false);
+      return;
+    }
     claimedKey.current = key;
+    forceClaim.current = false;
     void send('player:claim', {});
-  }, [started, connection, connectCount, memberId, send]);
+  }, [started, connection, connectCount, memberId, send, isDevice]);
 
   const report = useCallback(
     (event: 'started' | 'progress' | 'ended' | 'error', extra: { positionSec?: number; errorCode?: number } = {}) => {
@@ -250,7 +286,7 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
   useEffect(() => {
     const a = adapterRef.current;
     const np = previewRef.current;
-    if (!a || !ready || started || !np) return;
+    if (!a || !ready || started || !np || waitingForOther) return;
     const at = estimatePosition({ ...np, durationSec: np.item.track.durationSec }, offsetRef.current, Date.now());
     playedSinceLoad.current = false;
     loadedVideo.current = np.item.track.externalId;
@@ -262,7 +298,7 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
       if (s !== 1 && s !== 3) setNeedsTap(true);
     }, 2500);
     return () => clearTimeout(t);
-  }, [ready, started, previewId, previewPlaying]);
+  }, [ready, started, previewId, previewPlaying, waitingForOther]);
 
   useEffect(() => {
     volumeRef.current = volume;
@@ -422,6 +458,13 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
   // paused) its own ▶ starts this speaker. A hint says so — never over the video.
   const waitingHint = touch ? vi.host.startTouch : vi.host.start;
 
+  // A tap on "move the sound here": take over from the other speaker right now.
+  const takeOver = () => {
+    forceClaim.current = true;
+    setYieldTo(null);
+    start();
+  };
+
   return (
     <div className="space-y-2">
       {caption && (
@@ -441,9 +484,19 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
           onError={onError}
           onAutoplayBlocked={() => setNeedsTap(true)}
         />
+        {/* Nothing is loaded in the player while waiting, so this covers an empty frame. */}
+        {waitingForOther && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-dial-deep p-6 text-center">
+            <p className="max-w-md text-[18px]">{other ? vi.host.otherPlays(other.name) : vi.host.otherLeft}</p>
+            <Button variant="primary" onClick={takeOver}>
+              {vi.host.moveHere}
+            </Button>
+            <p className="max-w-md text-[14px] text-sage">{vi.host.autoReturn}</p>
+          </div>
+        )}
       </div>
       {!started
-        ? preview && (!previewPlaying || needsTap) && <TapVideoHint text={waitingHint} />
+        ? !waitingForOther && preview && (!previewPlaying || needsTap) && <TapVideoHint text={waitingHint} />
         : needsTap && <TapVideoHint text={vi.host.tapVideo} />}
     </div>
   );
