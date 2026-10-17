@@ -8,7 +8,7 @@ import type { SuggestionView } from '@/contracts';
 import { useAddTrack } from '@/hooks/useAddTrack';
 import { vi } from '@/i18n/vi';
 import { formatDuration } from '@/lib/time';
-import { useMe, useRoom } from '@/state/hooks';
+import { useBlockedIds, useMe, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 import { TrackRow } from './TrackRow';
 
@@ -141,13 +141,17 @@ function SearchRow({
   add: ReturnType<typeof useAddTrack>['add'];
 }) {
   const toast = useToast();
+  const blocked = useBlockedIds();
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
 
   async function findAndAdd() {
     setBusy(true);
     const r = await room.send('search:query', { q: `${artist} ${song}`.slice(0, 100) });
-    const first = r.ok ? r.data.results[0] : undefined;
+    // The first result the room can take: not blocked by the admin, not already waiting / on air.
+    const snap = room.getState().snapshot;
+    const taken = new Set([snap?.nowPlaying?.item.track.id, ...(snap?.queue ?? []).map((q) => q.track.id)]);
+    const first = r.ok ? r.data.results.find((t) => !blocked.has(t.id) && !taken.has(t.id)) : undefined;
     if (!first) {
       setBusy(false);
       toast(vi.suggest.notFound, 'error');
