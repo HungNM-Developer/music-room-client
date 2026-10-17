@@ -141,6 +141,7 @@ export const en: Dict = {
     searchYouTube: 'Search YouTube',
     tip: 'Type a song name to search, or paste a YouTube link to add it straight away.',
     results: 'Search results',
+    more: 'Show more',
     withWishShort: 'Add with a message',
     withWish: (title: string) => `Add "${title}" with a message`,
   },
