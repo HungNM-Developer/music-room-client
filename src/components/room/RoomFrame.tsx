@@ -16,6 +16,7 @@ import { RoomSkeleton } from '@/components/room/RoomSkeleton';
 import { SkipVote } from '@/components/room/SkipVote';
 import { LangSwitch } from '@/components/ui/LangSwitch';
 import { panelId, tabId, TabList, type TabDef } from '@/components/ui/Tabs';
+import { onFindSongs } from '@/lib/find-songs';
 import { errorMessage, useT } from '@/i18n';
 import { useMe, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
@@ -64,6 +65,15 @@ export function RoomFrame({
   const [tab, setTab] = useState<TabKey>('room');
   const [logOpen, setLogOpen] = useState(false);
   useListenSession();
+  // "Tìm bài khác" (idle speaker cover): the add panel, on the search box.
+  useEffect(
+    () =>
+      onFindSongs(() => {
+        setTab('add');
+        setTimeout(() => document.getElementById('add-input')?.focus(), 50);
+      }),
+    [],
+  );
 
   // Floating reactions + a visual cue for DJ sounds (audio plays on the speaker only, R-34).
   useEffect(

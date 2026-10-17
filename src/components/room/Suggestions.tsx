@@ -9,6 +9,7 @@ import { type AddWithWish, useAddTrack } from '@/hooks/useAddTrack';
 import { useT, tr } from '@/i18n';
 import { formatDuration } from '@/lib/time';
 import { useBlockedIds, useMe, useRoom } from '@/state/hooks';
+import { roomSuggestions } from '@/lib/room-suggestions';
 import { room } from '@/state/room-store';
 import { TrackRow } from './TrackRow';
 
@@ -35,7 +36,7 @@ export function Suggestions() {
     let alive = true;
     const load = forMe
       ? room.send('taste:for-me', {}).then((r) => (r.ok ? r.data.items : []))
-      : room.send('suggest:next', {}).then((r) => (r.ok ? r.data.items : []));
+      : roomSuggestions(onAir);
     void load.then((list) => {
       if (alive) setItems(list);
     });

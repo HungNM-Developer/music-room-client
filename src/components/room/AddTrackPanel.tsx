@@ -1,12 +1,13 @@
 'use client';
 
 import { ListMusic, Loader2, MessageSquareHeart, Plus, Search } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button, IconButton } from '@/components/ui/Button';
 import { panelId, tabId, TabList } from '@/components/ui/Tabs';
 import type { TrackSummary } from '@/contracts';
 import { useAct } from '@/hooks/useAct';
 import { type AddWithWish, useAddTrack } from '@/hooks/useAddTrack';
+import { onFindSongs } from '@/lib/find-songs';
 import { useT } from '@/i18n';
 import { classifyInput, playlistIn, sharedPlaylistIn } from '@/lib/add-input';
 import { formatDuration } from '@/lib/time';
@@ -26,6 +27,8 @@ export function AddTrackPanel() {
   const t = useT();
   const me = useMe();
   const [source, setSource] = useState<Source>('search');
+  // "Tìm bài khác" from the idle speaker: the search box, whatever list was open.
+  useEffect(() => onFindSongs(() => setSource('search')), []);
   const aiEnabled = useRoom((s) => s.snapshot?.aiEnabled ?? false);
   const blockedCount = useRoom((s) => s.snapshot?.room.blockedTrackIds.length ?? 0);
   const isAdmin = me?.role === 'ADMIN';

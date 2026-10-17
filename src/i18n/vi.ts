@@ -91,6 +91,8 @@ export const vi = {
     paused: 'Tạm dừng',
     idleTitle: 'Loa đang chờ bài',
     idle: 'Thêm bài đầu tiên, loa sẽ phát ngay.',
+    playNow: (title: string) => `Phát ngay: ${title}`,
+    findSong: 'Tìm bài khác',
     pickedBy: (name: string) => `${name} chọn`,
     fallback: 'Playlist dự phòng',
     radio: 'Radio tự động',

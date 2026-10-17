@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { useT } from '@/i18n';
 import { estimatePosition } from '@/lib/time';
 import { legacySpeech, SpeechCue } from '@/lib/speech';
+import { IdleCover } from './IdleCover';
 import { useMe, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 import { DJ_FILES, DRIFT_SEC, DUCK_VOLUME, type PlayerAdapter, playDj, preloadDj, TapVideoHint, YouTubeAdapter } from './PlayerEngine';
@@ -270,6 +271,7 @@ function ListenPlayer() {
           onEnded={() => {}}
           onError={() => {}}
         />
+        {!np && <IdleCover />}
       </div>
       {needsTap && <TapVideoHint text={t.listen.tapVideo} />}
       <ListenVolume />
