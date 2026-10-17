@@ -85,6 +85,16 @@ html[data-theme] {
     caret-color: var(--color-amber);
   }
 
+  /* iOS Safari zooms into any field whose text is under 16px when it gets focus, and
+     does not zoom back. Touch screens: every text field at 16px (beats size utilities). */
+  @media (pointer: coarse) {
+    input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file']),
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+  }
+
   input[type='range'] {
     accent-color: var(--color-amber);
   }
