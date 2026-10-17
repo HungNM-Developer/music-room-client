@@ -33,6 +33,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return {
     title,
     description,
+    manifest: `/r/${code}/app.webmanifest`,
     openGraph: { title, description, type: 'website', siteName: vi.appName, url: `${origin}/r/${code}`, images: [image] },
     twitter: { card: 'summary_large_image', title, description, images: [image] },
   };
