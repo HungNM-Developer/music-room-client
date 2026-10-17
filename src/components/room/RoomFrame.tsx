@@ -43,6 +43,7 @@ export function RoomFrame({
   decor,
   sideTop,
   inlineVote,
+  videoFrame,
 }: {
   code: string;
   /** The room column; receives "open the add tab" for empty-queue buttons. */
@@ -55,6 +56,8 @@ export function RoomFrame({
   sideTop?: React.ReactNode;
   /** ≥1024 px the stage shows the vote itself, so the floating card is for smaller screens. */
   inlineVote: boolean;
+  /** This device plays: the theme's frame around the video (its speaker-screen frame). */
+  videoFrame?: string;
 }) {
   const t = useT();
   const memberId = useRoom((s) => s.memberId);
@@ -129,7 +132,7 @@ export function RoomFrame({
           data-player={isPlayer || undefined}
           className={`room-stage min-w-0 space-y-5 ${tab === 'room' ? '' : 'hidden lg:block'}`}
         >
-          {isPlayer && <PlayerEngine caption />}
+          {isPlayer && <PlayerEngine caption frameClass={videoFrame && `room-video-frame ${videoFrame}`} />}
           {hasSnapshot ? stage(() => setTab('add')) : <RoomSkeleton />}
         </div>
 

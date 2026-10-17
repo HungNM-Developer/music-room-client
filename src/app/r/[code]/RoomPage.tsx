@@ -54,6 +54,7 @@ export function RoomPage() {
     <RoomFrame
       code={code}
       inlineVote
+      videoFrame={mod?.host?.videoClass}
       header={mod?.header}
       chat={mod?.chat}
       decor={Decor && <Decor />}

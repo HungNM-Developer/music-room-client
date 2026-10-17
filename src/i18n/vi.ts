@@ -641,7 +641,7 @@ export const vi = {
     moveHere: 'Phát ở máy này',
     autoReturn: 'Tự phát lại khi máy kia tắt',
     volume: 'Âm lượng',
-    thisDeviceWaits: 'Máy này là máy phát của phòng · chưa bật loa',
+    roomSpeaker: 'Máy này là máy phát của phòng.',
   },
 
   banners: {
