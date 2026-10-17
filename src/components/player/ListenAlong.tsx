@@ -119,6 +119,10 @@ function ListenPlayer() {
   const itemRef = useRef<string | null>(null);
   const npRef = useRef(np);
   const statusRef = useRef<string | null>(null);
+  // This song has really played here, and the listener then paused it with the video's own ⏸.
+  // Only that pause is left alone; anything else (autoplay blocked, not loaded yet) is retried.
+  const playedRef = useRef(false);
+  const userPausedRef = useRef(false);
   const offsetRef = useRef(offset);
   const volRef = useRef(vol);
   const duckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -143,6 +147,8 @@ function ListenPlayer() {
     statusRef.current = np.status;
     if (np.item.id !== itemRef.current) {
       itemRef.current = np.item.id;
+      playedRef.current = false;
+      userPausedRef.current = false;
       if (duckTimer.current) clearTimeout(duckTimer.current);
       a.setVolume(volRef.current);
       a.load(np.item.track.externalId, expected, np.status === 'PLAYING');
@@ -161,8 +167,9 @@ function ListenPlayer() {
       return;
     }
     if (np.status === 'PAUSED') a.pause();
-    else if (resumed) {
-      // Only when the room starts again: a listener who paused here stays paused until they press ▶.
+    else {
+      if (resumed) userPausedRef.current = false; // the room starting again brings everyone back
+      if (userPausedRef.current) return;
       if (Math.abs(a.currentTime() - expected) > DRIFT_SEC) a.seek(expected);
       a.play();
     }
@@ -170,8 +177,7 @@ function ListenPlayer() {
 
   // Pausing the video here (the iframe must stay clickable, YouTube policy) is this listener's
   // own choice and is left alone. Whenever it plays — their ▶, or the room starting again —
-  // jump to where the room is. While playing, ads, buffering or a sleepy tab are caught up
-  // every few seconds. ▶ while the room is paused is undone: there is nothing to listen to.
+  // jump to where the room is. ▶ while the room is paused is undone: nothing to listen to.
   const catchUp = useCallback(() => {
     const a = adapterRef.current;
     const cur = npRef.current;
@@ -180,10 +186,30 @@ function ListenPlayer() {
     const expected = estimatePosition({ ...cur, durationSec: cur.item.track.durationSec }, offsetRef.current, Date.now());
     if (Math.abs(a.currentTime() - expected) > DRIFT_SEC) a.seek(expected);
   }, []);
+  const onPlaying = useCallback(() => {
+    playedRef.current = true;
+    userPausedRef.current = false;
+    catchUp();
+  }, [catchUp]);
+  const onPaused = useCallback(() => {
+    const cur = npRef.current;
+    // Our own pause (the room paused) never counts: by then the room already says PAUSED.
+    if (playedRef.current && cur?.status === 'PLAYING' && cur.item.id === itemRef.current) userPausedRef.current = true;
+  }, []);
 
+  // Every few seconds: keep up while playing (ads, buffering, a sleepy tab), and keep trying to
+  // start when the room plays but this device does not yet (autoplay blocked, slow load) —
+  // unless the listener paused it themselves.
   useEffect(() => {
     if (!ready) return;
-    const t = setInterval(catchUp, CHECK_MS);
+    const t = setInterval(() => {
+      const a = adapterRef.current;
+      const cur = npRef.current;
+      if (!a || !cur || cur.item.id !== itemRef.current) return;
+      const s = a.state();
+      if (s === 1) return catchUp();
+      if (cur.status === 'PLAYING' && s !== 3 && s !== 0 && !userPausedRef.current) a.play();
+    }, CHECK_MS);
     return () => clearInterval(t);
   }, [ready, catchUp]);
 
@@ -222,7 +248,8 @@ function ListenPlayer() {
         <YouTubeAdapter
           adapterRef={adapterRef}
           onReady={() => setReady(true)}
-          onPlaying={catchUp}
+          onPlaying={onPlaying}
+          onPaused={onPaused}
           onEnded={() => {}}
           onError={() => {}}
         />
