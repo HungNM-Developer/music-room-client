@@ -9,6 +9,7 @@ import { PLAYER_PROGRESS_INTERVAL_MS } from '@/contracts/events';
 import { useT } from '@/i18n';
 import { memberName } from '@/i18n/activity';
 import { legacySpeech, SpeechCue } from '@/lib/speech';
+import { IdleCover } from './IdleCover';
 import { estimatePosition } from '@/lib/time';
 import { Button } from '@/components/ui/Button';
 import { HOST_RECLAIM_MS, useMe, useOtherLivePlayer, useRoom } from '@/state/hooks';
@@ -65,6 +66,8 @@ export function playDj(src: string): void {
 /** `caption`: a line above the video saying this device is the room's speaker (room page). */
 export function PlayerEngine({ volume = 100, caption = false }: { volume?: number; caption?: boolean }) {
   const t = useT();
+  // The room has no song at all (not merely paused): the cover replaces the empty video.
+  const idle = useRoom((s) => !s.snapshot?.nowPlaying);
   const playerCommand = useRoom((s) => s.playerCommand);
   const offset = useRoom((s) => s.offset);
   const connection = useRoom((s) => s.connection);
@@ -457,6 +460,8 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
           onError={onError}
           onAutoplayBlocked={() => setNeedsTap(true)}
         />
+        {/* No song in the room: nothing is loaded, and YouTube's own ▶ would only show an error. */}
+        {idle && !waitingForOther && <IdleCover forHost={!caption} />}
         {/* Nothing is loaded in the player while waiting, so this covers an empty frame. */}
         {waitingForOther && (
           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-dial-deep p-6 text-center">

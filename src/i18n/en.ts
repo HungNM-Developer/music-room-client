@@ -90,6 +90,8 @@ export const en: Dict = {
     paused: 'Paused',
     idleTitle: 'The speaker is waiting for a song',
     idle: 'Add the first song and it plays right away.',
+    playNow: (title: string) => `Play now: ${title}`,
+    findSong: 'Find another song',
     pickedBy: (name: string) => `Picked by ${name}`,
     fallback: 'Fallback playlist',
     radio: 'Auto radio',
