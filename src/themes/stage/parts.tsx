@@ -2,7 +2,7 @@
 
 import { Headphones, Plus } from 'lucide-react';
 import { setListening, useListening } from '@/components/player/ListenAlong';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 import { ytThumbLarge } from '@/lib/thumbs';
 import { useMe, useNowPlaying } from '@/state/hooks';
 
@@ -30,12 +30,13 @@ export function NowCover({ className = '' }: { className?: string }) {
 
 /** The picker's wish, as a quote under the title. */
 export function WishBlock({ className = '' }: { className?: string }) {
+  const t = useT();
   const np = useNowPlaying();
   const picker = np?.item.addedBy?.displayName;
   if (!np?.item.wishMessage || !picker) return null;
   return (
     <figure className={`stage-wish ${className}`}>
-      <figcaption>{vi.nowPlaying.wishFrom(picker)}</figcaption>
+      <figcaption>{t.nowPlaying.wishFrom(picker)}</figcaption>
       <blockquote>{np.item.wishMessage}</blockquote>
     </figure>
   );
@@ -43,20 +44,21 @@ export function WishBlock({ className = '' }: { className?: string }) {
 
 /** Nothing on air: say so and offer the add tab. */
 export function StageIdle({ openAdd }: { openAdd: () => void }) {
+  const t = useT();
   const me = useMe();
   return (
-    <section aria-label={vi.nowPlaying.title} className="stage-idle">
+    <section aria-label={t.nowPlaying.title} className="stage-idle">
       <p className="stage-state">
         <span className="stage-dot" data-live="false" aria-hidden />
-        {vi.nowPlaying.paused}
+        {t.nowPlaying.paused}
       </p>
-      <h2 className="stage-title">{vi.nowPlaying.idleTitle}</h2>
-      <p className="stage-by">{vi.nowPlaying.idle}</p>
+      <h2 className="stage-title">{t.nowPlaying.idleTitle}</h2>
+      <p className="stage-by">{t.nowPlaying.idle}</p>
       {me && !me.isDevice && (
         <div className="stage-controls">
           <button type="button" className="stage-btn" data-primary onClick={openAdd}>
             <Plus className="h-[18px] w-[18px]" aria-hidden />
-            {vi.queue.addFirst}
+            {t.queue.addFirst}
           </button>
         </div>
       )}
@@ -66,11 +68,12 @@ export function StageIdle({ openAdd }: { openAdd: () => void }) {
 
 /** "Nghe cùng" as a stage button (the same switch as the default card's). */
 export function ListenToggle({ short = false }: { short?: boolean }) {
+  const t = useT();
   const on = useListening();
   return (
     <button type="button" className="stage-btn" data-on={on || undefined} aria-pressed={on} onClick={() => setListening(!on)}>
       <Headphones className="h-[18px] w-[18px]" aria-hidden />
-      <span className={short ? 'max-lg:sr-only' : ''}>{on ? vi.listen.on : vi.listen.start}</span>
+      <span className={short ? 'max-lg:sr-only' : ''}>{on ? t.listen.on : t.listen.start}</span>
     </button>
   );
 }

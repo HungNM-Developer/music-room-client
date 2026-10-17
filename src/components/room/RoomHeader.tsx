@@ -5,8 +5,11 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { IconButton } from '@/components/ui/Button';
+import { LangSwitch } from '@/components/ui/LangSwitch';
 import { useToast } from '@/components/ui/Toast';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
+import { getLang } from '@/i18n/lang';
+import { shareUrl } from '@/lib/share-url';
 import { useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 
@@ -26,6 +29,7 @@ export interface RoomHeaderSlots {
 }
 
 export function RoomHeader({ onOpenLog, title, code: codeSlot, extra, variant }: { onOpenLog: () => void } & RoomHeaderSlots) {
+  const t = useT();
   const name = useRoom((s) => s.snapshot?.room.name);
   const code = useRoom((s) => s.snapshot?.room.code);
   const toast = useToast();
@@ -36,11 +40,11 @@ export function RoomHeader({ onOpenLog, title, code: codeSlot, extra, variant }:
   if (!name || !code) return null;
 
   async function copyLink() {
-    const url = `${window.location.origin}/r/${code}`;
+    const url = shareUrl(window.location.origin, code ?? '', getLang());
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
-      toast(vi.header.copied, 'success');
+      toast(t.header.copied, 'success');
       setTimeout(() => setCopied(false), 2000);
     } catch {
       toast(url);
@@ -57,27 +61,29 @@ export function RoomHeader({ onOpenLog, title, code: codeSlot, extra, variant }:
           <button
             type="button"
             onClick={copyLink}
-            title={vi.header.copyLink}
+            title={t.header.copyLink}
             className="-my-2.5 -ml-1 inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-md px-1 text-[13px] text-sage hover:text-paper"
           >
-            <span className="max-sm:sr-only">{vi.header.code}</span>
+            <span className="max-sm:sr-only">{t.header.code}</span>
             {codeSlot ?? <span className="room-code type-display text-[15px] font-bold tracking-[0.12em] text-amber">{code}</span>}
             {copied ? <Check className="h-3.5 w-3.5 text-amber" aria-hidden /> : <Link2 className="h-3.5 w-3.5" aria-hidden />}
-            <span className="sr-only">{vi.header.copyLink}</span>
+            <span className="sr-only">{t.header.copyLink}</span>
           </button>
         </div>
         {extra}
-        <IconButton label={vi.theme.button} onClick={() => setThemeOpen(true)}>
+        {/* Phones: the room name needs the room; the switch sits in the People tab instead. */}
+        <LangSwitch compact className="max-sm:hidden" />
+        <IconButton label={t.theme.button} onClick={() => setThemeOpen(true)}>
           <Palette className="h-5 w-5" aria-hidden />
         </IconButton>
-        <IconButton label={vi.share.button} onClick={() => setShareOpen(true)}>
+        <IconButton label={t.share.button} onClick={() => setShareOpen(true)}>
           <Share2 className="h-5 w-5" aria-hidden />
         </IconButton>
-        <IconButton label={vi.header.log} onClick={onOpenLog}>
+        <IconButton label={t.header.log} onClick={onOpenLog}>
           <History className="h-5 w-5" aria-hidden />
         </IconButton>
         <IconButton
-          label={vi.header.leave}
+          label={t.header.leave}
           tone="danger"
           onClick={async () => {
             await room.leave();

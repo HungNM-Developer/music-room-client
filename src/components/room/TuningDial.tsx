@@ -1,6 +1,6 @@
 'use client';
 
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 import { formatDuration } from '@/lib/time';
 import { useNowPlaying } from '@/state/hooks';
 import { useLiveProgress } from './stage/useLiveProgress';
@@ -89,6 +89,7 @@ export function DialScale({
 
 /** Live dial for the track that is playing now. Updates 4×/s without React renders. */
 export function LiveDial({ size = 'compact' }: { size?: Size }) {
+  const t = useT();
   const np = useNowPlaying();
   const { ref: trackRef, timeRef, info: progress } = useLiveProgress();
 
@@ -101,7 +102,7 @@ export function LiveDial({ size = 'compact' }: { size?: Size }) {
         <span ref={timeRef} className="text-paper">
           0:00
         </span>
-        <span className="text-sage">{progress.known ? formatDuration(progress.durationSec) : vi.nowPlaying.unknownDuration}</span>
+        <span className="text-sage">{progress.known ? formatDuration(progress.durationSec) : t.nowPlaying.unknownDuration}</span>
       </div>
     </div>
   );

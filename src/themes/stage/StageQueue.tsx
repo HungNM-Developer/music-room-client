@@ -5,7 +5,7 @@ import { HeartButton, hasItemMenu, useQueueView } from '@/components/room/QueueL
 import { SaveButton } from '@/components/room/SaveButton';
 import { IconButton } from '@/components/ui/Button';
 import { Thumb } from '@/components/ui/Thumb';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 import { addedByLabel } from '@/lib/added-by';
 import { formatDuration } from '@/lib/time';
 
@@ -18,7 +18,7 @@ export function StageQueue({
   openAdd,
   numbered = false,
   variant,
-  title = vi.queue.title,
+  title,
   lead,
   tail,
   className = '',
@@ -33,22 +33,24 @@ export function StageQueue({
   title?: string;
   className?: string;
 }) {
+  const t = useT();
+  title ??= t.queue.title;
   const { items, adding, me, openMenu, menus } = useQueueView();
   const empty = items.length === 0 && adding.length === 0;
   return (
     <section aria-labelledby="queue-title" className={`stage-queue ${className}`} data-variant={variant}>
-      <h3 id="queue-title" aria-label={vi.queue.title} className="stage-h3">
+      <h3 id="queue-title" aria-label={t.queue.title} className="stage-h3">
         {title}
         {!empty && <span className="stage-count">{items.length + adding.length}</span>}
       </h3>
       {lead}
       {empty ? (
         <div className="stage-empty">
-          <p>{vi.queue.empty}</p>
+          <p>{t.queue.empty}</p>
           {!me?.isDevice && (
             <button type="button" className="stage-btn" data-primary onClick={openAdd}>
               <Plus className="h-4 w-4" aria-hidden />
-              {vi.queue.addFirst}
+              {t.queue.addFirst}
             </button>
           )}
         </div>
@@ -67,10 +69,10 @@ export function StageQueue({
                   <p className="stage-q-meta">
                     <span className="truncate">
                       {addedByLabel(item)}
-                      {mine && ` (${vi.queue.you})`}
+                      {mine && ` (${t.queue.you})`}
                     </span>
-                    {item.pinned && <Pin className="h-3.5 w-3.5 shrink-0" aria-label={vi.queue.pinnedGroup} />}
-                    {item.wishMessage && <Mail className="h-3.5 w-3.5 shrink-0" aria-label={vi.queue.hasWish} />}
+                    {item.pinned && <Pin className="h-3.5 w-3.5 shrink-0" aria-label={t.queue.pinnedGroup} />}
+                    {item.wishMessage && <Mail className="h-3.5 w-3.5 shrink-0" aria-label={t.queue.hasWish} />}
                     {item.track.durationSec ? <span className="shrink-0 tabular-nums">{formatDuration(item.track.durationSec)}</span> : null}
                   </p>
                 </div>
@@ -78,7 +80,7 @@ export function StageQueue({
                   <SaveButton track={item.track} />
                   <HeartButton item={item} me={me} />
                   {hasItemMenu(item, me) && (
-                    <IconButton label={vi.queue.actions(item.track.title)} onClick={() => openMenu(item)}>
+                    <IconButton label={t.queue.actions(item.track.title)} onClick={() => openMenu(item)}>
                       <MoreHorizontal className="h-5 w-5" aria-hidden />
                     </IconButton>
                   )}
@@ -91,8 +93,8 @@ export function StageQueue({
               {numbered && <span className="stage-q-n">·</span>}
               <Thumb url={op.thumbnailUrl} size={44} className="stage-q-th" />
               <div className="min-w-0 flex-1">
-                <p className="stage-q-title">{op.title ?? vi.queue.addingTitle}</p>
-                <p className="stage-q-meta">{vi.add.adding}</p>
+                <p className="stage-q-title">{op.title ?? t.queue.addingTitle}</p>
+                <p className="stage-q-meta">{t.add.adding}</p>
               </div>
               <Loader2 className="h-4 w-4 shrink-0 animate-spin text-amber" aria-hidden />
             </li>

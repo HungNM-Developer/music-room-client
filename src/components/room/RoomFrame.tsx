@@ -14,8 +14,9 @@ import { RecapCard } from '@/components/room/RecapCard';
 import { RoomHeader, type RoomHeaderSlots } from '@/components/room/RoomHeader';
 import { RoomSkeleton } from '@/components/room/RoomSkeleton';
 import { SkipVote } from '@/components/room/SkipVote';
+import { LangSwitch } from '@/components/ui/LangSwitch';
 import { panelId, tabId, TabList, type TabDef } from '@/components/ui/Tabs';
-import { errorMessage, vi } from '@/i18n/vi';
+import { errorMessage, useT } from '@/i18n';
 import { useMe, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 
@@ -53,6 +54,7 @@ export function RoomFrame({
   /** ≥1024 px the stage shows the vote itself, so the floating card is for smaller screens. */
   inlineVote: boolean;
 }) {
+  const t = useT();
   const memberId = useRoom((s) => s.memberId);
   const revoked = useRoom((s) => s.revoked);
   const connection = useRoom((s) => s.connection);
@@ -79,12 +81,12 @@ export function RoomFrame({
   const isPlayer = Boolean(me?.canPlay && !me.isDevice);
   const needsJoin = connection === 'connected' && !memberId;
   const canChat = Boolean(memberId && me && !me.isDevice);
-  const notice = revoked === 'kicked' ? vi.banners.kicked : revoked === 'invalid' ? errorMessage('UNAUTHENTICATED') : null;
+  const notice = revoked === 'kicked' ? t.banners.kicked : revoked === 'invalid' ? errorMessage('UNAUTHENTICATED') : null;
 
   const tabs: TabDef<TabKey>[] = [
-    { key: 'room', label: vi.tabs.room, icon: <Radio className="h-[22px] w-[22px]" aria-hidden />, badge: queueCount },
-    { key: 'add', label: vi.tabs.add, icon: <ListPlus className="h-[22px] w-[22px]" aria-hidden /> },
-    { key: 'people', label: vi.tabs.people, icon: <Users className="h-[22px] w-[22px]" aria-hidden /> },
+    { key: 'room', label: t.tabs.room, icon: <Radio className="h-[22px] w-[22px]" aria-hidden />, badge: queueCount },
+    { key: 'add', label: t.tabs.add, icon: <ListPlus className="h-[22px] w-[22px]" aria-hidden /> },
+    { key: 'people', label: t.tabs.people, icon: <Users className="h-[22px] w-[22px]" aria-hidden /> },
   ];
   // ≥1024 px: the room column is always visible; the side column switches add / people.
   const sideTab: TabKey = tab === 'people' ? 'people' : 'add';
@@ -127,7 +129,7 @@ export function RoomFrame({
             variant="pill"
             idPrefix="room-side"
             panelPrefix="room"
-            label={vi.tabs.label}
+            label={t.tabs.label}
             tabs={tabs.slice(1)}
             value={sideTab}
             onChange={setTab}
@@ -140,6 +142,7 @@ export function RoomFrame({
             <PeoplePanel />
             <RecapCard />
             <SettingsPanel />
+            <LangSwitch className="sm:hidden" />
           </div>
         </div>
       </main>
@@ -151,8 +154,8 @@ export function RoomFrame({
         </div>
       )}
 
-      <nav aria-label={vi.tabs.label} className="room-tabbar fixed inset-x-0 bottom-0 z-40 border-t border-line bg-dial pb-[env(safe-area-inset-bottom)] lg:hidden">
-        <TabList variant="bar" idPrefix="room" label={vi.tabs.label} tabs={tabs} value={tab} onChange={setTab} />
+      <nav aria-label={t.tabs.label} className="room-tabbar fixed inset-x-0 bottom-0 z-40 border-t border-line bg-dial pb-[env(safe-area-inset-bottom)] lg:hidden">
+        <TabList variant="bar" idPrefix="room" label={t.tabs.label} tabs={tabs} value={tab} onChange={setTab} />
       </nav>
 
       {logOpen && <ActivityLog onClose={() => setLogOpen(false)} />}

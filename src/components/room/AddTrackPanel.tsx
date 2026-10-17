@@ -7,7 +7,7 @@ import { panelId, tabId, TabList } from '@/components/ui/Tabs';
 import type { TrackSummary } from '@/contracts';
 import { useAct } from '@/hooks/useAct';
 import { useAddTrack } from '@/hooks/useAddTrack';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 import { classifyInput, playlistIn, sharedPlaylistIn } from '@/lib/add-input';
 import { formatDuration } from '@/lib/time';
 import { useMe, useRoom } from '@/state/hooks';
@@ -23,6 +23,7 @@ import { TrackRow } from './TrackRow';
 type Source = 'search' | 'played' | 'saved' | 'dj' | 'blocked';
 
 export function AddTrackPanel() {
+  const t = useT();
   const me = useMe();
   const [source, setSource] = useState<Source>('search');
   const aiEnabled = useRoom((s) => s.snapshot?.aiEnabled ?? false);
@@ -37,18 +38,18 @@ export function AddTrackPanel() {
   return (
     <section aria-labelledby="add-title" className="space-y-4">
       <h2 id="add-title" className="type-display px-1 text-[20px] font-bold">
-        {vi.add.title}
+        {t.add.title}
       </h2>
       <TabList
         variant="pill"
         idPrefix="add"
-        label={vi.library.sources}
+        label={t.library.sources}
         tabs={[
-          { key: 'search', label: vi.library.tabSearch },
-          { key: 'played', label: vi.library.tabPlayed },
-          { key: 'saved', label: vi.library.tabSaved },
-          ...(aiEnabled ? [{ key: 'dj' as const, label: vi.djAsk.tab }] : []),
-          ...(isAdmin ? [{ key: 'blocked' as const, label: vi.block.tab, badge: blockedCount }] : []),
+          { key: 'search', label: t.library.tabSearch },
+          { key: 'played', label: t.library.tabPlayed },
+          { key: 'saved', label: t.library.tabSaved },
+          ...(aiEnabled ? [{ key: 'dj' as const, label: t.djAsk.tab }] : []),
+          ...(isAdmin ? [{ key: 'blocked' as const, label: t.block.tab, badge: blockedCount }] : []),
         ]}
         value={shown}
         onChange={setSource}
@@ -65,6 +66,7 @@ export function AddTrackPanel() {
 }
 
 function SearchPanel({ add, added }: { add: (input: string, known?: TrackSummary) => Promise<boolean>; added: Set<string> }) {
+  const t = useT();
   const searchEnabled = useRoom((s) => s.snapshot?.searchEnabled ?? false);
   const act = useAct();
   const [input, setInput] = useState('');
@@ -117,7 +119,7 @@ function SearchPanel({ add, added }: { add: (input: string, known?: TrackSummary
     <div className="space-y-4">
       <form onSubmit={submit} className="space-y-2" role="search">
         <label htmlFor="add-input" className="sr-only">
-          {vi.add.label}
+          {t.add.label}
         </label>
         <div className="flex gap-2">
           <div className="relative min-w-0 flex-1">
@@ -132,7 +134,7 @@ function SearchPanel({ add, added }: { add: (input: string, known?: TrackSummary
                 setPicker(null);
               }}
               maxLength={2048}
-              placeholder={vi.add.placeholder}
+              placeholder={t.add.placeholder}
               className="field !pl-11"
               autoComplete="off"
               enterKeyHint={kind === 'link' ? 'go' : 'search'}
@@ -146,34 +148,34 @@ function SearchPanel({ add, added }: { add: (input: string, known?: TrackSummary
             ) : kind === 'playlist' || kind === 'shared' ? (
               <ListMusic className="h-4 w-4" aria-hidden />
             ) : null}
-            {kind === 'link' ? vi.add.addLink : kind === 'playlist' || kind === 'shared' ? vi.playlist.open : vi.add.search}
+            {kind === 'link' ? t.add.addLink : kind === 'playlist' || kind === 'shared' ? t.playlist.open : t.add.search}
           </Button>
         </div>
-        <p className="px-1 text-[13px] text-sage">{searchEnabled ? vi.add.tip : vi.add.searchOff}</p>
+        <p className="px-1 text-[13px] text-sage">{searchEnabled ? t.add.tip : t.add.searchOff}</p>
         {alsoPlaylist && !picker && (
           <Button size="sm" variant="ghost" onClick={openPlaylist}>
             <ListMusic className="h-4 w-4" aria-hidden />
-            {vi.playlist.openWhole}
+            {t.playlist.openWhole}
           </Button>
         )}
       </form>
 
       {picker && <PlaylistPicker source={picker} onClose={() => setPicker(null)} />}
 
-      {results && results.length === 0 && <p className="px-1 text-sage">{vi.add.noResults}</p>}
+      {results && results.length === 0 && <p className="px-1 text-sage">{t.add.noResults}</p>}
       {results && results.length > 0 && source === 'library' && (
         <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-[13px] text-sage">
-          <span>{vi.add.fromLibrary}</span>
+          <span>{t.add.fromLibrary}</span>
           {searchEnabled && (
             <Button size="sm" variant="ghost" disabled={busy} onClick={() => search(true)}>
               <Search className="h-4 w-4" aria-hidden />
-              {vi.add.searchYouTube}
+              {t.add.searchYouTube}
             </Button>
           )}
         </div>
       )}
       {results && results.length > 0 && (
-        <ul aria-label={vi.add.results} className="divide-y divide-line/70 rounded-panel bg-panel px-1">
+        <ul aria-label={t.add.results} className="divide-y divide-line/70 rounded-panel bg-panel px-1">
           {results.map((t) => (
             <TrackRow
               key={t.id}
@@ -196,6 +198,7 @@ function SearchPanel({ add, added }: { add: (input: string, known?: TrackSummary
 
 /** "Của tôi": the account's playlists (L2, signed in), a pasted song list (L4) and Yêu thích (A2). */
 function MineTab({ add, added }: { add: (input: string, known?: TrackSummary) => Promise<boolean>; added: Set<string> }) {
+  const t = useT();
   const user = useRoom((s) => s.user);
   const canSignIn = useRoom((s) => Boolean(s.health?.googleClientId));
   // Saving "Dành cho bạn" adds or updates a playlist: reload the list.
@@ -208,11 +211,11 @@ function MineTab({ add, added }: { add: (input: string, known?: TrackSummary) =>
           <MyPlaylists key={listKey} add={add} added={added} />
         </>
       ) : (
-        canSignIn && <p className="px-1 text-[13px] text-sage">{vi.playlists.signInHint}</p>
+        canSignIn && <p className="px-1 text-[13px] text-sage">{t.playlists.signInHint}</p>
       )}
       <SongListImport onSaved={() => setListKey((k) => k + 1)} />
       <section className="space-y-2">
-        <h3 className="px-1 text-[15px] font-semibold">{vi.library.favorites}</h3>
+        <h3 className="px-1 text-[15px] font-semibold">{t.library.favorites}</h3>
         <SavedList add={add} added={added} />
       </section>
     </div>

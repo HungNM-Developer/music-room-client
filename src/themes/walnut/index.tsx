@@ -10,7 +10,7 @@ import { useNowPlayingActions } from '@/components/room/stage/useNowPlayingActio
 import { useSkipVoteState } from '@/components/room/stage/useSkipVoteState';
 import { Suggestions } from '@/components/room/Suggestions';
 import { IconButton } from '@/components/ui/Button';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 import { addedByLabel } from '@/lib/added-by';
 import { formatDuration } from '@/lib/time';
 import { fraunces } from '../listening/fonts';
@@ -24,6 +24,7 @@ import './theme.css';
 
 /** The VU meter: its needle swings across the dial as the song plays. */
 function Vu({ large = false }: { large?: boolean }) {
+  const t = useT();
   const { ref, timeRef, info } = useLiveProgress();
   return (
     <div ref={ref} className="wal-vu" data-large={large || undefined}>
@@ -32,7 +33,7 @@ function Vu({ large = false }: { large?: boolean }) {
       </div>
       <div className="t">
         <span ref={timeRef}>0:00</span>
-        <span>{info ? (info.known ? formatDuration(info.durationSec) : vi.nowPlaying.unknownDuration) : ''}</span>
+        <span>{info ? (info.known ? formatDuration(info.durationSec) : t.nowPlaying.unknownDuration) : ''}</span>
       </div>
     </div>
   );
@@ -40,22 +41,23 @@ function Vu({ large = false }: { large?: boolean }) {
 
 /** "Chồng đĩa tiếp theo": the queue as record sleeves, the room's suggestion last. */
 function Crate({ openAdd }: { openAdd: () => void }) {
+  const t = useT();
   const { items, adding, me, openMenu, menus } = useQueueView();
   const top = useTopSuggestions(1);
   const empty = items.length === 0 && adding.length === 0;
   return (
     <section aria-labelledby="queue-title" className="wal-crate-wrap">
-      <h3 id="queue-title" aria-label={vi.queue.title} className="stage-h3">
-        Chồng đĩa tiếp theo
+      <h3 id="queue-title" aria-label={t.queue.title} className="stage-h3">
+        {t.themeText.walnut.next}
         {!empty && <span className="stage-count">{items.length + adding.length}</span>}
       </h3>
       {empty && (
         <div className="stage-empty mb-3">
-          <p>{vi.queue.empty}</p>
+          <p>{t.queue.empty}</p>
           {!me?.isDevice && (
             <button type="button" className="stage-btn" data-primary onClick={openAdd}>
               <Plus className="h-4 w-4" aria-hidden />
-              {vi.queue.addFirst}
+              {t.queue.addFirst}
             </button>
           )}
         </div>
@@ -65,7 +67,7 @@ function Crate({ openAdd }: { openAdd: () => void }) {
           <li key={q.id} className="sleeve">
             <div className="c">
               <CoverImage url={q.track.thumbnailUrl} />
-              {(q.pinned || q.wishMessage) && <span className="tag">{[q.pinned && vi.queue.pinnedGroup, q.wishMessage && vi.queue.hasWish].filter(Boolean).join(' · ')}</span>}
+              {(q.pinned || q.wishMessage) && <span className="tag">{[q.pinned && t.queue.pinnedGroup, q.wishMessage && t.queue.hasWish].filter(Boolean).join(' · ')}</span>}
             </div>
             <b title={q.track.title}>{q.track.title}</b>
             <span className="who">{addedByLabel(q)}</span>
@@ -73,7 +75,7 @@ function Crate({ openAdd }: { openAdd: () => void }) {
               <HeartButton item={q} me={me} />
               <SaveButton track={q.track} />
               {hasItemMenu(q, me) && (
-                <IconButton label={vi.queue.actions(q.track.title)} onClick={() => openMenu(q)}>
+                <IconButton label={t.queue.actions(q.track.title)} onClick={() => openMenu(q)}>
                   <MoreHorizontal className="h-5 w-5" aria-hidden />
                 </IconButton>
               )}
@@ -85,22 +87,22 @@ function Crate({ openAdd }: { openAdd: () => void }) {
             <div className="c">
               <CoverImage url={op.thumbnailUrl} />
             </div>
-            <b>{op.title ?? vi.queue.addingTitle}</b>
-            <span className="who">{vi.add.adding}</span>
+            <b>{op.title ?? t.queue.addingTitle}</b>
+            <span className="who">{t.add.adding}</span>
           </li>
         ))}
         {top.items.map((s) => (
           <li key={s.track.id} className="sleeve suggest">
             <div className="c">
               <CoverImage url={s.track.thumbnailUrl} />
-              <span className="tag">gợi ý</span>
+              <span className="tag">{t.themeText.walnut.suggestTag}</span>
             </div>
             <b title={s.track.title}>{s.track.title}</b>
-            <span className="who">{vi.suggest.title}</span>
+            <span className="who">{t.suggest.title}</span>
             <span className="acts">
               <button type="button" className="stage-btn stage-sb" disabled={top.isAdded(s.track)} onClick={() => top.add(s.track)}>
                 <Plus className="h-4 w-4" aria-hidden />
-                {vi.add.addResult}
+                {t.add.addResult}
               </button>
             </span>
           </li>
@@ -112,6 +114,7 @@ function Crate({ openAdd }: { openAdd: () => void }) {
 }
 
 function Stage({ openAdd }: { openAdd: () => void }) {
+  const t = useT();
   const a = useNowPlayingActions();
   const vote = useSkipVoteState();
   if (!a) {
@@ -128,7 +131,7 @@ function Stage({ openAdd }: { openAdd: () => void }) {
   const { track, playing } = a;
   return (
     <div className="stage walnut">
-      <section aria-label={vi.nowPlaying.title} className="wal-deck">
+      <section aria-label={t.nowPlaying.title} className="wal-deck">
         <div className="wal-tt">
           <div className="wal-turntable" aria-hidden>
             <span className="platter" data-playing={playing}>
@@ -139,7 +142,7 @@ function Stage({ openAdd }: { openAdd: () => void }) {
           <div className="min-w-0">
             <p className="stage-state">
               <span className="stage-dot" data-live={playing} aria-hidden />
-              {playing ? vi.nowPlaying.live : vi.nowPlaying.paused}
+              {playing ? t.nowPlaying.live : t.nowPlaying.paused}
             </p>
             <h2 className="stage-title" title={track.title}>
               {track.title}
@@ -171,7 +174,7 @@ function Stage({ openAdd }: { openAdd: () => void }) {
 const walnut: ThemeModule = {
   Stage,
   fontClass: fraunces.variable,
-  chat: { title: 'Sổ lời nhắn', variant: 'walnut' },
+  chat: { title: (t) => t.themeText.walnut.chat, variant: 'walnut' },
   HostDial: () => <Vu large />,
 };
 export default walnut;

@@ -1,7 +1,7 @@
-// Every user-facing string lives here (requirements §2.6–2.7). Add `en.ts` with the
-// same shape to translate later.
+// Every user-facing Vietnamese string lives here (requirements §2.6–2.7). `en.ts` has the
+// same shape (type `Dict` in ./index); read them through `useT()` / `tr()`.
 import type { DjSound, ErrorCode, ErrorParams, VoicePreset } from '@/contracts';
-import { formatDuration } from '@/lib/time';
+import { formatDuration } from '@/lib/duration';
 
 export type ClientErrorCode = ErrorCode | 'NETWORK';
 
@@ -228,6 +228,8 @@ export const vi = {
     openHome: 'Về trang chủ',
     listLabel: 'Danh sách playlist',
     tracksLabel: 'Bài trong playlist',
+    likedName: 'Đã thích trên YouTube',
+    mixName: 'Dành cho bạn',
   },
 
   taste: {
@@ -559,7 +561,53 @@ export const vi = {
     } satisfies Record<DjSound, string>,
   },
 
-  log: { title: 'Nhật ký hoạt động', empty: 'Chưa có hoạt động nào.', close: 'Đóng' },
+  log: {
+    title: 'Nhật ký hoạt động',
+    empty: 'Chưa có hoạt động nào.',
+    close: 'Đóng',
+    /** Activity lines, same wording as the sentences the server stores. */
+    events: {
+      roomCreate: 'đã tạo phòng',
+      join: 'đã vào phòng',
+      joinSlack: 'đã vào phòng từ Slack',
+      deviceConnect: 'đã kết nối',
+      rejoin: 'đã quay lại phòng',
+      rejoinReset: 'đã quay lại phòng (quyền điều khiển, DJ, máy phát cần được cấp lại)',
+      leave: 'đã rời phòng',
+      kick: (name: string) => `đã mời ${name} ra khỏi phòng`,
+      adminClaim: 'đã nhận quyền quản trị bằng mã PIN',
+      pinChange: 'đã đổi mã PIN quản trị',
+      playerChange: 'đã trở thành máy phát',
+      permission: {
+        grantControl: (name: string) => `đã cấp quyền điều khiển cho ${name}`,
+        revokeControl: (name: string) => `đã bỏ quyền điều khiển của ${name}`,
+        grantDj: (name: string) => `đã cấp quyền DJ cho ${name}`,
+        revokeDj: (name: string) => `đã bỏ quyền DJ của ${name}`,
+        grantAdmin: (name: string) => `đã cấp quyền quản trị cho ${name}`,
+        revokeAdmin: (name: string) => `đã bỏ quyền quản trị của ${name}`,
+        makePlayer: (name: string) => `đã đặt ${name} làm máy phát`,
+        revokePlayer: (name: string) => `đã bỏ quyền máy phát của ${name}`,
+      },
+      settingsTheme: 'đã đổi giao diện phòng',
+      settingsOther: 'đã thay đổi cài đặt phòng',
+      add: (title: string) => `đã thêm "${title}"`,
+      addPlaylist: (n: number) => `đã thêm ${n} bài từ playlist`,
+      remove: (title: string) => `đã xóa "${title}"`,
+      heart: (title: string) => `đã thả tim "${title}"`,
+      block: (title: string) => `đã chặn "${title}"`,
+      unblock: (title: string) => `đã bỏ chặn "${title}"`,
+      pin: (title: string) => `đã ghim "${title}" phát tiếp theo`,
+      unpin: (title: string) => `đã bỏ ghim "${title}"`,
+      skipBy: (title: string) => `đã bỏ qua "${title}"`,
+      skipVotes: (title: string, yes: number) => `"${title}" đã bị bỏ qua sau ${yes} phiếu`,
+      skipTimeout: (title: string, yes: number, no: number) => `"${title}" đã bị bỏ qua khi hết giờ (✅ ${yes} · ❌ ${no})`,
+      kept: (title: string, yes: number, no: number) => `Cả phòng chọn nghe tiếp "${title}" (✅ ${yes} · ❌ ${no})`,
+      trackError: (title: string, code: number | null) => `Bỏ qua "${title}" vì video không phát được (mã ${code ?? '?'})`,
+    },
+  },
+
+  /** The name of a speaker device in the member list and the log ("Máy phát", "Máy phát 2"). */
+  deviceName: (n?: number) => (n ? `Máy phát ${n}` : 'Máy phát'),
 
   pwa: {
     roomName: (room: string) => `${room} | Music Room`,
@@ -609,57 +657,148 @@ export const vi = {
     hostLinkCopied: 'Đã sao chép link trang máy phát',
     kicked: 'Bạn đã được mời ra khỏi phòng.',
   },
+
+  /** Short labels used in several places. */
+  common: {
+    close: 'Đóng',
+  },
+
+  meta: {
+    description: 'Cả văn phòng cùng chọn nhạc YouTube, phát chung một loa.',
+  },
+
+  /** Relative and clock times. `locale` drives Intl date/number formatting. */
+  time: {
+    locale: 'vi-VN',
+    justNow: 'vừa xong',
+    minutesAgo: (n: number) => `${n} phút trước`,
+    hoursAgo: (n: number) => `${n} giờ trước`,
+    daysAgo: (n: number) => `${n} ngày trước`,
+  },
+
+  legal: {
+    privacyTitle: 'Chính sách quyền riêng tư',
+    termsTitle: 'Điều khoản sử dụng',
+    updated: (date: string) => `Cập nhật lần cuối: ${date}`,
+    privacy: 'Quyền riêng tư',
+    terms: 'Điều khoản',
+    home: 'Trang chủ',
+  },
+
+  /** Theme picker: group headings and theme names. */
+  themes: {
+    groups: {
+      default: 'Mặc định',
+      minimal: 'Tối giản',
+      vintage: 'Vintage',
+      sky: 'Bầu trời',
+      vietnam: 'Việt Nam',
+      decades: 'Thập niên',
+    },
+    names: {
+      default: 'Mặc định',
+      listening: 'Phòng nghe nhạc',
+      hifi82: 'Dàn máy Nhật 1982',
+      midcentury: 'Áp phích giữa thế kỷ',
+      walnut: 'Tủ hi-fi gỗ óc chó',
+      transistor: 'Đài bán dẫn',
+      cassette: 'Băng cassette tự thu',
+      station: 'Bảng giờ tàu nhà ga',
+      astro: 'Chiêm tinh',
+      cosmos: 'Vũ trụ',
+      saigon: 'Sài Gòn xưa',
+      pixel: 'Máy chơi game 8-bit',
+      synthwave: 'Synthwave 80s',
+    },
+  },
+
+  /** Words that belong to one theme's decoration. */
+  themeText: {
+    vote: (asks: string, votes: number, required: number, against: number, wait: string) =>
+      `${asks}. ${votes}/${required} đồng ý, ${against} nghe tiếp, ${wait}`,
+    voteShort: (asks: string, votes: number, required: number) => `${asks}. ${votes}/${required} đồng ý`,
+    voteSeconds: (asks: string, votes: number, required: number, seconds: number) => `${asks}. ${votes}/${required} đồng ý · ${seconds}s`,
+    voteMoon: (asks: string, votes: number, required: number, seconds: number) =>
+      `${asks}. ${votes}/${required} đồng ý, trăng tắt sau ${seconds} giây`,
+    ofDuration: (duration: string) => ` trên ${duration}`,
+    walnut: { next: 'Chồng đĩa tiếp theo', suggestTag: 'gợi ý', chat: 'Sổ lời nhắn' },
+    cassette: { suggest: 'Gợi ý:', sideA: 'Mặt A', sideB: 'Mặt B · Tiếp theo', chatPlaceholder: 'Viết lời nhắn…' },
+    cosmos: {
+      hint: 'Bấm một hành tinh để xem tên, tim, ghim, lời chúc',
+      next: 'Quỹ đạo tiếp theo',
+      chat: 'Tín hiệu',
+      chatPlaceholder: 'Gửi tín hiệu cho cả phòng…',
+    },
+    station: {
+      departures: 'Giờ khởi hành',
+      eta: 'Dự kiến',
+      song: 'Bài',
+      picker: 'Người chọn',
+      note: 'Ghi chú',
+      actions: 'Thao tác',
+      wish: 'Lời chúc',
+      suggestTag: 'gợi ý',
+      platform: 'Sân ga 1',
+    },
+    pixel: {
+      lives: (n: number) => `${n} người đang trong phòng`,
+      livesShort: (n: number) => `x ${n} người`,
+      stage: 'Màn 1: đang phát',
+      next: 'Màn tiếp theo',
+    },
+    transistor: {
+      next: 'Phím đài · Tiếp theo',
+      orSuggest: 'hoặc gợi ý',
+      playing: 'đang phát',
+      chat: 'Thư thính giả',
+      chatPlaceholder: 'Gửi thư cho cả phòng…',
+    },
+  },
+  errors: {
+    UNAUTHENTICATED: () => 'Phiên của bạn đã hết hạn. Hãy nhập tên để vào lại phòng.',
+    FORBIDDEN: () => 'Bạn không có quyền làm việc này. Hãy nhờ quản trị viên cấp quyền.',
+    VALIDATION: () => 'Dữ liệu chưa hợp lệ. Hãy kiểm tra lại rồi thử lại.',
+    ROOM_NOT_FOUND: () => 'Không tìm thấy phòng. Hãy kiểm tra lại mã phòng.',
+    NAME_TAKEN: () => 'Tên này đang có người dùng trong phòng. Hãy chọn tên khác.',
+    PIN_REQUIRED: () => 'Tên này là của quản trị viên phòng. Nếu không phải bạn, hãy dùng tên khác; nếu là bạn, nhập mã PIN quản trị.',
+    PIN_INVALID: (p) => `Mã PIN không đúng. Bạn còn ${p.remaining} lần thử.`,
+    PIN_LOCKED: (p) => `Nhập sai mã PIN quá nhiều lần. Hãy thử lại sau ${p.minutes} phút.`,
+    PIN_NOT_SET: () =>
+      'Phòng này chưa đặt mã PIN quản trị. Hãy nhờ một quản trị viên đặt mã trong Cài đặt phòng.',
+    ALREADY_QUEUED: () => 'Bài này đã có trong hàng chờ hoặc đang phát.',
+    PLAYED_RECENTLY: (p) =>
+      `Bài này vừa phát ${p.minutes} phút trước. Phòng chỉ cho thêm lại sau ${p.gap} phút.`,
+    PLAYLIST_UNAVAILABLE: () =>
+      'Máy chủ chưa bật YouTube API nên chưa đọc được playlist. Hãy dán link từng bài.',
+    MESSAGE_BLOCKED: () => 'Lời chúc có từ ngữ không phù hợp để đọc to. Hãy viết lại nhé.',
+    SIGN_IN_FAILED: () => 'Không đăng nhập được bằng Google. Hãy thử lại.',
+    SIGN_IN_UNAVAILABLE: () => 'Máy chủ chưa bật đăng nhập Google.',
+    PLAYLIST_NOT_FOUND: () => 'Không tìm thấy playlist. Có thể chủ playlist đã tắt chia sẻ hoặc xoá nó.',
+    PLAYLIST_LIMIT: (p) => `Bạn đã có ${p.max} playlist. Hãy xoá bớt playlist cũ để tạo mới.`,
+    PLAYLIST_FULL: (p) => `Playlist đã đủ ${p.max} bài.`,
+    YOUTUBE_ACCESS_DENIED: () =>
+      'YouTube không cho đọc dữ liệu. Hãy cấp quyền lại; nếu vẫn lỗi, nhờ quản trị thêm email của bạn vào danh sách người dùng thử của app.',
+    AI_UNAVAILABLE: () => 'DJ đang bận hoặc hết lượt miễn phí hôm nay. Hãy thử lại sau ít phút.',
+    PLAYLIST_EMPTY: () => 'Playlist này không có bài nào phát được (trống, riêng tư hoặc bị chặn nhúng).',
+    QUEUE_LIMIT: (p) =>
+      `Bạn đã có ${p.max} bài đang chờ. Hãy đợi bài của bạn phát rồi thêm tiếp.`,
+    TRACK_TOO_LONG: (p) =>
+      `Bài này dài ${formatDuration(Number(p.duration))}, vượt giới hạn ${formatDuration(
+        Number(p.max),
+      )} của phòng. Hãy chọn bài ngắn hơn.`,
+    TRACK_NOT_EMBEDDABLE: () => 'Video này không cho phát ngoài YouTube. Hãy chọn bản khác.',
+    TRACK_NOT_FOUND: () => 'Không tìm thấy video. Có thể video đã bị xóa hoặc để riêng tư.',
+    TRACK_LIVE: () => 'Không thể thêm video đang phát trực tiếp. Hãy chọn video thường.',
+    TRACK_BLOCKED: () => 'Bài này đã bị quản trị viên chặn trong phòng.',
+    LINK_UNSUPPORTED: () =>
+      'Không nhận ra link YouTube này. Hãy dán link dạng youtube.com/watch?v=… hoặc youtu.be/…',
+    SEARCH_UNAVAILABLE: () => 'Máy chủ chưa bật tìm kiếm. Hãy dán link YouTube để thêm bài.',
+    QUOTA_EXCEEDED: () => 'Hôm nay đã hết lượt tìm kiếm. Hãy dán link YouTube để thêm bài.',
+    RATE_LIMITED: (p) => `Bạn thao tác hơi nhanh. Hãy thử lại sau ${p.seconds} giây.`,
+    STALE_ITEM: () => 'Bài này vừa thay đổi. Danh sách đã được cập nhật.',
+    SKIP_BLOCKED: (p) => `Cả phòng vừa chọn nghe tiếp bài này. Thử lại sau ${p.seconds} giây.`,
+    VOTE_CLOSED: () => 'Cuộc bỏ phiếu đã kết thúc.',
+    INTERNAL: () => 'Máy chủ đang gặp sự cố. Hãy thử lại sau ít phút.',
+    NETWORK: () => 'Không kết nối được máy chủ. Hãy kiểm tra mạng rồi thử lại.',
+  } satisfies Record<ClientErrorCode, (p: ErrorParams) => string>,
 } as const;
-
-const ERRORS: Record<ClientErrorCode, (p: ErrorParams) => string> = {
-  UNAUTHENTICATED: () => 'Phiên của bạn đã hết hạn. Hãy nhập tên để vào lại phòng.',
-  FORBIDDEN: () => 'Bạn không có quyền làm việc này. Hãy nhờ quản trị viên cấp quyền.',
-  VALIDATION: () => 'Dữ liệu chưa hợp lệ. Hãy kiểm tra lại rồi thử lại.',
-  ROOM_NOT_FOUND: () => 'Không tìm thấy phòng. Hãy kiểm tra lại mã phòng.',
-  NAME_TAKEN: () => 'Tên này đang có người dùng trong phòng. Hãy chọn tên khác.',
-  PIN_REQUIRED: () => 'Tên này là của quản trị viên phòng. Nếu không phải bạn, hãy dùng tên khác; nếu là bạn, nhập mã PIN quản trị.',
-  PIN_INVALID: (p) => `Mã PIN không đúng. Bạn còn ${p.remaining} lần thử.`,
-  PIN_LOCKED: (p) => `Nhập sai mã PIN quá nhiều lần. Hãy thử lại sau ${p.minutes} phút.`,
-  PIN_NOT_SET: () =>
-    'Phòng này chưa đặt mã PIN quản trị. Hãy nhờ một quản trị viên đặt mã trong Cài đặt phòng.',
-  ALREADY_QUEUED: () => 'Bài này đã có trong hàng chờ hoặc đang phát.',
-  PLAYED_RECENTLY: (p) =>
-    `Bài này vừa phát ${p.minutes} phút trước. Phòng chỉ cho thêm lại sau ${p.gap} phút.`,
-  PLAYLIST_UNAVAILABLE: () =>
-    'Máy chủ chưa bật YouTube API nên chưa đọc được playlist. Hãy dán link từng bài.',
-  MESSAGE_BLOCKED: () => 'Lời chúc có từ ngữ không phù hợp để đọc to. Hãy viết lại nhé.',
-  SIGN_IN_FAILED: () => 'Không đăng nhập được bằng Google. Hãy thử lại.',
-  SIGN_IN_UNAVAILABLE: () => 'Máy chủ chưa bật đăng nhập Google.',
-  PLAYLIST_NOT_FOUND: () => 'Không tìm thấy playlist. Có thể chủ playlist đã tắt chia sẻ hoặc xoá nó.',
-  PLAYLIST_LIMIT: (p) => `Bạn đã có ${p.max} playlist. Hãy xoá bớt playlist cũ để tạo mới.`,
-  PLAYLIST_FULL: (p) => `Playlist đã đủ ${p.max} bài.`,
-  YOUTUBE_ACCESS_DENIED: () =>
-    'YouTube không cho đọc dữ liệu. Hãy cấp quyền lại; nếu vẫn lỗi, nhờ quản trị thêm email của bạn vào danh sách người dùng thử của app.',
-  AI_UNAVAILABLE: () => 'DJ đang bận hoặc hết lượt miễn phí hôm nay. Hãy thử lại sau ít phút.',
-  PLAYLIST_EMPTY: () => 'Playlist này không có bài nào phát được (trống, riêng tư hoặc bị chặn nhúng).',
-  QUEUE_LIMIT: (p) =>
-    `Bạn đã có ${p.max} bài đang chờ. Hãy đợi bài của bạn phát rồi thêm tiếp.`,
-  TRACK_TOO_LONG: (p) =>
-    `Bài này dài ${formatDuration(Number(p.duration))}, vượt giới hạn ${formatDuration(
-      Number(p.max),
-    )} của phòng. Hãy chọn bài ngắn hơn.`,
-  TRACK_NOT_EMBEDDABLE: () => 'Video này không cho phát ngoài YouTube. Hãy chọn bản khác.',
-  TRACK_NOT_FOUND: () => 'Không tìm thấy video. Có thể video đã bị xóa hoặc để riêng tư.',
-  TRACK_LIVE: () => 'Không thể thêm video đang phát trực tiếp. Hãy chọn video thường.',
-  TRACK_BLOCKED: () => 'Bài này đã bị quản trị viên chặn trong phòng.',
-  LINK_UNSUPPORTED: () =>
-    'Không nhận ra link YouTube này. Hãy dán link dạng youtube.com/watch?v=… hoặc youtu.be/…',
-  SEARCH_UNAVAILABLE: () => 'Máy chủ chưa bật tìm kiếm. Hãy dán link YouTube để thêm bài.',
-  QUOTA_EXCEEDED: () => 'Hôm nay đã hết lượt tìm kiếm. Hãy dán link YouTube để thêm bài.',
-  RATE_LIMITED: (p) => `Bạn thao tác hơi nhanh. Hãy thử lại sau ${p.seconds} giây.`,
-  STALE_ITEM: () => 'Bài này vừa thay đổi. Danh sách đã được cập nhật.',
-  SKIP_BLOCKED: (p) => `Cả phòng vừa chọn nghe tiếp bài này. Thử lại sau ${p.seconds} giây.`,
-  VOTE_CLOSED: () => 'Cuộc bỏ phiếu đã kết thúc.',
-  INTERNAL: () => 'Máy chủ đang gặp sự cố. Hãy thử lại sau ít phút.',
-  NETWORK: () => 'Không kết nối được máy chủ. Hãy kiểm tra mạng rồi thử lại.',
-};
-
-/** Error code (+ params from the server) → exact Vietnamese message (requirements §2.6). */
-export function errorMessage(code: ClientErrorCode, params: ErrorParams = {}): string {
-  return (ERRORS[code] ?? ERRORS.INTERNAL)(params);
-}

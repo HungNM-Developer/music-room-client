@@ -4,7 +4,7 @@ import { Loader2, MoreHorizontal, Pause, Play, SkipForward, StepForward } from '
 import { MiniPlayerButton } from '@/components/room/MiniPlayer';
 import { SaveButton } from '@/components/room/SaveButton';
 import type { NowPlayingActions } from '@/components/room/stage/useNowPlayingActions';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 import { ListenToggle } from './parts';
 
 /**
@@ -13,6 +13,7 @@ import { ListenToggle } from './parts';
  * Themes style them through `.stage-controls[data-variant]` (pills, keys, game buttons…).
  */
 export function StageControls({ a, variant, className = '' }: { a: NowPlayingActions; variant?: string; className?: string }) {
+  const t = useT();
   const { playing, canVote, canControl } = a;
   return (
     <div className={`stage-controls ${className}`} data-variant={variant}>
@@ -27,14 +28,14 @@ export function StageControls({ a, variant, className = '' }: { a: NowPlayingAct
       <MiniPlayerButton />
       {canControl && (
         <>
-          <button type="button" className="stage-btn stage-icon" aria-label={playing ? vi.nowPlaying.pause : vi.nowPlaying.play} title={playing ? vi.nowPlaying.pause : vi.nowPlaying.play} onClick={a.togglePlay}>
+          <button type="button" className="stage-btn stage-icon" aria-label={playing ? t.nowPlaying.pause : t.nowPlaying.play} title={playing ? t.nowPlaying.pause : t.nowPlaying.play} onClick={a.togglePlay}>
             {playing ? <Pause className="h-[18px] w-[18px]" aria-hidden /> : <Play className="h-[18px] w-[18px]" aria-hidden />}
           </button>
           <button
             type="button"
             className="stage-btn stage-icon"
-            aria-label={vi.nowPlaying.skipNow}
-            title={vi.nowPlaying.skipNow}
+            aria-label={t.nowPlaying.skipNow}
+            title={t.nowPlaying.skipNow}
             disabled={a.skipping}
             aria-busy={a.skipping}
             onClick={() => void a.skipNow()}
@@ -42,7 +43,7 @@ export function StageControls({ a, variant, className = '' }: { a: NowPlayingAct
             {a.skipping ? <Loader2 className="h-[18px] w-[18px] animate-spin" aria-hidden /> : <StepForward className="h-[18px] w-[18px]" aria-hidden />}
           </button>
           {a.isAdmin && (
-            <button type="button" className="stage-btn stage-icon" aria-label={vi.block.more(a.track.title)} title={vi.block.more(a.track.title)} onClick={a.openBlockMenu}>
+            <button type="button" className="stage-btn stage-icon" aria-label={t.block.more(a.track.title)} title={t.block.more(a.track.title)} onClick={a.openBlockMenu}>
               <MoreHorizontal className="h-[18px] w-[18px]" aria-hidden />
             </button>
           )}

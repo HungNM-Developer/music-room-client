@@ -7,7 +7,7 @@ import { useLiveProgress } from '@/components/room/stage/useLiveProgress';
 import { useNowPlayingActions } from '@/components/room/stage/useNowPlayingActions';
 import { useSkipVoteState } from '@/components/room/stage/useSkipVoteState';
 import { Suggestions } from '@/components/room/Suggestions';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 import { formatDuration } from '@/lib/time';
 import { useNowPlaying } from '@/state/hooks';
 import { barlowCondensed } from '../hifi82/fonts';
@@ -41,18 +41,19 @@ function TapeWindow({ playing, large = false }: { playing: boolean; large?: bool
 
 /** "Gợi ý: …  ＋ Thêm" written at the bottom of the J-card. */
 function SuggestLine() {
+  const t = useT();
   const top = useTopSuggestions(2);
   if (!top.items.length) return null;
   return (
     <p className="cs-suggest">
-      Gợi ý:{' '}
+      {t.themeText.cassette.suggest}{' '}
       {top.items.map((s, i) => (
         <span key={s.track.id}>
           {i > 0 && ' · '}
           {s.track.title}{' '}
-          <button type="button" disabled={top.isAdded(s.track)} onClick={() => top.add(s.track)} aria-label={vi.library.addTrack(s.track.title)}>
+          <button type="button" disabled={top.isAdded(s.track)} onClick={() => top.add(s.track)} aria-label={t.library.addTrack(s.track.title)}>
             <Plus className="inline h-4 w-4 align-[-3px]" aria-hidden />
-            {vi.add.addResult}
+            {t.add.addResult}
           </button>
         </span>
       ))}
@@ -61,9 +62,10 @@ function SuggestLine() {
 }
 
 function Stage({ openAdd }: { openAdd: () => void }) {
+  const t = useT();
   const a = useNowPlayingActions();
   const vote = useSkipVoteState();
-  const queue = <StageQueue openAdd={openAdd} title="Mặt B · Tiếp theo" variant="jcard" numbered tail={<SuggestLine />} />;
+  const queue = <StageQueue openAdd={openAdd} title={t.themeText.cassette.sideB} variant="jcard" numbered tail={<SuggestLine />} />;
   if (!a) {
     return (
       <div className="stage cassette">
@@ -78,13 +80,16 @@ function Stage({ openAdd }: { openAdd: () => void }) {
   const { track, playing } = a;
   return (
     <div className="stage cassette">
-      <section aria-label={vi.nowPlaying.title} className="cs-tape">
+      <section aria-label={t.nowPlaying.title} className="cs-tape">
         <div className="cs-label">
           <h2 className="stage-title" title={track.title}>
             {track.title}
           </h2>
           <div className="meta">
-            <span>Mặt A{track.channel ? ` · ${track.channel}` : ''}</span>
+            <span>
+              {t.themeText.cassette.sideA}
+              {track.channel ? ` · ${track.channel}` : ''}
+            </span>
             <span>{a.pickerLabel}</span>
           </div>
         </div>
@@ -117,7 +122,7 @@ const cassette: ThemeModule = {
   Stage,
   fontClass: `${bungee.variable} ${patrickHand.variable} ${barlowCondensed.variable}`,
   header: { variant: 'dymo' },
-  chat: { placeholder: 'Viết lời nhắn…', variant: 'cassette' },
+  chat: { placeholder: (t) => t.themeText.cassette.chatPlaceholder, variant: 'cassette' },
   Decor: () => <div className="cs-stripe" aria-hidden />,
   HostDial: HostTape,
 };

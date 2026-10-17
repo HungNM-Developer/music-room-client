@@ -3,7 +3,7 @@
 import { Check, SkipForward, X } from 'lucide-react';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Thumb } from '@/components/ui/Thumb';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 import { meterProps, useSkipVoteState, type VoteMeterProps } from './stage/useSkipVoteState';
 
 /**
@@ -36,6 +36,7 @@ export function useNow(ms: number, active: boolean): number {
  * `pip`: inline in the mini player.
  */
 export function SkipVote({ variant, meter: Meter }: { variant: 'member' | 'host' | 'pip'; meter?: React.ComponentType<VoteMeterProps> }) {
+  const t = useT();
   const s = useSkipVoteState(variant === 'host');
 
   const frame =
@@ -56,7 +57,7 @@ export function SkipVote({ variant, meter: Meter }: { variant: 'member' | 'host'
     return (
       <div className={frame}>
         <div role="status" className={`${card} text-center font-semibold ${variant === 'host' ? 'text-[24px]' : 'text-[15px]'}`}>
-          {s.result.kind === 'skipped' ? vi.skipVote.skipped : vi.skipVote.kept}
+          {s.result.kind === 'skipped' ? t.skipVote.skipped : t.skipVote.kept}
         </div>
       </div>
     );
@@ -67,7 +68,7 @@ export function SkipVote({ variant, meter: Meter }: { variant: 'member' | 'host'
 
   return (
     <div className={frame}>
-      <section aria-label={vi.skipVote.label} aria-live="polite" className={card}>
+      <section aria-label={t.skipVote.label} aria-live="polite" className={card}>
         <div className="flex items-center gap-3">
           {variant !== 'pip' && <Thumb url={np.item.track.thumbnailUrl} size={host ? 64 : 44} className="rounded-row" />}
           <div className="min-w-0 flex-1">
@@ -83,7 +84,7 @@ export function SkipVote({ variant, meter: Meter }: { variant: 'member' | 'host'
           <p className={`shrink-0 text-right tabular-nums ${host ? 'text-[20px]' : 'text-[13px]'}`}>
             <span className="text-online">✅ {votes}/{required}</span>
             <span className="ml-2 text-alert">❌ {against}</span>
-            <span className="block text-sage">{vi.skipVote.seconds(seconds)}</span>
+            <span className="block text-sage">{t.skipVote.seconds(seconds)}</span>
           </p>
         </div>
 
@@ -99,18 +100,18 @@ export function SkipVote({ variant, meter: Meter }: { variant: 'member' | 'host'
           <div className="mt-3 grid grid-cols-[1fr_1fr_auto] gap-2">
             <button type="button" onClick={() => s.vote(true)} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-row bg-online font-semibold text-dial-deep hover:brightness-110">
               <Check className="h-5 w-5" aria-hidden />
-              {vi.skipVote.yes}
+              {t.skipVote.yes}
             </button>
             <button type="button" onClick={() => s.vote(false)} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-row bg-onair-deep font-semibold text-paper hover:bg-onair">
               <X className="h-5 w-5" aria-hidden />
-              {vi.skipVote.no}
+              {t.skipVote.no}
             </button>
             <button type="button" onClick={s.dismiss} className="min-h-11 rounded-row px-2 text-[13px] text-sage hover:text-paper">
-              {vi.skipVote.later}
+              {t.skipVote.later}
             </button>
           </div>
         ) : (
-          mine && <p className="mt-2 text-[13px] text-sage">{mine === 'yes' ? vi.skipVote.youYes : vi.skipVote.youNo}</p>
+          mine && <p className="mt-2 text-[13px] text-sage">{mine === 'yes' ? t.skipVote.youYes : t.skipVote.youNo}</p>
         )}
       </section>
     </div>

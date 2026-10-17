@@ -1,8 +1,9 @@
 import type { QueueItemView } from '@/contracts';
-import { vi } from '@/i18n/vi';
+import { tr } from '@/i18n';
 
 /** "Minh Anh", "Radio tự động" or "Playlist dự phòng". */
 export function addedByLabel(item: Pick<QueueItemView, 'addedBy' | 'auto'>): string {
+  const t = tr();
   if (item.addedBy) return item.addedBy.displayName;
-  return item.auto === 'radio' ? vi.nowPlaying.radio : vi.nowPlaying.fallback;
+  return item.auto === 'radio' ? t.nowPlaying.radio : t.nowPlaying.fallback;
 }

@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import type { LibraryItemView, LibrarySort, TrackSummary } from '@/contracts';
 import { LIBRARY_SORTS, LOOKUP_MAX_IDS } from '@/contracts/constants';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 import { readLocalFavorites } from '@/lib/local-favorites';
 import { formatAgo, formatDuration } from '@/lib/time';
 import { useMe, useRoom } from '@/state/hooks';
@@ -16,18 +16,19 @@ import { TrackRow } from './TrackRow';
 type Add = (trackInput: string, known?: TrackSummary) => Promise<boolean>;
 
 function Status({ loading, failed, empty, onRetry }: { loading: boolean; failed: boolean; empty: string | null; onRetry: () => void }) {
+  const t = useT();
   if (loading)
     return (
       <p role="status" className="flex items-center gap-2 px-1 text-sage">
-        <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> {vi.library.loading}
+        <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> {t.library.loading}
       </p>
     );
   if (failed)
     return (
       <p role="alert" className="flex flex-wrap items-center gap-3 px-1 text-sage">
-        {vi.library.loadFailed}
+        {t.library.loadFailed}
         <Button size="sm" onClick={onRetry}>
-          {vi.library.retry}
+          {t.library.retry}
         </Button>
       </p>
     );
@@ -36,6 +37,7 @@ function Status({ loading, failed, empty, onRetry }: { loading: boolean; failed:
 
 /** A1: songs this room has played, to add again in one tap. */
 export function PlayedList({ add, added }: { add: Add; added: Set<string> }) {
+  const t = useT();
   const isAdmin = useMe()?.role === 'ADMIN';
   const [blockFor, setBlockFor] = useState<TrackSummary | null>(null);
   const [sort, setSort] = useState<LibrarySort>('recent');
@@ -59,7 +61,7 @@ export function PlayedList({ add, added }: { add: Add; added: Set<string> }) {
 
   return (
     <div className="space-y-3">
-      <div role="group" aria-label={vi.library.sortLabel} className="flex flex-wrap gap-1.5 px-1">
+      <div role="group" aria-label={t.library.sortLabel} className="flex flex-wrap gap-1.5 px-1">
         {LIBRARY_SORTS.map((k) => (
           <button
             key={k}
@@ -70,35 +72,35 @@ export function PlayedList({ add, added }: { add: Add; added: Set<string> }) {
               sort === k ? 'border-amber bg-amber/15 text-paper' : 'border-line text-sage hover:text-paper'
             }`}
           >
-            {vi.library.sorts[k]}
+            {t.library.sorts[k]}
           </button>
         ))}
       </div>
       <Status
         loading={items === null && !failed}
         failed={failed}
-        empty={items?.length === 0 ? vi.library.emptyPlayed : null}
+        empty={items?.length === 0 ? t.library.emptyPlayed : null}
         onRetry={() => {
           setFailed(false);
           setAttempt((n) => n + 1);
         }}
       />
       {items && items.length > 0 && (
-        <ul aria-label={vi.library.playedLabel} className="divide-y divide-line/70 rounded-panel bg-panel px-1">
+        <ul aria-label={t.library.playedLabel} className="divide-y divide-line/70 rounded-panel bg-panel px-1">
           {items.map((it) => (
             <TrackRow
               key={it.track.id}
               track={it.track}
               done={added.has(it.track.id)}
-              addLabel={vi.library.addAgain}
+              addLabel={t.library.addAgain}
               onAdd={() => void add(it.track.id, it.track)}
               onMore={isAdmin ? () => setBlockFor(it.track) : undefined}
               meta={
                 <p className="flex flex-wrap gap-x-2">
-                  <span className="truncate">{it.lastAddedBy?.displayName ?? vi.library.fallback}</span>
+                  <span className="truncate">{it.lastAddedBy?.displayName ?? t.library.fallback}</span>
                   <span className="shrink-0">{formatAgo(it.lastPlayedAt)}</span>
-                  <span className="shrink-0">{vi.library.plays(it.plays)}</span>
-                  {it.hearts > 0 && <span className="shrink-0">{vi.library.hearts(it.hearts)}</span>}
+                  <span className="shrink-0">{t.library.plays(it.plays)}</span>
+                  {it.hearts > 0 && <span className="shrink-0">{t.library.hearts(it.hearts)}</span>}
                 </p>
               }
             />
@@ -117,6 +119,7 @@ export function PlayedList({ add, added }: { add: Add; added: Set<string> }) {
  * so a mis-tap can be undone in place.
  */
 export function SavedList({ add, added }: { add: Add; added: Set<string> }) {
+  const t = useT();
   const signedIn = useRoom((s) => Boolean(s.user));
   const [tracks, setTracks] = useState<TrackSummary[] | null>(null);
   const [failed, setFailed] = useState(false);
@@ -149,18 +152,18 @@ export function SavedList({ add, added }: { add: Add; added: Set<string> }) {
 
   return (
     <div className="space-y-3">
-      <p className="px-1 text-[13px] text-sage">{signedIn ? vi.library.savedNoteAccount : vi.library.savedNote}</p>
+      <p className="px-1 text-[13px] text-sage">{signedIn ? t.library.savedNoteAccount : t.library.savedNote}</p>
       <Status
         loading={tracks === null && !failed}
         failed={failed}
-        empty={tracks?.length === 0 ? vi.library.emptySaved : null}
+        empty={tracks?.length === 0 ? t.library.emptySaved : null}
         onRetry={() => {
           setFailed(false);
           void load();
         }}
       />
       {tracks && tracks.length > 0 && (
-        <ul aria-label={vi.library.savedLabel} className="divide-y divide-line/70 rounded-panel bg-panel px-1">
+        <ul aria-label={t.library.savedLabel} className="divide-y divide-line/70 rounded-panel bg-panel px-1">
           {tracks.map((t) => (
             <TrackRow
               key={t.id}

@@ -2,9 +2,10 @@
 
 import { useEffect, useRef } from 'react';
 import { useToast } from '@/components/ui/Toast';
-import { errorMessage, vi } from '@/i18n/vi';
+import { errorMessage, tr } from '@/i18n';
 import { useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
+import { useLang } from '@/i18n/lang';
 
 interface GoogleId {
   initialize(o: {
@@ -52,6 +53,7 @@ function loadGis(): Promise<GoogleId> {
 
 /** L1: Google's own "Đăng nhập bằng Google" button. Hidden when the server has no client id. */
 export function GoogleButton({ width = 280 }: { width?: number }) {
+  const lang = useLang();
   const clientId = useRoom((s) => s.health?.googleClientId ?? null);
   const box = useRef<HTMLDivElement>(null);
   const toast = useToast();
@@ -71,17 +73,17 @@ export function GoogleButton({ width = 280 }: { width?: number }) {
           use_fedcm_for_button: true,
           callback: async ({ credential }) => {
             const r = await room.signInWithGoogle(credential);
-            if (r.ok) toast(vi.account.welcome(r.data.user.name), 'success');
+            if (r.ok) toast(tr().account.welcome(r.data.user.name), 'success');
             else toast(errorMessage(r.error.code, r.error.params), 'error');
           },
         });
-        gis.renderButton(box.current, { theme: 'filled_black', size: 'large', shape: 'pill', text: 'signin_with', locale: 'vi', width });
+        gis.renderButton(box.current, { theme: 'filled_black', size: 'large', shape: 'pill', text: 'signin_with', locale: lang, width });
       })
       .catch(() => undefined);
     return () => {
       alive = false;
     };
-  }, [clientId, toast, width]);
+  }, [clientId, toast, width, lang]);
 
   if (!clientId) return null;
   // Google draws the button in an iframe with a light color scheme. Under our dark page

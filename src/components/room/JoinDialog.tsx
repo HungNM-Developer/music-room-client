@@ -8,7 +8,7 @@ import { Dialog } from '@/components/ui/Dialog';
 import { AdminNameNotice } from '@/components/home/AdminNameNotice';
 import { Field } from '@/components/ui/Field';
 import { useToast } from '@/components/ui/Toast';
-import { errorMessage, vi } from '@/i18n/vi';
+import { errorMessage, useT } from '@/i18n';
 import { lastName, rememberName } from '@/lib/session-store';
 import { isDisplayName, isPin } from '@/lib/validate';
 import { useRoom } from '@/state/hooks';
@@ -18,6 +18,7 @@ import { setRoomThemeHint } from '@/themes/useTheme';
 
 /** Shown on /r/CODE when there is no valid session (TC-015, TC-021). Cannot be dismissed. */
 export function JoinDialog({ code, notice }: { code: string; notice?: string | null }) {
+  const t = useT();
   const [roomName, setRoomName] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(notice ?? null);
@@ -83,27 +84,27 @@ export function JoinDialog({ code, notice }: { code: string; notice?: string | n
       } else setError(errorMessage(r.error.code, r.error.params));
     } else {
       rememberName(name.trim(), r.data.code);
-      if (r.data.rightsReset) toast(vi.home.rightsReset, 'info');
+      if (r.data.rightsReset) toast(t.home.rightsReset, 'info');
     }
   }
 
   if (user && auto === 'joining') {
     return (
-      <Dialog open dismissable={false} onClose={() => undefined} title={roomName ? vi.joinDialog.title(roomName) : vi.joinDialog.loading}>
+      <Dialog open dismissable={false} onClose={() => undefined} title={roomName ? t.joinDialog.title(roomName) : t.joinDialog.loading}>
         <p role="status" className="text-sage">
-          {vi.account.joining(user.name)}
+          {t.account.joining(user.name)}
         </p>
       </Dialog>
     );
   }
 
   return (
-    <Dialog open dismissable={false} onClose={() => undefined} title={roomName ? vi.joinDialog.title(roomName) : vi.joinDialog.loading}>
+    <Dialog open dismissable={false} onClose={() => undefined} title={roomName ? t.joinDialog.title(roomName) : t.joinDialog.loading}>
       <form onSubmit={submit} className="space-y-4">
         <div ref={nameBox}>
           <Field
-            label={vi.home.yourName}
-            placeholder={vi.home.yourNamePlaceholder}
+            label={t.home.yourName}
+            placeholder={t.home.yourNamePlaceholder}
             value={name}
             maxLength={30}
             autoComplete="nickname"
@@ -128,7 +129,7 @@ export function JoinDialog({ code, notice }: { code: string; notice?: string | n
             }}
           />
         ) : (
-          <p className="text-[13px] text-sage">{vi.home.rejoinNote}</p>
+          <p className="text-[13px] text-sage">{t.home.rejoinNote}</p>
         )}
         {error && (
           <p role="alert" className="rounded-row border border-onair/50 bg-onair/10 p-3 text-[14px]">
@@ -136,7 +137,7 @@ export function JoinDialog({ code, notice }: { code: string; notice?: string | n
           </p>
         )}
         <Button type="submit" variant="primary" disabled={!valid || busy || !roomName} className="w-full">
-          {vi.joinDialog.submit}
+          {t.joinDialog.submit}
         </Button>
         {!user && (
           <div className="flex flex-col items-center gap-2 border-t border-line/70 pt-4">
@@ -144,7 +145,7 @@ export function JoinDialog({ code, notice }: { code: string; notice?: string | n
           </div>
         )}
         <Link href="/" className="block py-2 text-center text-[14px] text-sage hover:text-paper">
-          {vi.joinDialog.backHome}
+          {t.joinDialog.backHome}
         </Link>
       </form>
     </Dialog>

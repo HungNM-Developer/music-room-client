@@ -1,7 +1,7 @@
 'use client';
 
 import { useLiveProgress } from '@/components/room/stage/useLiveProgress';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 import { formatDuration } from '@/lib/time';
 import type { ThemeModule } from '../load';
 import { NowCover } from '../stage/parts';
@@ -11,17 +11,19 @@ import './theme.css';
 
 /** The amber LCD: elapsed time, a segment meter filling with --p, and the length. */
 function Lcd({ large = false }: { large?: boolean }) {
+  const t = useT();
   const { ref, timeRef, info } = useLiveProgress();
   return (
     <div ref={ref} className="hifi-lcd" data-large={large || undefined}>
       <span ref={timeRef}>0:00</span>
       <span className="meter" aria-hidden />
-      <small>{info ? (info.known ? formatDuration(info.durationSec) : vi.nowPlaying.unknownDuration) : ''}</small>
+      <small>{info ? (info.known ? formatDuration(info.durationSec) : t.nowPlaying.unknownDuration) : ''}</small>
     </div>
   );
 }
 
 function Stage({ openAdd }: { openAdd: () => void }) {
+  const t = useT();
   return (
     <StageLayout
       openAdd={openAdd}
@@ -30,7 +32,7 @@ function Stage({ openAdd }: { openAdd: () => void }) {
       dialInInfo
       controls="keys"
       voteMeterAt="middle"
-      voteText={(s) => `${s.asksLabel}. ${s.votes}/${s.required} đồng ý · ${s.seconds}s`}
+      voteText={(s) => t.themeText.voteSeconds(s.asksLabel, s.votes, s.required, s.seconds)}
       numbered
     />
   );

@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { HeartButton, hasItemMenu, useQueueView } from '@/components/room/QueueList';
 import { Dialog } from '@/components/ui/Dialog';
 import type { QueueItemView } from '@/contracts';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 import { addedByLabel } from '@/lib/added-by';
 import { ytThumb } from '@/lib/thumbs';
 import { formatDuration } from '@/lib/time';
@@ -39,6 +39,7 @@ function Planet({ withCover = true }: { withCover?: boolean }) {
 
 /** People listening along, drawn as stars. */
 function Stars() {
+  const t = useT();
   const members = useRoom((s) => s.snapshot?.members);
   const people = (members ?? []).filter((m) => m.listening && m.online);
   if (!people.length) return null;
@@ -47,20 +48,21 @@ function Stars() {
       {people.slice(0, 8).map((m) => (
         <i key={m.id} aria-hidden />
       ))}
-      {vi.listen.count(people.length)}
+      {t.listen.count(people.length)}
     </p>
   );
 }
 
 /** "Quỹ đạo tiếp theo": the next songs as planets getting smaller, then the full list. */
 function Orbits({ openAdd }: { openAdd: () => void }) {
+  const t = useT();
   const { items, me, openMenu, menus } = useQueueView();
   const [open, setOpen] = useState<QueueItemView | null>(null);
   // Keep the dialog on the live item (hearts change while it is open).
   const shown = open ? (items.find((q) => q.id === open.id) ?? null) : null;
   const sizes = [64, 54, 46, 40, 34, 30];
   const planets = items.length > 0 && (
-    <div className="cosmos-orbitq" role="group" aria-label={vi.queue.title}>
+    <div className="cosmos-orbitq" role="group" aria-label={t.queue.title}>
       {items.slice(0, sizes.length).map((q, i) => (
         <button
           key={q.id}
@@ -76,12 +78,12 @@ function Orbits({ openAdd }: { openAdd: () => void }) {
           onClick={() => setOpen(q)}
         />
       ))}
-      <span className="hint">Bấm một hành tinh để xem tên, tim, ghim, lời chúc</span>
+      <span className="hint">{t.themeText.cosmos.hint}</span>
     </div>
   );
   return (
     <>
-      <StageQueue openAdd={openAdd} title="Quỹ đạo tiếp theo" variant="cosmos" lead={planets} />
+      <StageQueue openAdd={openAdd} title={t.themeText.cosmos.next} variant="cosmos" lead={planets} />
       {shown && (
         <Dialog open onClose={() => setOpen(null)} title={shown.track.title} description={addedByLabel(shown)}>
           <div className="flex flex-wrap items-center gap-3">
@@ -98,7 +100,7 @@ function Orbits({ openAdd }: { openAdd: () => void }) {
                 }}
               >
                 <MoreHorizontal className="h-5 w-5" aria-hidden />
-                {vi.queue.actions(shown.track.title)}
+                {t.queue.actions(shown.track.title)}
               </button>
             )}
           </div>
@@ -127,8 +129,8 @@ const cosmos: ThemeModule = {
   Stage,
   fontClass: spaceGrotesk.variable,
   chat: {
-    title: 'Tín hiệu',
-    placeholder: 'Gửi tín hiệu cho cả phòng…',
+    title: (t) => t.themeText.cosmos.chat,
+    placeholder: (t) => t.themeText.cosmos.chatPlaceholder,
     variant: 'cosmos',
   },
   Decor: () => <div className="cosmos-sky" aria-hidden />,

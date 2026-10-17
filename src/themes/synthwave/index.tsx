@@ -7,6 +7,7 @@ import { NowCover } from '../stage/parts';
 import { StageLayout } from '../stage/StageLayout';
 import { exo2 } from './fonts';
 import './theme.css';
+import { useT } from '@/i18n';
 
 /** A striped sun over a perspective grid, the cover in a neon frame. */
 function Scene() {
@@ -29,6 +30,7 @@ function Led({ seconds }: VoteMeterProps) {
 }
 
 function Stage({ openAdd }: { openAdd: () => void }) {
+  const t = useT();
   return (
     <StageLayout
       openAdd={openAdd}
@@ -37,7 +39,7 @@ function Stage({ openAdd }: { openAdd: () => void }) {
       dialInInfo
       voteMeter={Led}
       voteMeterAt="start"
-      voteText={(s) => `${s.asksLabel}. ${s.votes}/${s.required} đồng ý`}
+      voteText={(s) => t.themeText.voteShort(s.asksLabel, s.votes, s.required)}
     />
   );
 }

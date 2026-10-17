@@ -7,7 +7,8 @@ import { Dialog } from '@/components/ui/Dialog';
 import { useToast } from '@/components/ui/Toast';
 import type { PlaylistSummaryView, TrackSummary } from '@/contracts';
 import { LIMITS } from '@/contracts/constants';
-import { errorMessage, vi } from '@/i18n/vi';
+import { errorMessage, useT } from '@/i18n';
+import { playlistName } from '@/i18n/activity';
 import { useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 
@@ -16,6 +17,7 @@ import { room } from '@/state/room-store';
  * playlists with a tick when the song is in them, then "Playlist mới".
  */
 export function SaveToDialog({ track, onClose }: { track: TrackSummary; onClose: () => void }) {
+  const t = useT();
   const toast = useToast();
   const favorite = useRoom((s) => s.favoriteIds.includes(track.id) || s.localFavorites.includes(track.externalId));
   const [lists, setLists] = useState<PlaylistSummaryView[] | null>(null);
@@ -41,7 +43,7 @@ export function SaveToDialog({ track, onClose }: { track: TrackSummary; onClose:
     setLists((ls) => ls?.map((x) => (x.id === p.id ? { ...x, hasTrack: saved, trackCount: x.trackCount + (saved ? 1 : -1) } : x)) ?? null);
     const r = await room.send('playlist:set-track', { id: p.id, trackId: track.id, saved });
     setBusy(null);
-    if (r.ok) toast(saved ? vi.playlists.savedTo(p.name) : vi.playlists.removedFrom(p.name), 'success');
+    if (r.ok) toast(saved ? t.playlists.savedTo(playlistName(p, t)) : t.playlists.removedFrom(playlistName(p, t)), 'success');
     else {
       setLists((ls) => ls?.map((x) => (x.id === p.id ? p : x)) ?? null);
       fail(r);
@@ -56,7 +58,7 @@ export function SaveToDialog({ track, onClose }: { track: TrackSummary; onClose:
     const r = await room.send('playlist:create', { name: n, trackIds: [track.id] });
     setBusy(null);
     if (!r.ok) return fail(r);
-    toast(vi.playlists.created(n), 'success');
+    toast(t.playlists.created(n), 'success');
     setName('');
     setLists((ls) => [
       { id: r.data.id, name: n, trackCount: 1, coverUrl: track.thumbnailUrl, shared: false, updatedAt: new Date().toISOString(), hasTrack: true },
@@ -65,7 +67,7 @@ export function SaveToDialog({ track, onClose }: { track: TrackSummary; onClose:
   }
 
   return (
-    <Dialog open onClose={onClose} title={vi.playlists.saveTo}>
+    <Dialog open onClose={onClose} title={t.playlists.saveTo}>
       <ul className="-mx-1 max-h-[45vh] space-y-0.5 overflow-y-auto">
         <li>
           <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-row px-1 hover:bg-panel-hi">
@@ -78,7 +80,7 @@ export function SaveToDialog({ track, onClose }: { track: TrackSummary; onClose:
                 if (!r.ok) fail(r);
               }}
             />
-            <span className="font-medium">{vi.library.favorites}</span>
+            <span className="font-medium">{t.library.favorites}</span>
           </label>
         </li>
         {!lists && (
@@ -90,27 +92,27 @@ export function SaveToDialog({ track, onClose }: { track: TrackSummary; onClose:
           <li key={p.id}>
             <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-row px-1 hover:bg-panel-hi">
               <input type="checkbox" className="h-5 w-5 accent-amber" checked={Boolean(p.hasTrack)} disabled={busy === p.id} onChange={() => void toggleList(p)} />
-              <span className="min-w-0 flex-1 truncate">{p.name}</span>
-              <span className="shrink-0 text-[13px] sm:text-[12px] text-sage">{vi.playlists.count(p.trackCount)}</span>
+              <span className="min-w-0 flex-1 truncate">{playlistName(p, t)}</span>
+              <span className="shrink-0 text-[13px] sm:text-[12px] text-sage">{t.playlists.count(p.trackCount)}</span>
             </label>
           </li>
         ))}
       </ul>
       <form onSubmit={create} className="mt-4 flex gap-2 border-t border-line/70 pt-4">
         <label htmlFor="new-playlist" className="sr-only">
-          {vi.playlists.newName}
+          {t.playlists.newName}
         </label>
         <input
           id="new-playlist"
           value={name}
           onChange={(e) => setName(e.target.value)}
           maxLength={LIMITS.playlistName}
-          placeholder={vi.playlists.newPlaylist}
+          placeholder={t.playlists.newPlaylist}
           className="field min-w-0 flex-1"
           autoComplete="off"
         />
         <Button type="submit" disabled={!name.trim() || busy === 'new'} aria-busy={busy === 'new'}>
-          <Plus className="h-4 w-4" aria-hidden /> {vi.playlists.create}
+          <Plus className="h-4 w-4" aria-hidden /> {t.playlists.create}
         </Button>
       </form>
     </Dialog>

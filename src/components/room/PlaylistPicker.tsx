@@ -7,7 +7,8 @@ import { Thumb } from '@/components/ui/Thumb';
 import { useToast } from '@/components/ui/Toast';
 import type { TrackSummary } from '@/contracts';
 import { ADD_MANY_MAX } from '@/contracts/constants';
-import { errorMessage, vi } from '@/i18n/vi';
+import { errorMessage, tr, useT } from '@/i18n';
+import { playlistName } from '@/i18n/activity';
 import { formatDuration } from '@/lib/time';
 import { useBlockedIds, useMe, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
@@ -20,6 +21,7 @@ export type PickerSource = { kind: 'youtube'; url: string } | { kind: 'shared'; 
  * says why) what the room refuses. Signed in, the list can be kept as one's own playlist.
  */
 export function PlaylistPicker({ source, onClose }: { source: PickerSource; onClose: () => void }) {
+  const t = useT();
   const user = useRoom((s) => s.user);
   const [title, setTitle] = useState<string | null>(null);
   const [kept, setKept] = useState(false);
@@ -46,7 +48,7 @@ export function PlaylistPicker({ source, onClose }: { source: PickerSource; onCl
         ? room.send('playlist:open', { url: source.url }).then((r) => (r.ok ? { ok: true as const, tracks: r.data.tracks, title: null } : r))
         : room
             .send('playlist:get', { shareCode: source.code })
-            .then((r) => (r.ok ? { ok: true as const, tracks: r.data.tracks, title: `${vi.playlists.by(r.data.owner.name)}: ${r.data.name}` } : r));
+            .then((r) => (r.ok ? { ok: true as const, tracks: r.data.tracks, title: `${tr().playlists.by(r.data.owner.name)}: ${playlistName(r.data, tr())}` } : r));
     void load.then((r) => {
       if (!alive) return;
       if (r.ok) {
@@ -64,14 +66,14 @@ export function PlaylistPicker({ source, onClose }: { source: PickerSource; onCl
     if (!tracks) return;
     const r =
       source.kind === 'youtube'
-        ? await room.send('playlist:create', { name: vi.playlists.youtubeName, trackIds: tracks.map((t) => t.id).slice(0, 200) })
+        ? await room.send('playlist:create', { name: t.playlists.youtubeName, trackIds: tracks.map((item) => item.id).slice(0, 200) })
         : await room.send('playlist:copy', { shareCode: source.code });
     if (!r.ok) {
       toast(errorMessage(r.error.code, r.error.params), 'error');
       return;
     }
     setKept(true);
-    toast(source.kind === 'youtube' ? vi.playlists.created(vi.playlists.youtubeName) : vi.playlists.copied, 'success');
+    toast(source.kind === 'youtube' ? t.playlists.created(t.playlists.youtubeName) : t.playlists.copied, 'success');
   }
 
   const slots = Math.max(0, Math.min(max - mine, ADD_MANY_MAX));
@@ -89,8 +91,8 @@ export function PlaylistPicker({ source, onClose }: { source: PickerSource; onCl
       return;
     }
     const { added, skipped } = r.data;
-    const why = skipped.length ? `. ${vi.playlist.skipped(skipped.length)}: ${errorMessage(skipped[0].reason)}` : '';
-    toast(`${vi.playlist.added(added)}${why}`, added ? 'success' : 'error');
+    const why = skipped.length ? `. ${t.playlist.skipped(skipped.length)}: ${errorMessage(skipped[0].reason)}` : '';
+    toast(`${t.playlist.added(added)}${why}`, added ? 'success' : 'error');
     setPicked([]);
   }
 
@@ -101,15 +103,15 @@ export function PlaylistPicker({ source, onClose }: { source: PickerSource; onCl
       <div className="flex items-center gap-2 pl-1">
         <p className="min-w-0 flex-1 text-[14px] font-medium">
           {title && <span className="block truncate">{title}</span>}
-          {tracks ? vi.playlist.count(tracks.length) : error ? null : vi.playlist.opening}
+          {tracks ? t.playlist.count(tracks.length) : error ? null : t.playlist.opening}
         </p>
         {user && tracks && (
           <Button size="sm" variant="ghost" disabled={kept} onClick={keep}>
             <ListPlus className="h-4 w-4" aria-hidden />
-            {source.kind === 'youtube' ? vi.playlists.saveYoutube : vi.playlists.copy}
+            {source.kind === 'youtube' ? t.playlists.saveYoutube : t.playlists.copy}
           </Button>
         )}
-        <IconButton label={vi.playlist.close} onClick={onClose}>
+        <IconButton label={t.playlist.close} onClick={onClose}>
           <X className="h-5 w-5" aria-hidden />
         </IconButton>
       </div>
@@ -121,35 +123,35 @@ export function PlaylistPicker({ source, onClose }: { source: PickerSource; onCl
       )}
       {tracks && (
         <>
-          <p className="px-1 text-[13px] text-sage">{vi.playlist.slots(slots)}</p>
-          <ul aria-label={vi.playlist.listLabel} className="max-h-[50vh] divide-y divide-line/70 overflow-y-auto">
-            {tracks.map((t) => {
-              const isBlocked = blocked.has(t.id);
-              const taken = inQueue.has(t.id) || isBlocked;
-              const on = picked.includes(t.id);
+          <p className="px-1 text-[13px] text-sage">{t.playlist.slots(slots)}</p>
+          <ul aria-label={t.playlist.listLabel} className="max-h-[50vh] divide-y divide-line/70 overflow-y-auto">
+            {tracks.map((item) => {
+              const isBlocked = blocked.has(item.id);
+              const taken = inQueue.has(item.id) || isBlocked;
+              const on = picked.includes(item.id);
               return (
-                <li key={t.id}>
+                <li key={item.id}>
                   <label className={`flex items-center gap-3 px-1 py-2 ${taken ? 'opacity-50' : 'cursor-pointer'}`}>
                     <input
                       type="checkbox"
                       className="h-5 w-5 shrink-0 accent-amber"
                       checked={on || taken}
                       disabled={taken || (!on && picked.length >= slots)}
-                      onChange={() => toggle(t.id)}
-                      aria-label={vi.playlist.choose(t.title)}
+                      onChange={() => toggle(item.id)}
+                      aria-label={t.playlist.choose(item.title)}
                     />
-                    <Thumb url={t.thumbnailUrl} size={56} ratio="wide" />
+                    <Thumb url={item.thumbnailUrl} size={56} ratio="wide" />
                     <span className="min-w-0 flex-1">
-                      <span className="line-clamp-2 text-[14px] leading-snug [unicode-bidi:plaintext]">{t.title}</span>
+                      <span className="line-clamp-2 text-[14px] leading-snug [unicode-bidi:plaintext]">{item.title}</span>
                       <span className="mt-0.5 flex gap-2 text-[13px] sm:text-[12px] text-sage">
                         {isBlocked ? (
-                          <span className="text-alert">{vi.block.label}</span>
+                          <span className="text-alert">{t.block.label}</span>
                         ) : taken ? (
-                          <span>{vi.library.inQueue}</span>
+                          <span>{t.library.inQueue}</span>
                         ) : (
-                          t.channel && <span className="truncate">{t.channel}</span>
+                          item.channel && <span className="truncate">{item.channel}</span>
                         )}
-                        {t.durationSec ? <span className="shrink-0 tabular-nums">{formatDuration(t.durationSec)}</span> : null}
+                        {item.durationSec ? <span className="shrink-0 tabular-nums">{formatDuration(item.durationSec)}</span> : null}
                       </span>
                     </span>
                   </label>
@@ -159,7 +161,7 @@ export function PlaylistPicker({ source, onClose }: { source: PickerSource; onCl
           </ul>
           <Button variant="primary" className="w-full" disabled={!picked.length || busy} aria-busy={busy} onClick={addPicked}>
             {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
-            {vi.playlist.addSelected(picked.length)}
+            {t.playlist.addSelected(picked.length)}
           </Button>
         </>
       )}

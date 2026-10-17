@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useAct } from '@/hooks/useAct';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 import { useMe, useNowPlaying, useRoom } from '@/state/hooks';
 import { useNow } from '../SkipVote';
 
@@ -46,6 +46,7 @@ function useVoteResult(): Result | null {
  * casting ✅ / ❌. `readOnly` (the speaker screen) never offers the buttons.
  */
 export function useSkipVoteState(readOnly = false) {
+  const t = useT();
   const np = useNowPlaying();
   const me = useMe();
   const offset = useRoom((s) => s.offset);
@@ -75,7 +76,7 @@ export function useSkipVoteState(readOnly = false) {
     against,
     mine,
     canVote,
-    asksLabel: openedBy ? vi.skipVote.asks(openedBy.id === me?.id ? vi.skipVote.you : openedBy.displayName) : vi.skipVote.asksAnon,
+    asksLabel: openedBy ? t.skipVote.asks(openedBy.id === me?.id ? t.skipVote.you : openedBy.displayName) : t.skipVote.asksAnon,
     /** Show ✅ / ❌: I can vote, have not yet, and did not choose "Để sau" for this vote. */
     offer: canVote && mine === null && dismissedAt !== endsAt,
     vote: (approve: boolean) =>

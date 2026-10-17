@@ -8,7 +8,8 @@ import { Dialog } from '@/components/ui/Dialog';
 import { Thumb } from '@/components/ui/Thumb';
 import { useToast } from '@/components/ui/Toast';
 import type { YouTubePlaylistView } from '@/contracts';
-import { errorMessage, vi } from '@/i18n/vi';
+import { errorMessage, useT } from '@/i18n';
+import { playlistName } from '@/i18n/activity';
 import { useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 
@@ -20,6 +21,7 @@ type Row = { source: 'liked' | string; title: string; count: number | null; thum
  * only in this dialog and is given back when it closes.
  */
 export function YouTubeImport({ onImported }: { onImported: () => void }) {
+  const t = useT();
   const clientId = useRoom((s) => s.health?.googleClientId ?? null);
   const toast = useToast();
   const [token, setToken] = useState<string | null>(null);
@@ -34,22 +36,22 @@ export function YouTubeImport({ onImported }: { onImported: () => void }) {
 
   async function connect() {
     setConnecting(true);
-    const t = await requestYouTubeToken(clientId!);
-    if (!t) {
+    const item = await requestYouTubeToken(clientId!);
+    if (!item) {
       setConnecting(false);
-      toast(vi.ytImport.cancelled, 'info');
+      toast(t.ytImport.cancelled, 'info');
       return;
     }
-    const r = await room.send('youtube:library', { accessToken: t });
+    const r = await room.send('youtube:library', { accessToken: item });
     setConnecting(false);
     if (!r.ok) {
-      revokeYouTubeToken(t);
+      revokeYouTubeToken(item);
       toast(errorMessage(r.error.code, r.error.params), 'error');
       return;
     }
-    setToken(t);
+    setToken(item);
     setRows([
-      { source: 'liked', title: vi.ytImport.liked, count: null, thumb: null, imported: Boolean(r.data.likedImportedId) },
+      { source: 'liked', title: t.ytImport.liked, count: null, thumb: null, imported: Boolean(r.data.likedImportedId) },
       ...r.data.playlists.map((p: YouTubePlaylistView) => ({
         source: p.id,
         title: p.title,
@@ -72,7 +74,7 @@ export function YouTubeImport({ onImported }: { onImported: () => void }) {
     const r = await room.send('youtube:import', { accessToken: token, source: row.source, musicOnly });
     setBusy(null);
     if (!r.ok) return toast(errorMessage(r.error.code, r.error.params), 'error');
-    toast(vi.ytImport.done(r.data.name, r.data.imported, r.data.skipped), 'success');
+    toast(t.ytImport.done(playlistName({ name: r.data.name, kind: row.source === 'liked' ? 'liked' : null }, t), r.data.imported, r.data.skipped), 'success');
     setRows((rs) => rs?.map((x) => (x.source === row.source ? { ...x, imported: true } : x)) ?? null);
     onImported();
   }
@@ -81,16 +83,16 @@ export function YouTubeImport({ onImported }: { onImported: () => void }) {
     <>
       <Button size="sm" disabled={connecting} aria-busy={connecting} onClick={connect}>
         {connecting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Youtube className="h-4 w-4" aria-hidden />}
-        {connecting ? vi.ytImport.connecting : vi.ytImport.open}
+        {connecting ? t.ytImport.connecting : t.ytImport.open}
       </Button>
       {rows && (
-        <Dialog open onClose={close} title={vi.ytImport.title}>
-          <p className="text-[13px] text-sage">{vi.ytImport.note}</p>
+        <Dialog open onClose={close} title={t.ytImport.title}>
+          <p className="text-[13px] text-sage">{t.ytImport.note}</p>
           <label className="mt-3 flex min-h-11 items-center gap-3">
             <input type="checkbox" className="h-5 w-5 accent-amber" checked={musicOnly} onChange={(e) => setMusicOnly(e.target.checked)} />
-            {vi.ytImport.musicOnly}
+            {t.ytImport.musicOnly}
           </label>
-          <ul aria-label={vi.ytImport.listLabel} className="mt-2 max-h-[50vh] divide-y divide-line/70 overflow-y-auto">
+          <ul aria-label={t.ytImport.listLabel} className="mt-2 max-h-[50vh] divide-y divide-line/70 overflow-y-auto">
             {rows.map((row) => (
               <li key={row.source} className="flex items-center gap-3 py-2.5">
                 {row.thumb ? (
@@ -102,16 +104,16 @@ export function YouTubeImport({ onImported }: { onImported: () => void }) {
                 )}
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium">{row.title}</span>
-                  {row.count !== null && <span className="text-[13px] sm:text-[12px] text-sage">{vi.ytImport.count(row.count)}</span>}
+                  {row.count !== null && <span className="text-[13px] sm:text-[12px] text-sage">{t.ytImport.count(row.count)}</span>}
                 </span>
                 <Button size="sm" variant={row.imported ? 'secondary' : 'primary'} disabled={busy !== null} aria-busy={busy === row.source} onClick={() => importRow(row)}>
                   {busy === row.source && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
-                  {row.imported ? vi.ytImport.update : vi.ytImport.import}
+                  {row.imported ? t.ytImport.update : t.ytImport.import}
                 </Button>
               </li>
             ))}
           </ul>
-          {rows.length === 1 && <p className="mt-2 text-[13px] text-sage">{vi.ytImport.empty}</p>}
+          {rows.length === 1 && <p className="mt-2 text-[13px] text-sage">{t.ytImport.empty}</p>}
         </Dialog>
       )}
     </>

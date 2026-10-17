@@ -9,10 +9,12 @@ import { PinField } from '@/components/ui/PinField';
 import { useToast } from '@/components/ui/Toast';
 import type { MemberView } from '@/contracts';
 import { useAct } from '@/hooks/useAct';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
+import { memberName } from '@/i18n/activity';
 import { isPin } from '@/lib/validate';
 import { useMe, useRoom } from '@/state/hooks';
 import { applyMembers } from '@/state/optimistic';
+import { getLang } from '@/i18n/lang';
 
 function Badge({ children, tone }: { children: React.ReactNode; tone: 'amber' | 'onair' | 'plain' }) {
   const tones = {
@@ -24,6 +26,7 @@ function Badge({ children, tone }: { children: React.ReactNode; tone: 'amber' | 
 }
 
 export function PeoplePanel() {
+  const t = useT();
   const members = useRoom((s) => s.snapshot?.members);
   const pending = useRoom((s) => s.pending);
   const playerId = useRoom((s) => s.snapshot?.player.memberId ?? null);
@@ -36,9 +39,9 @@ export function PeoplePanel() {
   const sorted = useMemo(
     () =>
       [...applyMembers(members ?? [], pending)].sort(
-        (a, b) => Number(b.online) - Number(a.online) || a.displayName.localeCompare(b.displayName, 'vi', { numeric: true }),
+        (a, b) => Number(b.online) - Number(a.online) || memberName(a, t).localeCompare(memberName(b, t), getLang(), { numeric: true }),
       ),
-    [members, pending],
+    [members, pending, t],
   );
   const isAdmin = me?.role === 'ADMIN';
   const onlineList = sorted.filter((m) => m.online);
@@ -54,23 +57,23 @@ export function PeoplePanel() {
 
   const row = (m: MemberView) => (
     <li key={m.id} className="flex items-center gap-3 py-2.5 pl-2.5 pr-1">
-      <Avatar name={m.displayName} color={m.color} online={m.online} />
+      <Avatar name={memberName(m, t)} color={m.color} online={m.online} />
       <div className="min-w-0 flex-1">
         <p className={`truncate font-medium ${m.online ? '' : 'text-sage'}`}>
-          {m.displayName} {m.id === me?.id && <span className="font-normal text-sage">{vi.people.you}</span>}
+          {memberName(m, t)} {m.id === me?.id && <span className="font-normal text-sage">{t.people.you}</span>}
           <span className="sr-only">{m.online ? ', online' : ', offline'}</span>
         </p>
         <div className="mt-1 flex flex-wrap gap-1 empty:hidden">
-          {m.role === 'ADMIN' && <Badge tone="amber">{vi.people.badges.admin}</Badge>}
-          {(m.canPlay || playerId === m.id) && <Badge tone="onair">{vi.people.badges.player}</Badge>}
-          {m.canControl && m.role !== 'ADMIN' && <Badge tone="plain">{vi.people.badges.control}</Badge>}
-          {m.canDj && m.role !== 'ADMIN' && <Badge tone="plain">{vi.people.badges.dj}</Badge>}
-          {m.listening && m.online && <Badge tone="plain">🎧 {vi.listen.badge}</Badge>}
+          {m.role === 'ADMIN' && <Badge tone="amber">{t.people.badges.admin}</Badge>}
+          {(m.canPlay || playerId === m.id) && <Badge tone="onair">{t.people.badges.player}</Badge>}
+          {m.canControl && m.role !== 'ADMIN' && <Badge tone="plain">{t.people.badges.control}</Badge>}
+          {m.canDj && m.role !== 'ADMIN' && <Badge tone="plain">{t.people.badges.dj}</Badge>}
+          {m.listening && m.online && <Badge tone="plain">🎧 {t.listen.badge}</Badge>}
         </div>
       </div>
       {/* Admins manage everyone; on their own row the menu offers only the player. */}
       {isAdmin && (
-        <IconButton label={vi.people.menu(m.displayName)} onClick={() => setMenuFor(m)}>
+        <IconButton label={t.people.menu(memberName(m, t))} onClick={() => setMenuFor(m)}>
           <MoreHorizontal className="h-5 w-5" aria-hidden />
         </IconButton>
       )}
@@ -81,13 +84,13 @@ export function PeoplePanel() {
     <section aria-labelledby="people-title">
       <div className="mb-2 px-1">
         <h2 id="people-title" className="type-display text-[20px] font-bold">
-          {vi.people.title}
+          {t.people.title}
         </h2>
-        <p className="text-[13px] text-sage">{vi.people.online(online)}</p>
+        <p className="text-[13px] text-sage">{t.people.online(online)}</p>
       </div>
       {me && !isAdmin && !me.isDevice && hasPin && (
         <Button size="sm" className="mb-3 w-full" onClick={() => setClaiming(true)}>
-          <KeyRound className="h-4 w-4" aria-hidden /> {vi.people.claimAdmin}
+          <KeyRound className="h-4 w-4" aria-hidden /> {t.people.claimAdmin}
         </Button>
       )}
 
@@ -106,7 +109,7 @@ export function PeoplePanel() {
             onClick={() => setShowOffline((v) => !v)}
             className="flex min-h-11 w-full items-center justify-between rounded-row px-2 text-[14px] font-medium text-sage hover:text-paper"
           >
-            {vi.people.offline(offlineList.length)}
+            {t.people.offline(offlineList.length)}
             <ChevronDown className={`h-5 w-5 transition-transform ${showOffline ? 'rotate-180' : ''}`} aria-hidden />
           </button>
           {showOffline && (
@@ -118,28 +121,28 @@ export function PeoplePanel() {
       )}
 
       {menuFor && (
-        <Dialog open onClose={() => setMenuFor(null)} title={vi.people.menu(menuFor.displayName)}>
+        <Dialog open onClose={() => setMenuFor(null)} title={t.people.menu(memberName(menuFor, t))}>
           <div className="-mx-2 space-y-0.5">
             {menuFor.id === me?.id ? (
               // Myself: only the player — no revoking my own admin or kicking myself.
               menuFor.canPlay ? (
-                <SheetAction onClick={() => setPerm(menuFor, { canPlay: false })}>{vi.people.stopPlayer}</SheetAction>
+                <SheetAction onClick={() => setPerm(menuFor, { canPlay: false })}>{t.people.stopPlayer}</SheetAction>
               ) : (
-                <SheetAction onClick={() => setPerm(menuFor, { canPlay: true })}>{vi.people.makePlayer}</SheetAction>
+                <SheetAction onClick={() => setPerm(menuFor, { canPlay: true })}>{t.people.makePlayer}</SheetAction>
               )
             ) : (
               <>
                 {!menuFor.isDevice && (
                   <>
                     <SheetAction onClick={() => setPerm(menuFor, { canControl: !menuFor.canControl })}>
-                      {menuFor.canControl ? vi.people.revokeControl : vi.people.grantControl}
+                      {menuFor.canControl ? t.people.revokeControl : t.people.grantControl}
                     </SheetAction>
                     <SheetAction onClick={() => setPerm(menuFor, { canDj: !menuFor.canDj })}>
-                      {menuFor.canDj ? vi.people.revokeDj : vi.people.grantDj}
+                      {menuFor.canDj ? t.people.revokeDj : t.people.grantDj}
                     </SheetAction>
-                    {!menuFor.canPlay && <SheetAction onClick={() => setPerm(menuFor, { canPlay: true })}>{vi.people.makePlayer}</SheetAction>}
+                    {!menuFor.canPlay && <SheetAction onClick={() => setPerm(menuFor, { canPlay: true })}>{t.people.makePlayer}</SheetAction>}
                     <SheetAction onClick={() => setPerm(menuFor, { role: menuFor.role === 'ADMIN' ? 'USER' : 'ADMIN' })}>
-                      {menuFor.role === 'ADMIN' ? vi.people.revokeAdmin : vi.people.grantAdmin}
+                      {menuFor.role === 'ADMIN' ? t.people.revokeAdmin : t.people.grantAdmin}
                     </SheetAction>
                   </>
                 )}
@@ -150,7 +153,7 @@ export function PeoplePanel() {
                     setMenuFor(null);
                   }}
                 >
-                  {vi.people.kick}
+                  {t.people.kick}
                 </SheetAction>
               </>
             )}
@@ -159,11 +162,11 @@ export function PeoplePanel() {
       )}
 
       {kick && (
-        <Dialog open onClose={() => setKick(null)} title={vi.people.kickConfirm(kick.displayName)}>
-          <p className="text-sage">{vi.people.kickNote}</p>
+        <Dialog open onClose={() => setKick(null)} title={t.people.kickConfirm(memberName(kick, t))}>
+          <p className="text-sage">{t.people.kickNote}</p>
           <div className="mt-5 flex gap-2">
             <Button className="flex-1" onClick={() => setKick(null)}>
-              {vi.people.cancel}
+              {t.people.cancel}
             </Button>
             <Button
               variant="danger"
@@ -174,7 +177,7 @@ export function PeoplePanel() {
                 await act('member:kick', { memberId: target.id }, { optimistic: { kind: 'kick', memberId: target.id } });
               }}
             >
-              {vi.people.kickYes}
+              {t.people.kickYes}
             </Button>
           </div>
         </Dialog>
@@ -186,6 +189,7 @@ export function PeoplePanel() {
 
 /** Any member who knows the room PIN becomes admin (admin:claim). */
 function ClaimAdminDialog({ onClose }: { onClose: () => void }) {
+  const t = useT();
   const act = useAct();
   const toast = useToast();
   const [pin, setPin] = useState('');
@@ -199,21 +203,21 @@ function ClaimAdminDialog({ onClose }: { onClose: () => void }) {
     const ok = await act('admin:claim', { pin });
     setBusy(false);
     if (!ok) return;
-    toast(vi.people.claimed, 'success');
+    toast(t.people.claimed, 'success');
     onClose();
   }
 
   return (
-    <Dialog open onClose={onClose} title={vi.people.claimAdmin}>
+    <Dialog open onClose={onClose} title={t.people.claimAdmin}>
       <form onSubmit={submit} className="space-y-4" noValidate>
-        <p className="text-sage">{vi.people.claimNote}</p>
+        <p className="text-sage">{t.people.claimNote}</p>
         <PinField value={pin} onChange={setPin} />
         <div className="flex gap-2">
           <Button className="flex-1" onClick={onClose}>
-            {vi.people.cancel}
+            {t.people.cancel}
           </Button>
           <Button type="submit" variant="primary" className="flex-1" disabled={!isPin(pin) || busy} aria-busy={busy}>
-            {vi.people.claimSubmit}
+            {t.people.claimSubmit}
           </Button>
         </div>
       </form>

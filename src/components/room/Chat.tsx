@@ -8,10 +8,11 @@ import type { ChatMessageView } from '@/contracts';
 import { LIMITS, REACTIONS } from '@/contracts/constants';
 import { useAct } from '@/hooks/useAct';
 import { triggerReaction } from './HeartCanvas';
-import { errorMessage, vi } from '@/i18n/vi';
+import { errorMessage, useT } from '@/i18n';
 import { formatClock } from '@/lib/time';
 import { useMe, useRoom } from '@/state/hooks';
 import { type PendingChat, room } from '@/state/room-store';
+import type { Dict } from '@/i18n';
 
 const DjPads = dynamic(() => import('./DjPads').then((m) => m.DjPads), { ssr: false });
 
@@ -20,6 +21,7 @@ const DjPads = dynamic(() => import('./DjPads').then((m) => m.DjPads), { ssr: fa
  * so scrolling back through history is never yanked away.
  */
 function ChatMessages({ className = '' }: { className?: string }) {
+  const t = useT();
   const chat = useRoom((s) => s.chat);
   const chatPending = useRoom((s) => s.chatPending);
   const meId = useRoom((s) => s.memberId);
@@ -41,7 +43,7 @@ function ChatMessages({ className = '' }: { className?: string }) {
       className={`space-y-2.5 overflow-y-auto overscroll-contain px-3 py-3 ${className}`}
       aria-live="polite"
     >
-      {chat.length === 0 && chatPending.length === 0 && <li className="py-8 text-center text-sage">{vi.chat.empty}</li>}
+      {chat.length === 0 && chatPending.length === 0 && <li className="py-8 text-center text-sage">{t.chat.empty}</li>}
       {chat.map((m) => (
         <Bubble key={m.id} m={m} mine={m.memberId === meId} />
       ))}
@@ -69,6 +71,7 @@ function Bubble({ m, mine }: { m: ChatMessageView; mine: boolean }) {
 
 /** My message before the server confirmed it: dimmed while sending, "Gửi lại" if it failed. */
 function PendingBubble({ m }: { m: PendingChat }) {
+  const t = useT();
   return (
     <li className="flex flex-col items-end" aria-busy={!m.failed}>
       <p
@@ -80,16 +83,16 @@ function PendingBubble({ m }: { m: PendingChat }) {
       </p>
       {m.failed ? (
         <span className="mt-0.5 flex max-w-[85%] flex-wrap items-center justify-end gap-x-2 px-1 text-right text-[13px] sm:text-[12px] text-alert">
-          {m.error ? errorMessage(m.error.code, m.error.params) : vi.chat.failed}
+          {m.error ? errorMessage(m.error.code, m.error.params) : t.chat.failed}
           <button type="button" className="font-semibold text-amber hover:underline" onClick={() => void room.sendChat(m.content, m.id)}>
-            {vi.chat.retry}
+            {t.chat.retry}
           </button>
           <button type="button" className="text-sage hover:underline" onClick={() => room.discardChat(m.id)}>
-            {vi.chat.discard}
+            {t.chat.discard}
           </button>
         </span>
       ) : (
-        <span className="mt-0.5 px-1 text-[13px] sm:text-[12px] text-sage">{vi.chat.sending}</span>
+        <span className="mt-0.5 px-1 text-[13px] sm:text-[12px] text-sage">{t.chat.sending}</span>
       )}
     </li>
   );
@@ -100,14 +103,15 @@ function PendingBubble({ m }: { m: PendingChat }) {
  * at once (the server's echo of my own reaction is ignored by the room page).
  */
 function ReactionRow() {
+  const t = useT();
   const act = useAct();
   return (
-    <div role="group" aria-label={vi.chat.reactions} className="flex min-w-0 flex-1 justify-between">
+    <div role="group" aria-label={t.chat.reactions} className="flex min-w-0 flex-1 justify-between">
       {REACTIONS.map((emoji) => (
         <button
           key={emoji}
           type="button"
-          aria-label={vi.chat.react(emoji)}
+          aria-label={t.chat.react(emoji)}
           onClick={(e) => {
             const r = e.currentTarget.getBoundingClientRect();
             triggerReaction(r.left + r.width / 2, r.top, emoji);
@@ -122,7 +126,9 @@ function ReactionRow() {
   );
 }
 
-function ChatComposer({ inputRef, placeholder = vi.chat.placeholder }: { inputRef: React.RefObject<HTMLInputElement | null>; placeholder?: string }) {
+function ChatComposer({ inputRef, placeholder }: { inputRef: React.RefObject<HTMLInputElement | null>; placeholder?: string }) {
+  const t = useT();
+  placeholder ??= t.chat.placeholder;
   const [text, setText] = useState('');
   const id = useId();
 
@@ -139,7 +145,7 @@ function ChatComposer({ inputRef, placeholder = vi.chat.placeholder }: { inputRe
   return (
     <form onSubmit={submit} className="flex gap-2">
       <label className="sr-only" htmlFor={id}>
-        {vi.chat.label}
+        {t.chat.label}
       </label>
       <input
         ref={inputRef}
@@ -152,7 +158,7 @@ function ChatComposer({ inputRef, placeholder = vi.chat.placeholder }: { inputRe
         autoComplete="off"
         enterKeyHint="send"
       />
-      <Button type="submit" variant="primary" aria-label={vi.chat.send} disabled={!text.trim()} className="!min-h-11 w-11 shrink-0 rounded-full !px-0">
+      <Button type="submit" variant="primary" aria-label={t.chat.send} disabled={!text.trim()} className="!min-h-11 w-11 shrink-0 rounded-full !px-0">
         <Send className="h-[18px] w-[18px]" aria-hidden />
       </Button>
     </form>
@@ -188,12 +194,14 @@ function useTuckOnScroll(): boolean {
  */
 /** How a theme dresses the chat: its own heading / placeholder and a CSS hook. */
 export interface InlineChatSkin {
-  title?: string;
-  placeholder?: string;
+  /** Read from the dictionary at render time, so they follow the device language. */
+  title?: (t: Dict) => string;
+  placeholder?: (t: Dict) => string;
   variant?: string;
 }
 
 export function ChatOverlay({ title, placeholder, variant }: InlineChatSkin = {}) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [djOpen, setDjOpen] = useState(false);
   const [dismissedId, setDismissedId] = useState<string | null>(null);
@@ -278,12 +286,12 @@ export function ChatOverlay({ title, placeholder, variant }: InlineChatSkin = {}
               <MessageCircle className="h-5 w-5" />
             </span>
             <div className="min-w-0 flex-1">
-              <h2 id={titleId} aria-label={vi.chat.title} className="type-display text-[18px] font-bold leading-tight">
-                {title ?? vi.chat.title}
+              <h2 id={titleId} aria-label={t.chat.title} className="type-display text-[18px] font-bold leading-tight">
+                {title?.(t) ?? t.chat.title}
               </h2>
               {roomName && <p className="truncate text-[13px] sm:text-[12px] text-sage">{roomName}</p>}
             </div>
-            <IconButton label={vi.chat.minimize} onClick={minimize}>
+            <IconButton label={t.chat.minimize} onClick={minimize}>
               <ChevronDown className="h-5 w-5" aria-hidden />
             </IconButton>
           </header>
@@ -297,8 +305,8 @@ export function ChatOverlay({ title, placeholder, variant }: InlineChatSkin = {}
                 <button
                   type="button"
                   aria-pressed={djOpen}
-                  aria-label={vi.chat.djToggle}
-                  title={vi.chat.djToggle}
+                  aria-label={t.chat.djToggle}
+                  title={t.chat.djToggle}
                   onClick={() => setDjOpen((v) => !v)}
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-colors ${
                     djOpen ? 'border-amber bg-amber text-amber-ink' : 'border-line text-sage hover:text-paper'
@@ -309,7 +317,7 @@ export function ChatOverlay({ title, placeholder, variant }: InlineChatSkin = {}
               )}
             </div>
             {canDj && djOpen && <DjPads />}
-            <ChatComposer inputRef={inputRef} placeholder={placeholder} />
+            <ChatComposer inputRef={inputRef} placeholder={placeholder?.(t)} />
           </div>
         </section>
       )}
@@ -322,15 +330,15 @@ export function ChatOverlay({ title, placeholder, variant }: InlineChatSkin = {}
           onClick={() => setOpen(true)}
           aria-expanded={false}
           aria-controls={windowId}
-          aria-label={`${vi.chat.open}${unread ? `, ${vi.chat.unread(unread)}` : ''}`}
+          aria-label={`${t.chat.open}${unread ? `, ${t.chat.unread(unread)}` : ''}`}
           className={`fixed bottom-0 right-6 z-40 hidden h-12 w-[360px] items-center gap-3 rounded-t-panel border border-b-0 bg-panel px-4 text-left shadow-[0_-12px_32px_-12px_rgb(0_0_0/0.6)] transition-colors hover:bg-panel-hi lg:flex ${
             unread > 0 ? 'border-amber/70' : 'border-line'
           }`}
         >
           <MessageCircle className="h-5 w-5 shrink-0 text-amber" aria-hidden />
-          <span className="type-display shrink-0 text-[16px] font-bold">{vi.chat.title}</span>
+          <span className="type-display shrink-0 text-[16px] font-bold">{t.chat.title}</span>
           <span className="min-w-0 flex-1 truncate text-[13px] text-sage">
-            {last && `${last.memberId === me?.id ? vi.chat.you : last.displayName}: ${last.content}`}
+            {last && `${last.memberId === me?.id ? t.chat.you : last.displayName}: ${last.content}`}
           </span>
           {badge}
           <ChevronUp className="h-4 w-4 shrink-0 text-sage" aria-hidden />
@@ -359,7 +367,7 @@ export function ChatOverlay({ title, placeholder, variant }: InlineChatSkin = {}
           onClick={() => (open ? minimize() : setOpen(true))}
           aria-expanded={open}
           aria-controls={windowId}
-          aria-label={open ? vi.chat.minimize : `${vi.chat.open}${unread ? `, ${vi.chat.unread(unread)}` : ''}`}
+          aria-label={open ? t.chat.minimize : `${t.chat.open}${unread ? `, ${t.chat.unread(unread)}` : ''}`}
           className={`relative flex h-14 w-14 items-center justify-center rounded-full shadow-[0_12px_32px_-8px_rgb(0_0_0/0.7)] transition-transform hover:scale-105 active:scale-95 ${
             open ? 'bg-panel-hi text-paper max-sm:hidden' : 'bg-amber text-amber-ink'
           }`}
@@ -378,6 +386,7 @@ export function ChatOverlay({ title, placeholder, variant }: InlineChatSkin = {}
  * Seen on screen = read. Phones keep the floating chat (ChatOverlay).
  */
 export function InlineChat({ title, placeholder, variant }: InlineChatSkin = {}) {
+  const t = useT();
   const me = useMe();
   const canDj = Boolean(me && (me.canDj || me.role === 'ADMIN'));
   const chatLength = useRoom((s) => s.chat.length);
@@ -400,8 +409,8 @@ export function InlineChat({ title, placeholder, variant }: InlineChatSkin = {})
 
   return (
     <section ref={boxRef} aria-labelledby="inline-chat-title" data-variant={variant} className="chat-inline flex flex-col rounded-panel border border-line bg-panel/70">
-      <h2 id="inline-chat-title" aria-label={vi.chat.title} className="type-display px-4 pt-3 text-[22px] font-bold">
-        {title ?? vi.chat.title}
+      <h2 id="inline-chat-title" aria-label={t.chat.title} className="type-display px-4 pt-3 text-[22px] font-bold">
+        {title?.(t) ?? t.chat.title}
       </h2>
       <ChatMessages className="h-[300px]" />
       <div className="space-y-2 border-t border-line p-3">
@@ -411,8 +420,8 @@ export function InlineChat({ title, placeholder, variant }: InlineChatSkin = {})
             <button
               type="button"
               aria-pressed={djOpen}
-              aria-label={vi.chat.djToggle}
-              title={vi.chat.djToggle}
+              aria-label={t.chat.djToggle}
+              title={t.chat.djToggle}
               onClick={() => setDjOpen((v) => !v)}
               className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-colors ${
                 djOpen ? 'border-amber bg-amber text-amber-ink' : 'border-line text-sage hover:text-paper'
@@ -423,22 +432,23 @@ export function InlineChat({ title, placeholder, variant }: InlineChatSkin = {})
           )}
         </div>
         {canDj && djOpen && <DjPads />}
-        <ChatComposer inputRef={inputRef} placeholder={placeholder} />
+        <ChatComposer inputRef={inputRef} placeholder={placeholder?.(t)} />
       </div>
     </section>
   );
 }
 
 export function HostChat() {
+  const t = useT();
   const chat = useRoom((s) => s.chat);
   const recent = chat.slice(-4);
   return (
     <section aria-labelledby="host-chat-title">
       <h2 id="host-chat-title" className="type-display mb-2 text-[22px] font-bold">
-        {vi.chat.title}
+        {t.chat.title}
       </h2>
       {recent.length === 0 ? (
-        <p className="text-sage">{vi.chat.hostEmpty}</p>
+        <p className="text-sage">{t.chat.hostEmpty}</p>
       ) : (
         <ol className="space-y-2.5" aria-live="polite">
           {recent.map((m) => (

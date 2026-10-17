@@ -4,7 +4,7 @@ import { Headphones, Volume2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
-import { vi } from '@/i18n/vi';
+import { useT } from '@/i18n';
 import { estimatePosition } from '@/lib/time';
 import { useMe, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
@@ -59,21 +59,23 @@ export function setListenVolume(v: number): void {
 
 /** The "🎧 Nghe cùng" toggle for the now-playing card. */
 export function ListenButton() {
+  const t = useT();
   const on = useListening();
   return (
     <Button size="sm" variant={on ? 'primary' : 'secondary'} aria-pressed={on} onClick={() => setListening(!on)}>
       <Headphones className="h-4 w-4" aria-hidden />
-      {on ? vi.listen.on : vi.listen.start}
+      {on ? t.listen.on : t.listen.start}
     </Button>
   );
 }
 
 export function ListenVolume({ compact = false }: { compact?: boolean }) {
+  const t = useT();
   const v = useListenVolume();
   return (
     <label className={`flex items-center gap-2 text-[13px] text-sage ${compact ? '' : 'min-h-11'}`}>
       <Volume2 className="h-4 w-4 shrink-0" aria-hidden />
-      <span className="sr-only">{vi.listen.volume}</span>
+      <span className="sr-only">{t.listen.volume}</span>
       <input
         type="range"
         min={0}
@@ -117,6 +119,7 @@ export function ListenAlong() {
 }
 
 function ListenPlayer() {
+  const t = useT();
   const np = useRoom((s) => s.snapshot?.nowPlaying ?? null);
   const offset = useRoom((s) => s.offset);
   const vol = useListenVolume();
@@ -247,12 +250,12 @@ function ListenPlayer() {
   );
 
   return (
-    <section aria-label={vi.listen.title} className="space-y-3 rounded-panel border border-amber/40 bg-panel/80 p-3">
+    <section aria-label={t.listen.title} className="space-y-3 rounded-panel border border-amber/40 bg-panel/80 p-3">
       <div className="flex items-center gap-2">
         <Headphones className="h-5 w-5 text-amber" aria-hidden />
-        <p className="min-w-0 flex-1 text-[14px] font-semibold">{vi.listen.title}</p>
+        <p className="min-w-0 flex-1 text-[14px] font-semibold">{t.listen.title}</p>
         <Button size="sm" variant="ghost" onClick={() => setListening(false)}>
-          {vi.listen.stop}
+          {t.listen.stop}
         </Button>
       </div>
       {/* Visible and at least 200 px tall: YouTube API policy (TC-131). */}
@@ -270,15 +273,16 @@ function ListenPlayer() {
           onError={() => {}}
         />
       </div>
-      {needsTap && <TapVideoHint text={vi.listen.tapVideo} />}
+      {needsTap && <TapVideoHint text={t.listen.tapVideo} />}
       <ListenVolume />
-      {touch && <p className="text-[13px] text-sage">{vi.listen.keepScreenOn}</p>}
+      {touch && <p className="text-[13px] text-sage">{t.listen.keepScreenOn}</p>}
     </section>
   );
 }
 
 /** N3: who plays the room on their own device right now. */
 export function ListenersStrip({ size = 'sm' }: { size?: 'sm' | 'lg' }) {
+  const t = useT();
   const members = useRoom((s) => s.snapshot?.members);
   const me = useMe();
   const people = (members ?? []).filter((m) => m.listening && m.online);
@@ -297,7 +301,7 @@ export function ListenersStrip({ size = 'sm' }: { size?: 'sm' | 'lg' }) {
       {people.length > shown.length && <span>+{people.length - shown.length}</span>}
       <span>
         <Headphones className="mr-1 inline h-4 w-4 align-[-3px] text-amber" aria-hidden />
-        {people.length === 1 && people[0].id === me?.id ? vi.listen.onlyYou : vi.listen.count(people.length)}
+        {people.length === 1 && people[0].id === me?.id ? t.listen.onlyYou : t.listen.count(people.length)}
       </span>
     </div>
   );

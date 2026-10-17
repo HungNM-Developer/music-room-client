@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/Button';
 import type { SuggestionView } from '@/contracts';
 import { LIMITS } from '@/contracts/constants';
 import type { useAddTrack } from '@/hooks/useAddTrack';
-import { errorMessage, vi } from '@/i18n/vi';
+import { errorMessage, useT } from '@/i18n';
+import { getLang } from '@/i18n/lang';
 import { room } from '@/state/room-store';
 import { SuggestionList } from './Suggestions';
 
 /** AI2: "Hỏi DJ" — describe the music, get songs to add. */
 export function DjAsk({ add, added }: { add: ReturnType<typeof useAddTrack>['add']; added: Set<string> }) {
+  const t = useT();
   const [prompt, setPrompt] = useState('');
   const [items, setItems] = useState<SuggestionView[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +25,8 @@ export function DjAsk({ add, added }: { add: ReturnType<typeof useAddTrack>['add
     setPrompt(q);
     setBusy(true);
     setError(null);
-    const r = await room.send('dj:ask', { prompt: q });
+    // `language` only for English: the server defaults to Vietnamese, and one older than this page rejects unknown fields.
+    const r = await room.send('dj:ask', { prompt: q, ...(getLang() === 'en' ? { language: 'en' as const } : {}) });
     setBusy(false);
     if (r.ok) setItems(r.data.items);
     else setError(errorMessage(r.error.code, r.error.params));
@@ -39,7 +42,7 @@ export function DjAsk({ add, added }: { add: ReturnType<typeof useAddTrack>['add
         }}
       >
         <label htmlFor="dj-prompt" className="block px-1 text-[13px] font-medium text-sage">
-          {vi.djAsk.label}
+          {t.djAsk.label}
         </label>
         <div className="flex gap-2">
           <input
@@ -47,17 +50,17 @@ export function DjAsk({ add, added }: { add: ReturnType<typeof useAddTrack>['add
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             maxLength={LIMITS.djPrompt}
-            placeholder={vi.djAsk.placeholder}
+            placeholder={t.djAsk.placeholder}
             className="field min-w-0 flex-1"
             autoComplete="off"
           />
           <Button type="submit" variant="primary" className="shrink-0" disabled={busy || !prompt.trim()} aria-busy={busy}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Sparkles className="h-4 w-4" aria-hidden />}
-            {vi.djAsk.ask}
+            {t.djAsk.ask}
           </Button>
         </div>
         <div className="flex flex-wrap gap-1.5 px-1">
-          {vi.djAsk.examples.map((ex) => (
+          {t.djAsk.examples.map((ex) => (
             <button
               key={ex}
               type="button"
@@ -69,11 +72,11 @@ export function DjAsk({ add, added }: { add: ReturnType<typeof useAddTrack>['add
             </button>
           ))}
         </div>
-        <p className="px-1 text-[13px] sm:text-[12px] text-sage/80">{vi.djAsk.note}</p>
+        <p className="px-1 text-[13px] sm:text-[12px] text-sage/80">{t.djAsk.note}</p>
       </form>
       {busy && (
         <p role="status" className="flex items-center gap-2 px-1 text-sage">
-          <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> {vi.djAsk.asking}
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> {t.djAsk.asking}
         </p>
       )}
       {error && (
@@ -81,7 +84,7 @@ export function DjAsk({ add, added }: { add: ReturnType<typeof useAddTrack>['add
           {error}
         </p>
       )}
-      {items && !busy && (items.length ? <SuggestionList items={items} label={vi.djAsk.listLabel} add={add} added={added} /> : <p className="px-1 text-sage">{vi.djAsk.empty}</p>)}
+      {items && !busy && (items.length ? <SuggestionList items={items} label={t.djAsk.listLabel} add={add} added={added} /> : <p className="px-1 text-sage">{t.djAsk.empty}</p>)}
     </div>
   );
 }
