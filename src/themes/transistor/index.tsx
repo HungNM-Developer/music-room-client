@@ -19,7 +19,6 @@ import { NowCover, StageIdle, WishBlock } from '../stage/parts';
 import { StageControls } from '../stage/StageControls';
 import { StageVote } from '../stage/StageVote';
 import '../stage/stage.css';
-import { bigShoulders } from './fonts';
 import './theme.css';
 
 /** The tuning band: amber glass with a minute scale; the red needle is the time. */
@@ -165,7 +164,7 @@ function Stage({ openAdd }: { openAdd: () => void }) {
 
 const transistor: ThemeModule = {
   Stage,
-  fontClass: bigShoulders.variable,
+  fontClass: '', // Big Shoulders is declared in theme.css
   header: { variant: 'chrome' },
   chat: { title: 'Thư thính giả', placeholder: 'Gửi thư cho cả phòng…', variant: 'transistor' },
   HostDial: () => <Band large />,
