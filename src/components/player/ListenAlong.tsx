@@ -94,7 +94,13 @@ export function useListenSession(): void {
   const on = useListening();
   const connectCount = useRoom((s) => s.connectCount);
   const connection = useRoom((s) => s.connection);
+  const isPlayer = useMe()?.canPlay ?? false;
 
+  // This device became the room's speaker (e.g. an admin made themselves the player): it now
+  // plays for everyone, so its own "Nghe cùng" stops — otherwise the song plays twice.
+  useEffect(() => {
+    if (on && isPlayer) setListening(false);
+  }, [on, isPlayer]);
   // The server forgets listeners on disconnect: say it again after every reconnect.
   useEffect(() => {
     if (on && connection === 'connected') void room.send('listen:set', { on: true });
@@ -115,7 +121,8 @@ function ListenPlayer() {
   const offset = useRoom((s) => s.offset);
   const vol = useListenVolume();
   const adapterRef = useRef<PlayerAdapter | null>(null);
-  const [ready, setReady] = useState(false);
+  // Counts ready YouTube players: a rebuilt iframe (StrictMode, remount) must get the song again.
+  const [ready, setReady] = useState(0);
   const itemRef = useRef<string | null>(null);
   const npRef = useRef(np);
   const statusRef = useRef<string | null>(null);
@@ -252,7 +259,10 @@ function ListenPlayer() {
       <div className="relative aspect-video min-h-[200px] w-full overflow-hidden rounded-row bg-dial-deep">
         <YouTubeAdapter
           adapterRef={adapterRef}
-          onReady={() => setReady(true)}
+          onReady={() => {
+            itemRef.current = null; // a new, empty player: load the room's song into it
+            setReady((n) => n + 1);
+          }}
           onPlaying={onPlaying}
           onPaused={onPaused}
           onAutoplayBlocked={() => setNeedsTap(true)}

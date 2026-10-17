@@ -101,7 +101,10 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
   const preview = useRoom((s) => s.snapshot?.nowPlaying ?? null);
   const send = room.send;
   const adapterRef = useRef<PlayerAdapter | null>(null);
-  const [ready, setReady] = useState(false);
+  // Counts YouTube players that became ready. The iframe can be rebuilt (React StrictMode in dev,
+  // a theme switch remounting the box): every new player must be told the song again, or the
+  // command goes to the destroyed one and the live video just sits there.
+  const [ready, setReady] = useState(0);
   const [started, setStarted] = useState(false);
   const itemRef = useRef<string | null>(null);
   const reported = useRef({ started: false, ended: false });
@@ -133,6 +136,14 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
 
   // The room plays but the browser blocked this video after starting. Shown under the video.
   const [needsTap, setNeedsTap] = useState(false);
+  // The loaded video has really played since our last load(). Loading over a playing video
+  // makes YouTube report "paused" first; only a pause after real playback is someone's ⏸.
+  const playedSinceLoad = useRef(false);
+  // The video id currently loaded in the player, so a command for the song already playing
+  // (started on its own before the lease) does not reload it — a reload makes the video flash.
+  const loadedVideo = useRef<string | null>(null);
+  // ▶ was pressed on the waiting video of a paused room: once the lease is ours, resume the room.
+  const wantResume = useRef(false);
 
   // R-27: take the lease only once playback is actually possible, and again after every reconnect.
   useEffect(() => {
@@ -178,12 +189,31 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
         a.pause();
         return;
       }
-      const autoplay = playerCommand.status === 'PLAYING';
+      const resume = wantResume.current && playerCommand.status === 'PAUSED';
+      wantResume.current = false;
+      const autoplay = playerCommand.status === 'PLAYING' || resume;
       // A wish first; otherwise the MC's line (AI3), read in the radio voice.
       const wish =
         playerCommand.wish ??
         (playerCommand.intro ? { message: playerCommand.intro, voicePreset: 'radio' as const } : null);
-      a.load(playerCommand.videoId, expected, autoplay);
+      const s = a.state();
+      if (loadedVideo.current === playerCommand.videoId && (s === 1 || s === 3)) {
+        // This song already plays here: keep it, only line it up with the room.
+        if (!autoplay) a.pause();
+        else if (!resume && Math.abs(a.currentTime() - expected) > DRIFT_SEC) a.seek(expected);
+      } else {
+        playedSinceLoad.current = false;
+        loadedVideo.current = playerCommand.videoId;
+        a.load(playerCommand.videoId, expected, autoplay);
+      }
+      const itemId = playerCommand.queueItemId;
+      if (resume && itemId) {
+        // The room resumes from where it stopped, like the room's own ▶.
+        void room.withOptimistic(
+          { kind: 'playback', itemId, status: 'PLAYING', positionSec: expected, positionAt: Date.now() + offsetRef.current },
+          () => room.send('playback:control', { action: 'play', queueItemId: itemId }),
+        );
+      }
       if (wish && autoplay && expected < 3) {
         const restore = () => {
           if (duckTimer.current) clearTimeout(duckTimer.current);
@@ -222,6 +252,8 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
     const np = previewRef.current;
     if (!a || !ready || started || !np) return;
     const at = estimatePosition({ ...np, durationSec: np.item.track.durationSec }, offsetRef.current, Date.now());
+    playedSinceLoad.current = false;
+    loadedVideo.current = np.item.track.externalId;
     a.load(np.item.track.externalId, at, previewPlaying);
     if (!previewPlaying) return;
     // Blocked without a word (no onAutoplayBlocked): still not playing after a moment.
@@ -255,12 +287,16 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
       const itemId = cmd?.queueItemId;
       if (!a || !started || !cmd?.videoId || !itemId || itemId !== itemRef.current || reported.current.ended) return;
       if (cmd.status === status) return;
+      if (status === 'PAUSED' && !playedSinceLoad.current) return; // our own load, not a ⏸
+      const positionSec = Math.max(0, a.currentTime());
+      // The room stops exactly where this video did (the server's clock may be a little ahead).
+      if (status === 'PAUSED') await send('player:report', { queueItemId: itemId, event: 'progress', positionSec });
       const r = await room.withOptimistic(
         {
           kind: 'playback',
           itemId,
           status,
-          positionSec: Math.max(0, a.currentTime()),
+          positionSec,
           positionAt: Date.now() + offsetRef.current,
         },
         () => send('playback:control', { action: status === 'PAUSED' ? 'pause' : 'play', queueItemId: itemId }),
@@ -276,11 +312,13 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
     const t = setInterval(() => {
       const a = adapterRef.current;
       const cmd = cmdRef.current;
+      const s = a?.state() ?? -1;
       if (a && cmd?.status === 'PLAYING' && cmd.queueItemId === itemRef.current && !reported.current.ended) {
-        const s = a.state();
         setNeedsTap(s === -1 || s === 5);
       }
-      if (a && itemRef.current && cmdRef.current?.status === 'PLAYING') {
+      // Only a video that really plays reports its position: the server re-anchors the room's
+      // clock on it, so a stalled or blocked video would drag everyone back every 5 s.
+      if (a && itemRef.current && cmdRef.current?.status === 'PLAYING' && s === 1) {
         report('progress', { positionSec: Math.max(0, a.currentTime()) });
       } else {
         void send('player:heartbeat', {});
@@ -341,11 +379,23 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
   // ---------------------------------------------------------------- player events
   const onPlaying = useCallback(() => {
     playingRef.current = true;
+    playedSinceLoad.current = true;
     setNeedsTap(false);
     // ▶ pressed on the waiting video: playback is allowed now. Take the lease; the room's
     // command then reloads the song at the room's position.
-    if (!started) return start();
-    if (cmdRef.current?.status !== 'PLAYING') return void fromVideo('PLAYING'); // ▶ on the video of a paused room
+    if (!started) {
+      // ▶ on the waiting video of a paused room means "play": resume the room once we lead it.
+      if (previewRef.current?.status === 'PAUSED') wantResume.current = true;
+      return start();
+    }
+    const cmd = cmdRef.current;
+    if (cmd?.status !== 'PLAYING') return void fromVideo('PLAYING'); // ▶ on the video of a paused room
+    // Playing again after a stall (blocked, buffering, a tap on ▶): rejoin the room where it is.
+    const a = adapterRef.current;
+    if (a && cmd.queueItemId === itemRef.current) {
+      const expected = estimatePosition(cmd, offsetRef.current, Date.now());
+      if (Math.abs(a.currentTime() - expected) > DRIFT_SEC) a.seek(expected);
+    }
     if (!reported.current.started) {
       reported.current.started = true;
       report('started', { positionSec: adapterRef.current?.currentTime() ?? 0 });
@@ -368,27 +418,9 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
     [report],
   );
 
-  // On a computer any click or key press on the page is the one interaction the browser asks
-  // for: start right then, so whoever is at this device (adding a song, chatting) never has to
-  // look for anything. Not on phones: there it would take the lease without sound.
-  useEffect(() => {
-    if (started || touch) return;
-    const go = () => start();
-    window.addEventListener('click', go, true);
-    window.addEventListener('keydown', go, true);
-    return () => {
-      window.removeEventListener('click', go, true);
-      window.removeEventListener('keydown', go, true);
-    };
-  }, [started, start, touch]);
-
-  const waitingHint = touch
-    ? preview
-      ? vi.host.startTouch
-      : vi.host.startTouchIdle
-    : preview
-      ? vi.host.start
-      : vi.host.startIdle;
+  // The video starts on its own when the browser allows it; otherwise (or when the room is
+  // paused) its own ▶ starts this speaker. A hint says so — never over the video.
+  const waitingHint = touch ? vi.host.startTouch : vi.host.start;
 
   return (
     <div className="space-y-2">
@@ -398,7 +430,11 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
       <div className="relative aspect-video w-full overflow-hidden rounded-panel bg-dial-deep">
         <YouTubeAdapter
           adapterRef={adapterRef}
-          onReady={() => setReady(true)}
+          onReady={() => {
+            itemRef.current = null; // a new, empty player: load the current song into it
+            loadedVideo.current = null;
+            setReady((n) => n + 1);
+          }}
           onPlaying={onPlaying}
           onPaused={() => void fromVideo('PAUSED')}
           onEnded={onEnded}
@@ -407,7 +443,7 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
         />
       </div>
       {!started
-        ? (!previewPlaying || needsTap) && <TapVideoHint text={waitingHint} />
+        ? preview && (!previewPlaying || needsTap) && <TapVideoHint text={waitingHint} />
         : needsTap && <TapVideoHint text={vi.host.tapVideo} />}
     </div>
   );
