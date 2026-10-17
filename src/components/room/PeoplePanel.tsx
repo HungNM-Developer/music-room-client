@@ -68,7 +68,8 @@ export function PeoplePanel() {
           {m.listening && m.online && <Badge tone="plain">🎧 {vi.listen.badge}</Badge>}
         </div>
       </div>
-      {isAdmin && m.id !== me?.id && (
+      {/* Admins manage everyone; on their own row the menu offers only the player. */}
+      {isAdmin && (
         <IconButton label={vi.people.menu(m.displayName)} onClick={() => setMenuFor(m)}>
           <MoreHorizontal className="h-5 w-5" aria-hidden />
         </IconButton>
@@ -119,29 +120,40 @@ export function PeoplePanel() {
       {menuFor && (
         <Dialog open onClose={() => setMenuFor(null)} title={vi.people.menu(menuFor.displayName)}>
           <div className="-mx-2 space-y-0.5">
-            {!menuFor.isDevice && (
+            {menuFor.id === me?.id ? (
+              // Myself: only the player — no revoking my own admin or kicking myself.
+              menuFor.canPlay ? (
+                <SheetAction onClick={() => setPerm(menuFor, { canPlay: false })}>{vi.people.stopPlayer}</SheetAction>
+              ) : (
+                <SheetAction onClick={() => setPerm(menuFor, { canPlay: true })}>{vi.people.makePlayer}</SheetAction>
+              )
+            ) : (
               <>
-                <SheetAction onClick={() => setPerm(menuFor, { canControl: !menuFor.canControl })}>
-                  {menuFor.canControl ? vi.people.revokeControl : vi.people.grantControl}
-                </SheetAction>
-                <SheetAction onClick={() => setPerm(menuFor, { canDj: !menuFor.canDj })}>
-                  {menuFor.canDj ? vi.people.revokeDj : vi.people.grantDj}
-                </SheetAction>
-                {!menuFor.canPlay && <SheetAction onClick={() => setPerm(menuFor, { canPlay: true })}>{vi.people.makePlayer}</SheetAction>}
-                <SheetAction onClick={() => setPerm(menuFor, { role: menuFor.role === 'ADMIN' ? 'USER' : 'ADMIN' })}>
-                  {menuFor.role === 'ADMIN' ? vi.people.revokeAdmin : vi.people.grantAdmin}
+                {!menuFor.isDevice && (
+                  <>
+                    <SheetAction onClick={() => setPerm(menuFor, { canControl: !menuFor.canControl })}>
+                      {menuFor.canControl ? vi.people.revokeControl : vi.people.grantControl}
+                    </SheetAction>
+                    <SheetAction onClick={() => setPerm(menuFor, { canDj: !menuFor.canDj })}>
+                      {menuFor.canDj ? vi.people.revokeDj : vi.people.grantDj}
+                    </SheetAction>
+                    {!menuFor.canPlay && <SheetAction onClick={() => setPerm(menuFor, { canPlay: true })}>{vi.people.makePlayer}</SheetAction>}
+                    <SheetAction onClick={() => setPerm(menuFor, { role: menuFor.role === 'ADMIN' ? 'USER' : 'ADMIN' })}>
+                      {menuFor.role === 'ADMIN' ? vi.people.revokeAdmin : vi.people.grantAdmin}
+                    </SheetAction>
+                  </>
+                )}
+                <SheetAction
+                  danger
+                  onClick={() => {
+                    setKick(menuFor);
+                    setMenuFor(null);
+                  }}
+                >
+                  {vi.people.kick}
                 </SheetAction>
               </>
             )}
-            <SheetAction
-              danger
-              onClick={() => {
-                setKick(menuFor);
-                setMenuFor(null);
-              }}
-            >
-              {vi.people.kick}
-            </SheetAction>
           </div>
         </Dialog>
       )}
