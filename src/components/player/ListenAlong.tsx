@@ -6,9 +6,10 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { useT } from '@/i18n';
 import { estimatePosition } from '@/lib/time';
+import { legacySpeech, playSpeech, stopSpeech } from '@/lib/speech';
 import { useMe, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
-import { DJ_FILES, DRIFT_SEC, DUCK_VOLUME, type PlayerAdapter, playDj, preloadDj, speak, TapVideoHint, YouTubeAdapter } from './PlayerEngine';
+import { DJ_FILES, DRIFT_SEC, DUCK_VOLUME, type PlayerAdapter, playDj, preloadDj, TapVideoHint, YouTubeAdapter } from './PlayerEngine';
 
 // N1 "Nghe cùng": this device plays the room's song in sync, for itself only. It follows
 // the room snapshot (song, play / pause, position on the server clock) — the same clock
@@ -165,15 +166,16 @@ function ListenPlayer() {
       a.setVolume(volRef.current);
       a.load(np.item.track.externalId, expected, np.status === 'PLAYING');
       // The wish is read here too, like on the speaker (the MC line only goes to the speaker).
-      const wish = np.item.wishMessage;
-      if (wish && np.status === 'PLAYING' && expected < 3) {
+      stopSpeech();
+      const speech = np.item.wishSpeech ?? legacySpeech(np.item.wishMessage);
+      if (speech && np.status === 'PLAYING' && expected < 3) {
         const restore = () => {
           if (duckTimer.current) clearTimeout(duckTimer.current);
           a.setVolume(volRef.current);
         };
-        if (speak(wish, np.item.voicePreset, restore)) {
+        if (playSpeech(speech, volRef.current, restore)) {
           a.setVolume(Math.min(volRef.current, DUCK_VOLUME));
-          duckTimer.current = setTimeout(restore, Math.max(8000, wish.length * 150));
+          duckTimer.current = setTimeout(restore, Math.max(8000, speech.text.length * 150));
         }
       }
       return;

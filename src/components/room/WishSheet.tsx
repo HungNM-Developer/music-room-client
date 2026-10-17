@@ -3,8 +3,8 @@
 import { useId, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
-import type { QueueItemView, VoicePreset } from '@/contracts';
-import { LIMITS, VOICE_PRESETS } from '@/contracts/constants';
+import type { QueueItemView, Voice } from '@/contracts';
+import { LIMITS, VOICES } from '@/contracts/constants';
 import { useAct } from '@/hooks/useAct';
 import { useT } from '@/i18n';
 
@@ -13,7 +13,8 @@ export function WishSheet({ item, onClose }: { item: QueueItemView; onClose: () 
   const t = useT();
   const act = useAct();
   const [text, setText] = useState(item.wishMessage ?? '');
-  const [voice, setVoice] = useState<VoicePreset>(item.voicePreset ?? 'radio');
+  // Nothing picked in advance: the sender chooses the voice (a wish from before voices shows none).
+  const [voice, setVoice] = useState<Voice | null>(item.voice ?? null);
   const [busy, setBusy] = useState(false);
   const textId = useId();
   const voiceId = useId();
@@ -24,7 +25,8 @@ export function WishSheet({ item, onClose }: { item: QueueItemView; onClose: () 
     onClose();
     void act(
       'queue:set-message',
-      { queueItemId: item.id, wishMessage: message, voicePreset: voice },
+      // `voice` only when female: male is what the server assumes, so an older server still accepts it.
+      { queueItemId: item.id, wishMessage: message, ...(message && voice === 'female' ? { voice } : {}) },
       { optimistic: { kind: 'wish', itemId: item.id, message: message.trim() || null } },
     );
   }
@@ -55,8 +57,8 @@ export function WishSheet({ item, onClose }: { item: QueueItemView; onClose: () 
           <p id={voiceId} className="mb-2 text-[13px] font-medium text-sage">
             {t.wish.voice}
           </p>
-          <div role="radiogroup" aria-labelledby={voiceId} className="grid grid-cols-3 gap-2">
-            {VOICE_PRESETS.map((v) => (
+          <div role="radiogroup" aria-labelledby={voiceId} className="grid grid-cols-2 gap-2">
+            {VOICES.map((v) => (
               <button
                 key={v}
                 type="button"
@@ -67,13 +69,13 @@ export function WishSheet({ item, onClose }: { item: QueueItemView; onClose: () 
                   voice === v ? 'border-amber bg-amber/15 text-paper' : 'border-line text-sage hover:text-paper'
                 }`}
               >
-                {t.wish.voices[v]}
+                {v === 'male' ? t.wish.voiceMale : t.wish.voiceFemale}
               </button>
             ))}
           </div>
         </div>
 
-        <p className="text-[13px] text-sage">{t.wish.note}</p>
+        <p className="text-[13px] text-sage">{text.trim() && !voice ? t.wish.pickVoice : t.wish.note}</p>
 
         <div className="flex gap-2">
           {item.wishMessage && (
@@ -81,7 +83,7 @@ export function WishSheet({ item, onClose }: { item: QueueItemView; onClose: () 
               {t.wish.clear}
             </Button>
           )}
-          <Button variant="primary" disabled={busy || !text.trim()} onClick={() => save(text)} className="flex-1">
+          <Button variant="primary" disabled={busy || !text.trim() || !voice} onClick={() => save(text)} className="flex-1">
             {t.wish.save}
           </Button>
         </div>

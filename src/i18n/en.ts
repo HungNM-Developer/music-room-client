@@ -424,15 +424,10 @@ export const en: Dict = {
     voice: 'Voice',
     save: 'Save message',
     clear: 'Remove message',
-    note: 'The speaker reads your message right before your song plays.',
-    voices: {
-      radio: 'Radio host',
-      drama: 'Dramatic',
-      baby: 'Baby',
-      panic: 'Panicked',
-      chipmunk: 'Chipmunk',
-      sleepy: 'Sleepy',
-    },
+    note: 'The speaker reads your message in the voice you pick, right before your song plays.',
+    voiceMale: 'Male voice',
+    voiceFemale: 'Female voice',
+    pickVoice: 'Choose a voice',
   },
 
   people: {
