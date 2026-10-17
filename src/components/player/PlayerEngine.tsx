@@ -64,7 +64,7 @@ export function playDj(src: string): void {
   a.play().catch(() => console.warn('[player] DJ sound blocked'));
 }
 
-/** `caption`: a line above the video saying this device is the room's speaker (room page). */
+/** `caption`: room page — until the sound starts, a line above the video saying this device is the room's speaker. */
 export function PlayerEngine({ volume = 100, caption = false }: { volume?: number; caption?: boolean }) {
   const t = useT();
   // The room has no song at all (not merely paused): the cover replaces the empty video.
@@ -444,9 +444,7 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
 
   return (
     <div className="space-y-2">
-      {caption && (
-        <p className="px-1 text-[13px] font-medium text-amber">{started ? t.host.thisDevicePlays : t.host.thisDeviceWaits}</p>
-      )}
+      {caption && !started && <p className="px-1 text-[13px] font-medium text-amber">{t.host.thisDeviceWaits}</p>}
       <div className="relative aspect-video w-full overflow-hidden rounded-panel bg-dial-deep">
         <YouTubeAdapter
           adapterRef={adapterRef}

@@ -23,6 +23,9 @@
 
   --radius-panel: 20px;
   --radius-row: 12px;
+  /* Blocks that can wrap to several lines: the theme's row radius, capped (a pill row
+     radius, as in transistor / astro / midcentury, would turn them into ovals). */
+  --radius-box: min(var(--radius-row), 16px);
 
   --animate-rise: rise 180ms ease-out;
 }
@@ -104,6 +107,9 @@ html[data-theme] {
   .field {
     @apply w-full rounded-row border border-line bg-dial-deep px-3.5 text-paper outline-none transition-colors placeholder:text-sage/60 focus:border-amber;
     min-height: 48px;
+  }
+  textarea.field {
+    border-radius: var(--radius-box);
   }
 
   /* Track titles, room names, the dial numbers: narrow and heavy, like a printed radio label. */

@@ -171,7 +171,7 @@ function Stage({ openAdd }: { openAdd: () => void }) {
             <Vu />
           </div>
         </div>
-        <InlineLyrics trackId={track.id} size="stage" storageKey="mr:room-lyrics" className="max-lg:hidden" />
+        <InlineLyrics trackId={track.id} size="stage" className="max-lg:hidden" />
         <StageVote s={vote} meterAt="middle" className="max-lg:hidden" />
         <StageControls a={a} variant="brass" />
         <div className="stage-listeners empty:hidden">

@@ -84,7 +84,7 @@ export function StageLayout(p: StageProps) {
         <div className="stage-listeners empty:hidden">{p.listeners ?? <ListenersStrip />}</div>
         {p.aside}
         <WishBlock />
-        <InlineLyrics trackId={track.id} size="stage" storageKey="mr:room-lyrics" className="max-lg:hidden" />
+        <InlineLyrics trackId={track.id} size="stage" className="max-lg:hidden" />
         {a.blockMenu}
       </section>
       <ListenAlong />

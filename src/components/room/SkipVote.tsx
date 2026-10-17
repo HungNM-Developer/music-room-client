@@ -50,7 +50,7 @@ export function SkipVote({ variant, meter: Meter }: { variant: 'member' | 'host'
       ? 'w-full max-w-3xl rounded-panel border border-amber/60 bg-panel/95 p-5 shadow-[0_24px_60px_-20px_rgb(0_0_0/0.7)]'
       : variant === 'member'
         ? 'pointer-events-auto w-full max-w-md animate-rise rounded-panel border border-amber/50 bg-panel p-3.5 shadow-[0_16px_40px_-16px_rgb(0_0_0/0.7)]'
-        : 'rounded-row border border-amber/50 bg-dial-deep p-2.5';
+        : 'rounded-box border border-amber/50 bg-dial-deep p-2.5';
 
   if (!s.open) {
     if (!s.result) return null;

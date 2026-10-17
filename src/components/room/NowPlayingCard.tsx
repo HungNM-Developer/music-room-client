@@ -30,13 +30,13 @@ export function NowPlayingCard() {
   const { np, track: item, playing, picker, canVote, canControl } = a;
 
   return (
-    <section aria-label={t.nowPlaying.title} className="rounded-panel border border-paper/10 bg-panel/80 p-4 sm:p-5">
+    <section aria-label={t.nowPlaying.title} className="np-card rounded-panel border border-paper/10 bg-panel/80 p-4 sm:p-5">
       <OnAirLamp live={playing}>{playing ? t.nowPlaying.live : t.nowPlaying.paused}</OnAirLamp>
 
       <div className="mt-3 flex gap-3.5">
-        <Thumb url={item.thumbnailUrl} size={76} className="rounded-row" />
+        <Thumb url={item.thumbnailUrl} size={76} className="np-thumb rounded-row" />
         <div className="min-w-0 flex-1">
-          <h2 className="type-display line-clamp-2 text-[22px] font-bold leading-[1.1] [unicode-bidi:plaintext] lg:text-[28px]" title={item.title}>
+          <h2 className="np-title type-display line-clamp-2 text-[22px] font-bold leading-[1.1] [unicode-bidi:plaintext] lg:text-[28px]" title={item.title}>
             {item.title}
           </h2>
           <p className="mt-1 truncate text-[14px] text-sage">{a.pickerLabel}</p>

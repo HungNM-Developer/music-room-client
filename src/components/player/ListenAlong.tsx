@@ -258,7 +258,7 @@ function ListenPlayer() {
         </Button>
       </div>
       {/* Visible and at least 200 px tall: YouTube API policy (TC-131). */}
-      <div className="relative aspect-video min-h-[200px] w-full overflow-hidden rounded-row bg-dial-deep">
+      <div className="relative aspect-video min-h-[200px] w-full overflow-hidden rounded-box bg-dial-deep">
         <YouTubeAdapter
           adapterRef={adapterRef}
           onReady={() => {

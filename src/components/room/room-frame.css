@@ -1,0 +1,143 @@
+/* Wide screens. The frame widens through RoomFrame / RoomHeader utilities: 1840 px from
+   1600 px (side column 480), 2400 px from 2000 px (side column 520). Unlayered on purpose:
+   it overrides the room column's space-y / lg:block utilities and the themes' layered sizes. */
+@media (min-width: 1600px) {
+  /* A listener's page: the shared stage's cover grows with the column. */
+  .room-stage:not([data-player]) .stage {
+    --stage-cover-scale: 1.2;
+  }
+
+  /* This device plays for the room: the video on the left, the theme's now-playing block
+     beside it, the queue and suggestions across the full width below. The theme's own
+     stage wrapper steps aside (display: contents) so its sections join this grid. */
+  .room-stage[data-player] {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 20px 28px;
+    align-items: start;
+    /* The side column is often taller: keep the rows at their content height. */
+    align-content: start;
+  }
+  .room-stage[data-player] > * {
+    margin: 0;
+  }
+  .room-stage[data-player] > .stage {
+    display: contents;
+  }
+  /* The video; centred beside a now-playing block taller than it. */
+  .room-stage[data-player] > :first-child {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+  }
+  /* The now-playing block: the theme stage's first section, or the default theme's card;
+     at least as tall as the video, its content centred. */
+  .room-stage[data-player] > .stage > :first-child,
+  .room-stage[data-player] > :nth-child(2):not(.stage) {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: stretch;
+    align-content: center;
+  }
+  /* Cassette: the lyrics card under the tape stays beside the video. */
+  .room-stage[data-player]:has(> .stage > .cs-under) > :first-child {
+    grid-row: 1 / span 2;
+  }
+  .room-stage[data-player] > .stage > .cs-under {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .room-stage[data-player] > .stage > :not(:first-child):not(.cs-under),
+  .room-stage[data-player] > :nth-child(n + 3) {
+    grid-column: 1 / -1;
+  }
+  /* The now-playing column is narrower than the whole stage: a smaller title. */
+  .room-stage[data-player] .stage-title {
+    font-size: clamp(28px, 2.1vw, 40px);
+  }
+  /* Transistor's knobs: one row of equal cells, smaller knobs, the labels wrap inside. */
+  html[data-theme='transistor'] .room-stage[data-player] .stage-controls[data-variant='knobs'] {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 92px);
+    gap: 8px;
+    align-items: start;
+  }
+  html[data-theme='transistor'] .room-stage[data-player] .stage-controls[data-variant='knobs'] > button {
+    font-size: 12px;
+  }
+  html[data-theme='transistor'] .room-stage[data-player] .stage-controls[data-variant='knobs'] > button > svg {
+    width: 44px;
+    height: 44px;
+    padding: 13px;
+  }
+  html[data-theme='transistor'] .room-stage[data-player] .stage-controls[data-variant='knobs'] > button::after {
+    max-width: 100%;
+  }
+  /* The default theme's compact card in a wider column: a bigger cover and title.
+     !important: Thumb sizes itself inline. */
+  .room-stage .np-thumb {
+    width: clamp(96px, 6.5vw, 120px) !important;
+    height: clamp(96px, 6.5vw, 120px) !important;
+  }
+  .room-stage .np-title {
+    font-size: clamp(24px, 1.7vw, 32px);
+  }
+}
+
+/* 1600–1799 px: the now-playing column is under 560 px; smaller cover and turntable. */
+@media (min-width: 1600px) and (max-width: 1799px) {
+  .room-stage[data-player] .stage {
+    --stage-cover-scale: 0.8;
+  }
+  .room-stage[data-player] .wal-tt {
+    grid-template-columns: 190px minmax(0, 1fr);
+  }
+  .room-stage[data-player] .wal-turntable {
+    width: 190px;
+    height: 190px;
+  }
+}
+
+/* ≥2000 px: video and now-playing block share the stage (about 900 px each); the
+   themes' own covers grow with the block. */
+@media (min-width: 2000px) {
+  .room-stage:not([data-player]) .stage {
+    --stage-cover-scale: 1.35;
+  }
+  .room-stage[data-player] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 32px;
+  }
+  .room-stage[data-player] .stage {
+    --stage-cover-scale: 1.25;
+  }
+  .room-stage .np-thumb {
+    width: 168px !important;
+    height: 168px !important;
+  }
+  .room-stage .np-title {
+    font-size: 38px;
+  }
+  .room-stage[data-player] .tr-np {
+    grid-template-columns: 180px minmax(0, 1fr);
+  }
+  .room-stage[data-player] .tr-np .art {
+    width: 180px;
+    height: 180px;
+  }
+  .room-stage[data-player] .st-now {
+    grid-template-columns: 210px minmax(0, 1fr);
+  }
+  .room-stage[data-player] .st-now .art {
+    width: 210px;
+    height: 210px;
+  }
+  .room-stage .wal-tt {
+    grid-template-columns: 300px minmax(0, 1fr);
+  }
+  .room-stage .wal-turntable {
+    width: 300px;
+    height: 300px;
+  }
+}

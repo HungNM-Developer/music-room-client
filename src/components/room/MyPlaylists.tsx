@@ -186,7 +186,7 @@ function PlaylistDetail({ id, add, added, addWithWish, onBack }: Lists & { id: s
         </Button>
       </div>
       {link && (
-        <div className="space-y-1.5 rounded-row border border-line/70 p-3">
+        <div className="space-y-1.5 rounded-box border border-line/70 p-3">
           <p className="text-[13px] text-sage">{t.playlists.shareNote}</p>
           <div className="flex items-center gap-2">
             <code className="min-w-0 flex-1 truncate text-[13px]">{link}</code>

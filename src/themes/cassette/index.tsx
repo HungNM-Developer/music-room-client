@@ -119,7 +119,7 @@ function Stage({ openAdd }: { openAdd: () => void }) {
       <div className="cs-under">
         <LyricsButton trackId={track.id} />
         <WishBlock className="cs-note" />
-        <InlineLyrics trackId={track.id} size="stage" storageKey="mr:room-lyrics" className="max-lg:hidden" />
+        <InlineLyrics trackId={track.id} size="stage" className="max-lg:hidden" />
       </div>
       <ListenAlong />
       {queue}

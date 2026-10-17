@@ -132,7 +132,7 @@ export function JoinDialog({ code, notice }: { code: string; notice?: string | n
           <p className="text-[13px] text-sage">{t.home.rejoinNote}</p>
         )}
         {error && (
-          <p role="alert" className="rounded-row border border-onair/50 bg-onair/10 p-3 text-[14px]">
+          <p role="alert" className="rounded-box border border-onair/50 bg-onair/10 p-3 text-[14px]">
             {error}
           </p>
         )}

@@ -21,7 +21,7 @@ export function AdminNameNotice({
 }) {
   const t = useT();
   return (
-    <div role="status" className="space-y-3 rounded-row border border-amber/40 bg-amber/10 p-3.5">
+    <div role="status" className="space-y-3 rounded-box border border-amber/40 bg-amber/10 p-3.5">
       <p className="flex gap-2 text-[14px]">
         <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-amber" aria-hidden />
         <span>{t.adminName.taken(name.trim())}</span>

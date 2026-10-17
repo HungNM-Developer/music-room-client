@@ -363,8 +363,6 @@ export const en: Dict = {
     loading: 'Looking for lyrics…',
     none: 'No lyrics found for this song.',
     source: 'Lyrics: LRCLIB',
-    show: 'Show lyrics',
-    hide: 'Hide lyrics',
   },
 
   suggest: {
@@ -474,6 +472,8 @@ export const en: Dict = {
   block: {
     menu: 'Block this song in the room',
     more: (title: string) => `Options for ${title}`,
+    /** Printed under the ⋯ key in themes that label their keys. */
+    moreKey: 'Options',
     title: (title: string) => `Block "${title}"?`,
     bodyPlaying: 'The current song will be skipped right away.',
     bodyQueued: 'The song will be removed from the queue.',
@@ -644,7 +644,6 @@ export const en: Dict = {
     moveHere: 'Play here',
     autoReturn: 'Takes over when the other one stops',
     volume: 'Volume',
-    thisDevicePlays: 'This device is playing music for the whole room',
     thisDeviceWaits: "This device is the room's player · speaker not on yet",
   },
 

@@ -5,6 +5,8 @@
   .stage {
     --stage-cover: 240px;
     --stage-cover-phone: 180px;
+    /* The room frame enlarges the cover on wide screens (room-frame.css). */
+    --stage-cover-scale: 1;
     --stage-btn-radius: 999px;
     --stage-card-radius: 14px;
     --stage-thumb-radius: 6px;
@@ -21,13 +23,13 @@
 
   .stage-hero {
     display: grid;
-    grid-template-columns: var(--stage-cover) minmax(0, 1fr);
+    grid-template-columns: calc(var(--stage-cover) * var(--stage-cover-scale)) minmax(0, 1fr);
     gap: 34px;
     align-items: center;
   }
   .stage-cover {
     position: relative;
-    width: var(--stage-cover);
+    width: calc(var(--stage-cover) * var(--stage-cover-scale));
     aspect-ratio: 1;
   }
   .stage-cover-img {

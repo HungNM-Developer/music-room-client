@@ -358,8 +358,6 @@ export const vi = {
     loading: 'Đang tìm lời…',
     none: 'Chưa tìm thấy lời cho bài này.',
     source: 'Lời: LRCLIB',
-    show: 'Hiện lời',
-    hide: 'Ẩn lời',
   },
 
   suggest: {
@@ -469,6 +467,8 @@ export const vi = {
   block: {
     menu: 'Chặn bài này trong phòng',
     more: (title: string) => `Tùy chọn cho ${title}`,
+    /** Printed under the ⋯ key in themes that label their keys. */
+    moreKey: 'Tùy chọn',
     title: (title: string) => `Chặn "${title}"?`,
     bodyPlaying: 'Bài đang phát sẽ qua ngay.',
     bodyQueued: 'Bài sẽ được gỡ khỏi hàng chờ.',
@@ -641,7 +641,6 @@ export const vi = {
     moveHere: 'Phát ở máy này',
     autoReturn: 'Tự phát lại khi máy kia tắt',
     volume: 'Âm lượng',
-    thisDevicePlays: 'Máy này đang phát nhạc cho cả phòng',
     thisDeviceWaits: 'Máy này là máy phát của phòng · chưa bật loa',
   },
 
