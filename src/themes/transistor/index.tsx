@@ -3,7 +3,21 @@
 import { MoreHorizontal, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { ListenAlong, ListenersStrip } from '@/components/player/ListenAlong';
-import { InlineLyrics, LyricsButton } from '@/components/room/Lyrics';
+import { useHost } from '@/components/host/HostContext';
+import {
+  HostChatLines,
+  HostCode,
+  HostControls,
+  HostLamp,
+  HostLink,
+  HostListeners,
+  HostMeta,
+  HostNextEmpty,
+  HostQr,
+  HostTitle,
+  HostWish,
+} from '@/components/host/parts';
+import { HostLyrics, InlineLyrics, LyricsButton } from '@/components/room/Lyrics';
 import { HeartButton, hasItemMenu, useQueueView } from '@/components/room/QueueList';
 import { useLiveProgress } from '@/components/room/stage/useLiveProgress';
 import { useNowPlayingActions } from '@/components/room/stage/useNowPlayingActions';
@@ -14,12 +28,13 @@ import { Dialog } from '@/components/ui/Dialog';
 import { useT } from '@/i18n';
 import { addedByLabel } from '@/lib/added-by';
 import { formatDuration } from '@/lib/time';
-import type { ThemeModule } from '../load';
+import type { HostSkin, ThemeModule } from '../load';
 import { NowCover, StageIdle, WishBlock } from '../stage/parts';
 import { StageControls } from '../stage/StageControls';
 import { StageVote } from '../stage/StageVote';
 import '../stage/stage.css';
 import './theme.css';
+import './host.css';
 
 /** The tuning band: amber glass with a minute scale; the red needle is the time. */
 function Band({ large = false }: { large?: boolean }) {
@@ -165,6 +180,72 @@ function Stage({ openAdd }: { openAdd: () => void }) {
   );
 }
 
+/* ---- Speaker screen: the whole screen is the radio ---- */
+
+/** Inside the speaker grille, under the video: the song and its lyrics. */
+function HostGrille() {
+  const { np } = useHost();
+  return (
+    <div className="ht-now">
+      <div className="ht-row">
+        <HostLamp />
+        <HostMeta />
+      </div>
+      <HostTitle />
+      {np && <HostLyrics trackId={np.item.track.id} />}
+    </div>
+  );
+}
+
+/** The chrome badge (QR), the preset keys (next songs), the wish, the listeners' letters. */
+function HostDialSide() {
+  const t = useT();
+  const { next } = useHost();
+  return (
+    <div className="ht-side">
+      <div className="ht-badge">
+        <HostQr />
+        <div className="min-w-0">
+          <p className="ht-scan">{t.host.scan}</p>
+          <HostCode />
+          <HostLink />
+        </div>
+      </div>
+      <section className="ht-presets" aria-label={t.host.next}>
+        <h2>{t.themeText.transistor.next}</h2>
+        {next.length === 0 ? (
+          <HostNextEmpty />
+        ) : (
+          <ol>
+            {next.map((q, i) => (
+              <li key={q.id}>
+                <b>{i + 1}</b>
+                <span className="t">{q.track.title}</span>
+                <span className="p">{addedByLabel(q)}</span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+      <HostWish withFrom className="ht-wish host-wish-1" />
+      <div className="ht-letters">
+        <h2>{t.themeText.transistor.chat}</h2>
+        <HostListeners max={4} />
+        <HostChatLines n={2} />
+        <HostControls />
+      </div>
+    </div>
+  );
+}
+
+/** The tuning glass across the bottom: the red needle is the time. */
+function HostBand() {
+  const { np } = useHost();
+  return <div className="ht-band">{np ? <Band large /> : <div className="tr-band" data-large aria-hidden />}</div>;
+}
+
+const host: HostSkin = { className: 'host-transistor', videoClass: 'ht-video', Below: HostGrille, Side: HostDialSide, Footer: HostBand };
+
 const transistor: ThemeModule = {
   Stage,
   fontClass: '', // Big Shoulders is declared in theme.css
@@ -174,6 +255,6 @@ const transistor: ThemeModule = {
     placeholder: (t) => t.themeText.transistor.chatPlaceholder,
     variant: 'transistor',
   },
-  HostDial: () => <Band large />,
+  host,
 };
 export default transistor;

@@ -1,6 +1,20 @@
 'use client';
 
 import { MoreHorizontal } from 'lucide-react';
+import { useHost } from '@/components/host/HostContext';
+import {
+  HostChatLines,
+  HostCode,
+  HostControls,
+  HostLamp,
+  HostLink,
+  HostMeta,
+  HostNextEmpty,
+  HostQr,
+  HostTitle,
+  HostWish,
+} from '@/components/host/parts';
+import { HostLyrics } from '@/components/room/Lyrics';
 import { useState } from 'react';
 import { HeartButton, hasItemMenu, useQueueView } from '@/components/room/QueueList';
 import { Dialog } from '@/components/ui/Dialog';
@@ -10,13 +24,14 @@ import { addedByLabel } from '@/lib/added-by';
 import { ytThumb } from '@/lib/thumbs';
 import { formatDuration } from '@/lib/time';
 import { useRoom } from '@/state/hooks';
-import type { ThemeModule } from '../load';
+import type { HostSkin, ThemeModule } from '../load';
 import { ProgressBox, TimeText } from '../stage/dials';
-import { NowCover } from '../stage/parts';
+import { CoverImage, NowCover } from '../stage/parts';
 import { StageLayout } from '../stage/StageLayout';
 import { StageQueue } from '../stage/StageQueue';
 import { spaceGrotesk } from './fonts';
 import './theme.css';
+import './host.css';
 
 /** The ellipse every orbit is drawn on (rotated -18°). */
 const ORBIT = 'M 2 130 A 128 40 0 1 0 258 130 A 128 40 0 1 0 2 130';
@@ -125,6 +140,74 @@ function Stage({ openAdd }: { openAdd: () => void }) {
   );
 }
 
+/* ---- Speaker screen: the view from a spaceship ---- */
+
+function HostCockpit() {
+  const { np } = useHost();
+  return (
+    <div className="hc2-now">
+      <div className="hc2-song">
+        {np && (
+          <div className="hc2-planet">
+            <Planet />
+          </div>
+        )}
+        <div className="hc2-info">
+          <HostLamp />
+          <HostTitle />
+          <HostMeta />
+          {np && <TimeText />}
+        </div>
+      </div>
+      {np && <HostLyrics trackId={np.item.track.id} />}
+      <HostWish withFrom className="hc2-wish host-wish-1" />
+    </div>
+  );
+}
+
+/** Planet sizes for the next three songs: the farther away, the smaller. */
+const ORBIT_SIZES = [5.6, 4.4, 3.4];
+
+function HostStation() {
+  const t = useT();
+  const { next } = useHost();
+  return (
+    <div className="hc2-side">
+      <div className="hc2-panel hc2-qr">
+        <HostQr />
+        <div className="min-w-0">
+          <h2>{t.host.scan}</h2>
+          <HostCode />
+          <HostLink />
+        </div>
+      </div>
+      <section className="hc2-panel hc2-orbits" aria-label={t.host.next}>
+        <h2>{t.themeText.cosmos.next}</h2>
+        {next.length === 0 ? (
+          <HostNextEmpty />
+        ) : (
+          <ol>
+            {next.map((q, i) => (
+              <li key={q.id} style={{ ['--s' as string]: ORBIT_SIZES[i] }}>
+                <CoverImage url={q.track.thumbnailUrl} className="hc2-world" />
+                <span className="t">{q.track.title}</span>
+                <span className="p">{addedByLabel(q)}</span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+      <div className="hc2-panel hc2-people">
+        <Stars />
+        <HostChatLines n={2} />
+        <HostControls />
+      </div>
+    </div>
+  );
+}
+
+const host: HostSkin = { className: 'host-cosmos', videoClass: 'hc2-port', Below: HostCockpit, Side: HostStation };
+
 const cosmos: ThemeModule = {
   Stage,
   fontClass: spaceGrotesk.variable,
@@ -134,13 +217,6 @@ const cosmos: ThemeModule = {
     variant: 'cosmos',
   },
   Decor: () => <div className="cosmos-sky" aria-hidden />,
-  HostDial: () => (
-    <div className="cosmos-host">
-      <div className="h-28 w-28">
-        <Planet withCover={false} />
-      </div>
-      <TimeText />
-    </div>
-  ),
+  host,
 };
 export default cosmos;

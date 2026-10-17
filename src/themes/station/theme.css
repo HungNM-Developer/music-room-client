@@ -173,15 +173,6 @@ html[data-theme='station'] {
   .st-track-wrap[data-large] .st-times {
     font-size: 24px;
   }
-  .st-host {
-    display: flex;
-    align-items: center;
-    gap: 22px;
-  }
-  .st-host .st-track-wrap {
-    flex: 1;
-    margin: 0;
-  }
   /* The wish as an announcement panel. */
   html[data-theme='station'] .stage-wish.st-ann {
     margin-top: 14px;

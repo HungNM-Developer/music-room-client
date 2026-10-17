@@ -1,0 +1,418 @@
+/* The speaker screen (/r/CODE/host): shared slots, the default layout and the themed 16:9 canvas. */
+
+.host-header:empty,
+.host-footer:empty,
+.host-banners:empty {
+  display: none;
+}
+.host-grid > * {
+  min-width: 0;
+}
+
+/* ---- The 16:9 canvas (every theme, the default one included) ----
+   Sizes are written as multiples of --u: 1% of the 16:9 canvas width on wide screens, a fixed
+   13px when the screen is too small for the canvas and the slots stack in one scrolling column.
+   Each theme's host.css places the slots (grid-template-areas) inside the canvas media query. */
+.host-root[data-layout='canvas'] {
+  --u: 13px;
+  min-height: 100dvh;
+  padding: 1rem;
+}
+[data-layout='canvas'] .host-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 760px;
+  margin: 0 auto;
+  font-size: calc(var(--u) * 1.15);
+  line-height: 1.25;
+}
+[data-layout='canvas'] .host-video > * {
+  width: 100%;
+}
+[data-layout='canvas'] .host-banners {
+  max-width: 760px;
+  margin: 1rem auto 0;
+}
+
+/* Shared parts, in --u. */
+[data-layout='canvas'] .host-title {
+  font-family: var(--font-display);
+  font-size: calc(var(--u) * 2.6);
+  font-weight: 800;
+  line-height: 1.02;
+}
+[data-layout='canvas'] .host-meta {
+  font-size: calc(var(--u) * 1.3);
+  color: var(--color-sage);
+}
+[data-layout='canvas'] .host-code {
+  font-family: var(--font-display);
+  font-size: calc(var(--u) * 2.8);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+[data-layout='canvas'] .host-link,
+[data-layout='canvas'] .host-wish-from {
+  font-size: calc(var(--u) * 1.1);
+}
+[data-layout='canvas'] .host-wish blockquote,
+[data-layout='canvas'] .host-chat,
+[data-layout='canvas'] .host-next-empty {
+  font-size: calc(var(--u) * 1.25);
+}
+/* A wish on one line: the sender, then the message (for tight layouts). */
+[data-layout='canvas'] .host-wish-1 {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--u) * 0.8);
+  min-width: 0;
+}
+[data-layout='canvas'] .host-wish-1 blockquote {
+  min-width: 0;
+  -webkit-line-clamp: 1;
+}
+[data-layout='canvas'] .host-wish-1 figcaption {
+  flex: none;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+[data-layout='canvas'] .host-chat ol {
+  display: grid;
+  gap: calc(var(--u) * 0.35);
+}
+[data-layout='canvas'] .host-chat-name {
+  margin-right: 0.35em;
+}
+[data-layout='canvas'] .host-controls {
+  font-size: calc(var(--u) * 1.1);
+  gap: calc(var(--u) * 1.2);
+}
+/* The language button sized with the screen (its own size is a fixed 44px). */
+[data-layout='canvas'] .host-controls > button {
+  width: calc(var(--u) * 2.8);
+  height: calc(var(--u) * 2.8);
+}
+[data-layout='canvas'] .host-controls > button svg {
+  width: calc(var(--u) * 1.6);
+  height: calc(var(--u) * 1.6);
+}
+[data-layout='canvas'] .host-controls > button > span {
+  font-size: calc(var(--u) * 0.95);
+  line-height: 1.6;
+}
+[data-layout='canvas'] .host-volume {
+  font-size: inherit;
+  max-width: calc(var(--u) * 24);
+}
+[data-layout='canvas'] .host-qr-code {
+  width: calc(var(--u) * 14.5);
+  flex: none;
+}
+[data-layout='canvas'] .host-listeners {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.8);
+  font-size: calc(var(--u) * 1.15);
+  color: var(--color-sage);
+}
+[data-layout='canvas'] .host-faces {
+  display: inline-flex;
+  align-items: center;
+}
+[data-layout='canvas'] .host-faces i {
+  display: grid;
+  place-items: center;
+  width: calc(var(--u) * 2.2);
+  height: calc(var(--u) * 2.2);
+  margin-right: calc(var(--u) * -0.5);
+  border-radius: 50%;
+  box-shadow: 0 0 0 calc(var(--u) * 0.18) var(--color-dial);
+  font: 700 calc(var(--u) * 1.05) / 1 var(--font-display);
+  font-style: normal;
+}
+[data-layout='canvas'] .host-faces b {
+  margin-left: calc(var(--u) * 0.9);
+}
+[data-layout='canvas'] .host-listeners-text svg {
+  display: inline;
+  width: 1.1em;
+  height: 1.1em;
+  margin-right: 0.3em;
+  vertical-align: -0.18em;
+  color: var(--color-amber);
+}
+[data-layout='canvas'] .host-lamp {
+  gap: calc(var(--u) * 0.55);
+  padding: calc(var(--u) * 0.3) calc(var(--u) * 0.9);
+  font-size: calc(var(--u) * 1.1);
+  letter-spacing: 0.04em;
+}
+[data-layout='canvas'] .host-lamp > span {
+  width: calc(var(--u) * 0.65);
+  height: calc(var(--u) * 0.65);
+}
+/* Lyrics: four karaoke lines, always shown on the speaker. */
+[data-layout='canvas'] .lyrics-inline {
+  max-width: none;
+}
+[data-layout='canvas'] .lyrics-inline > div {
+  display: grid;
+  gap: calc(var(--u) * 0.1);
+}
+[data-layout='canvas'] .lyrics-inline p {
+  font-size: calc(var(--u) * 1.35);
+}
+[data-layout='canvas'] .lyrics-inline p[data-current] {
+  font-size: calc(var(--u) * 2);
+}
+[data-layout='canvas'] .lyrics-inline .lyrics-source {
+  padding-top: 0;
+  font-size: calc(var(--u) * 0.85);
+}
+
+@media (min-width: 960px) and (min-height: 540px) {
+  .host-root[data-layout='canvas'] {
+    --u: 1cqw;
+    height: 100dvh;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+  /* Decor and overlays share the frame's cell: a theme's strip never pushes the canvas down. */
+  .host-root[data-layout='canvas'] > * {
+    grid-area: 1 / 1;
+  }
+  .host-root[data-layout='canvas'] > :not(.host-frame) {
+    align-self: start;
+    justify-self: stretch;
+  }
+  [data-layout='canvas'] .host-frame {
+    position: relative;
+    width: min(100vw, calc(100dvh * 16 / 9));
+    aspect-ratio: 16 / 9;
+    container-type: size;
+  }
+  [data-layout='canvas'] .host-grid {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    gap: 0;
+    max-width: none;
+    margin: 0;
+    font-size: calc(var(--u) * 1.15);
+    overflow: hidden;
+  }
+  [data-layout='canvas'] .host-grid > * {
+    min-height: 0;
+  }
+  [data-layout='canvas'] .host-header {
+    grid-area: header;
+  }
+  [data-layout='canvas'] .host-video {
+    grid-area: video;
+  }
+  [data-layout='canvas'] .host-below {
+    grid-area: below;
+  }
+  [data-layout='canvas'] .host-side {
+    grid-area: side;
+  }
+  [data-layout='canvas'] .host-footer {
+    grid-area: footer;
+  }
+  /* "Tap ▶ on the video" floats over the video's bottom-left corner instead of pushing the
+     layout down (it shows on every fresh load until someone taps; taps pass through it). */
+  [data-layout='canvas'] .host-video > div {
+    position: relative;
+  }
+  [data-layout='canvas'] .host-video > div > p[role='status'] {
+    position: absolute;
+    left: calc(var(--u) * 0.8);
+    bottom: calc(var(--u) * 0.8);
+    z-index: 30;
+    max-width: calc(100% - var(--u) * 1.6);
+    margin: 0;
+    padding: calc(var(--u) * 0.3) calc(var(--u) * 0.8);
+    border-radius: calc(var(--u) * 0.4);
+    background: #000000cc;
+    color: #ffd27a;
+    font-size: calc(var(--u) * 1.1);
+    pointer-events: none;
+  }
+  [data-layout='canvas'] .host-banners {
+    position: absolute;
+    left: 50%;
+    top: calc(var(--u) * 1.5);
+    z-index: 20;
+    width: min(calc(var(--u) * 60), 90%);
+    max-width: none;
+    margin: 0;
+    transform: translateX(-50%);
+  }
+  /* Floating over the layout: each banner on a solid panel so its text never mixes with what is under it. */
+  [data-layout='canvas'] .host-banners [role='status'] > div {
+    background: var(--color-panel);
+    color: var(--color-paper);
+    font-size: calc(var(--u) * 1.2);
+    box-shadow:
+      inset 0 0 0 calc(var(--u) * 0.12) var(--color-amber),
+      0 calc(var(--u) * 0.4) calc(var(--u) * 1.2) #0009;
+  }
+}
+
+/* The live lamp's ink, per theme: the page's paper colour is under 4.5:1 on several themes'
+   on-air colour at this size. White on the darker reds and browns, dark on the bright ones. */
+html[data-theme='listening'] .host-lamp.bg-onair-deep,
+html[data-theme='midcentury'] .host-lamp.bg-onair-deep,
+html[data-theme='astro'] .host-lamp.bg-onair-deep,
+html[data-theme='hifi82'] .host-lamp.bg-onair-deep,
+html[data-theme='saigon'] .host-lamp.bg-onair-deep {
+  color: #ffffff;
+}
+html[data-theme='cosmos'] .host-lamp.bg-onair-deep {
+  color: #050813;
+}
+html[data-theme='synthwave'] .host-lamp.bg-onair-deep {
+  color: #0e021e;
+}
+html[data-theme='pixel'] .host-lamp.bg-onair-deep {
+  color: #14132a;
+}
+html[data-theme='listening'] .host-lamp.bg-onair-deep > span,
+html[data-theme='midcentury'] .host-lamp.bg-onair-deep > span,
+html[data-theme='astro'] .host-lamp.bg-onair-deep > span,
+html[data-theme='hifi82'] .host-lamp.bg-onair-deep > span,
+html[data-theme='saigon'] .host-lamp.bg-onair-deep > span {
+  background: #ffffff;
+}
+html[data-theme='cosmos'] .host-lamp.bg-onair-deep > span,
+html[data-theme='synthwave'] .host-lamp.bg-onair-deep > span,
+html[data-theme='pixel'] .host-lamp.bg-onair-deep > span {
+  background: currentColor;
+}
+
+/* ---- Default theme: the room-mood backdrop, the tuning dial, the paper QR card ---- */
+.host-root.host-default {
+  color: var(--color-paper);
+}
+.host-default .host-video > * {
+  border-radius: calc(var(--u) * 1);
+  overflow: hidden;
+}
+.host-default .hd-now {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: start;
+  gap: calc(var(--u) * 0.35);
+  padding-top: calc(var(--u) * 0.9);
+}
+.host-default .hd-now > :not(.host-lamp) {
+  justify-self: stretch;
+}
+.host-default .host-title {
+  font-size: calc(var(--u) * 2.6);
+  line-height: 1.02;
+}
+.host-default .hd-wish {
+  padding-left: calc(var(--u) * 1);
+  border-left: calc(var(--u) * 0.25) solid var(--color-amber);
+}
+.host-default .hd-wish figcaption {
+  color: var(--color-sage);
+}
+/* The tuning dial in canvas units (its px heights are inline). */
+.host-default .dial-track {
+  height: calc(var(--u) * 3) !important;
+}
+.host-default .dial-needle {
+  height: calc(var(--u) * 2.15) !important;
+}
+.host-default .dial-track > span {
+  font-size: calc(var(--u) * 0.95);
+}
+.host-default .dial > div:last-child {
+  font-size: calc(var(--u) * 1.2);
+}
+.host-default .hd-side {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: calc(var(--u) * 1.2);
+}
+.host-default .hd-qr {
+  display: grid;
+  justify-items: center;
+  gap: calc(var(--u) * 0.5);
+  padding: calc(var(--u) * 1.2);
+  border-radius: calc(var(--u) * 1.2);
+  background: var(--color-paper);
+  color: var(--color-dial);
+  text-align: center;
+}
+.host-default .hd-scan {
+  font: 700 calc(var(--u) * 1.5) / 1.1 var(--font-display);
+}
+.host-default .hd-qr .host-code {
+  font-size: calc(var(--u) * 3);
+  letter-spacing: 0.12em;
+}
+.host-default .hd-qr .host-link {
+  color: color-mix(in srgb, var(--color-dial) 75%, transparent);
+}
+.host-default .hd-side h2 {
+  margin-bottom: calc(var(--u) * 0.5);
+  font: 700 calc(var(--u) * 1.5) / 1.1 var(--font-display);
+}
+.host-default .hd-next ol {
+  display: grid;
+  gap: calc(var(--u) * 0.6);
+}
+.host-default .hd-next li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: calc(var(--u) * 0.9);
+}
+.host-default .hd-thumb {
+  width: calc(var(--u) * 4.4);
+  height: calc(var(--u) * 3.3);
+  border-radius: calc(var(--u) * 0.4);
+}
+.host-default .hd-q {
+  display: grid;
+  min-width: 0;
+}
+.host-default .hd-q span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.host-default .hd-q .t {
+  font-size: calc(var(--u) * 1.25);
+  font-weight: 600;
+}
+.host-default .hd-q .p,
+.host-default .hd-next .host-next-empty,
+.host-default .host-chat-empty {
+  color: var(--color-sage);
+  font-size: calc(var(--u) * 1.1);
+}
+.host-default .hd-chat-box .host-chat-name {
+  color: var(--color-amber);
+}
+
+@media (min-width: 960px) and (min-height: 540px) {
+  .host-default .host-grid {
+    grid-template-columns: calc(var(--u) * 2.4) calc(var(--u) * 44) calc(var(--u) * 3) minmax(0, 1fr) calc(var(--u) * 2.4);
+    grid-template-rows: calc(var(--u) * 2) auto minmax(0, 1fr) calc(var(--u) * 1.4);
+    grid-template-areas:
+      '. . . . .'
+      '. video . side .'
+      '. below . side .'
+      '. . . . .';
+  }
+}

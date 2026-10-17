@@ -281,7 +281,7 @@ html[data-theme='cassette'] {
   }
   .stage-queue[data-variant='jcard'] .stage-h3 {
     margin: 0 0 6px;
-    color: #c8401f;
+    color: #a8341a;
   }
   .stage-queue[data-variant='jcard'] .stage-count {
     color: #7a5a43;
@@ -305,7 +305,7 @@ html[data-theme='cassette'] {
     color: #7a5a43 !important;
   }
   .stage-queue[data-variant='jcard'] .stage-q-actions button[aria-pressed='true'] {
-    color: #c8401f !important;
+    color: #a8341a !important;
   }
   .stage-queue[data-variant='jcard'] .stage-empty {
     border-color: #c9b99c;
@@ -317,7 +317,7 @@ html[data-theme='cassette'] {
     color: #7a5a43;
   }
   .cs-suggest button {
-    color: #c8401f;
+    color: #a8341a;
     font-weight: 600;
   }
   .cs-suggest button:disabled {

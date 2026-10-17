@@ -1,0 +1,255 @@
+/* Speaker screen · Băng cassette tự thu: side A (label, tape window, lyrics) under the video;
+   side B on the right — the QR on a white sticker (kept straight so cameras read it), the room
+   code on Dymo tape, the wish on a yellow note, the J-card, chat on sticky notes.
+   Sizes in --u (see components/host/host.css). */
+html[data-theme='cassette'] .host-cassette {
+  background: #2e1d13;
+  color: #f1ead9;
+}
+html[data-theme='cassette'] .host-cassette .hc-video > * {
+  outline: calc(var(--u) * 0.4) solid #1c1612;
+  border-radius: calc(var(--u) * 0.3);
+}
+
+/* Side A. */
+html[data-theme='cassette'] .hc-now {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: calc(var(--u) * 0.7);
+  padding-top: calc(var(--u) * 0.7);
+}
+html[data-theme='cassette'] .hc-shell {
+  display: grid;
+  gap: calc(var(--u) * 0.7);
+  padding: calc(var(--u) * 0.9);
+  border-radius: calc(var(--u) * 1);
+  background: #3a2f27;
+  box-shadow: inset 0 0 0 calc(var(--u) * 0.18) #5a4433;
+}
+html[data-theme='cassette'] .hc-label {
+  padding: calc(var(--u) * 0.6) calc(var(--u) * 1) calc(var(--u) * 0.5);
+  border-radius: calc(var(--u) * 0.5);
+  background-image: repeating-linear-gradient(transparent 0 calc(var(--u) * 2.1), #c9b99b55 0 calc(var(--u) * 2.2));
+}
+html[data-theme='cassette'] .hc-label::before {
+  display: none;
+}
+html[data-theme='cassette'] .hc-side {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--u) * 0.8);
+  color: #a8341a;
+  font: 400 calc(var(--u) * 1.1) var(--font-bungee);
+}
+/* Paused / waiting lamp on the cream label: dark ink, not the page's sage. */
+html[data-theme='cassette'] .hc-side .host-lamp.text-sage {
+  border-color: #b9a587;
+  color: #6b5333;
+}
+html[data-theme='cassette'] .hc-label .host-title {
+  margin-top: calc(var(--u) * 0.2);
+  color: #2b1c12;
+  font: 400 calc(var(--u) * 2.4) / 1.05 var(--font-patrick-hand);
+}
+html[data-theme='cassette'] .hc-label .host-meta {
+  color: #5c4130;
+  font: 400 calc(var(--u) * 1.45) / 1.2 var(--font-patrick-hand);
+}
+html[data-theme='cassette'] .host-cassette .cs-window {
+  width: 100%;
+  margin: 0;
+  padding: calc(var(--u) * 0.3) calc(var(--u) * 1.6);
+  border-radius: calc(var(--u) * 2.4);
+  background: #1c1612;
+}
+html[data-theme='cassette'] .host-cassette .cs-window .reel.left {
+  width: calc(var(--u) * 4.6 - var(--p, 0) * var(--u) * 1.4);
+  height: calc(var(--u) * 4.6 - var(--p, 0) * var(--u) * 1.4);
+}
+html[data-theme='cassette'] .host-cassette .cs-window .reel.right {
+  width: calc(var(--u) * 3.2 + var(--p, 0) * var(--u) * 1.4);
+  height: calc(var(--u) * 3.2 + var(--p, 0) * var(--u) * 1.4);
+}
+html[data-theme='cassette'] .host-cassette .cs-window .prog {
+  gap: calc(var(--u) * 0.6);
+  margin: 0 calc(var(--u) * 1.2);
+  font-size: calc(var(--u) * 1.4);
+}
+html[data-theme='cassette'] .host-cassette .cs-window .line i {
+  top: calc(var(--u) * -0.35);
+  width: calc(var(--u) * 0.85);
+  height: calc(var(--u) * 0.85);
+  margin-left: calc(var(--u) * -0.42);
+}
+html[data-theme='cassette'] .host-cassette .lyrics-inline p {
+  color: #d9cbb4;
+}
+html[data-theme='cassette'] .host-cassette .lyrics-inline p[data-current] {
+  color: #e3a62b;
+  font-family: var(--font-patrick-hand);
+  font-weight: 400;
+  font-size: calc(var(--u) * 2.1);
+}
+
+/* Side B. */
+html[data-theme='cassette'] .hc-side-b {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: calc(var(--u) * 1.1);
+}
+html[data-theme='cassette'] .hc-top {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(var(--u) * 1.6);
+}
+html[data-theme='cassette'] .hc-sticker {
+  flex: none;
+  padding: calc(var(--u) * 0.9);
+  background: #fff;
+  color: #111;
+  box-shadow: calc(var(--u) * 0.35) calc(var(--u) * 0.45) 0 #0006;
+}
+html[data-theme='cassette'] .hc-sticker p {
+  margin-top: calc(var(--u) * 0.4);
+  font: 400 calc(var(--u) * 1.4) var(--font-patrick-hand);
+  text-align: center;
+}
+html[data-theme='cassette'] .hc-tags {
+  display: grid;
+  justify-items: start;
+  gap: calc(var(--u) * 0.6);
+  min-width: 0;
+  padding-top: calc(var(--u) * 0.6);
+}
+html[data-theme='cassette'] .hc-dymo {
+  padding: calc(var(--u) * 0.35) calc(var(--u) * 1) calc(var(--u) * 0.25);
+  background: #111;
+  color: #eee;
+  font: 400 calc(var(--u) * 2.6) / 1 var(--font-bungee);
+  letter-spacing: 0.18em;
+  box-shadow: 0 calc(var(--u) * 0.2) 0 #000;
+  transform: rotate(1.5deg);
+}
+html[data-theme='cassette'] .hc-tags .host-link {
+  color: #d9cbb4;
+}
+html[data-theme='cassette'] .hc-wish {
+  margin-top: calc(var(--u) * 0.4);
+  padding: calc(var(--u) * 0.6) calc(var(--u) * 0.9);
+  background: #f6d860;
+  color: #2b1c12;
+  font-family: var(--font-patrick-hand);
+  box-shadow: calc(var(--u) * 0.3) calc(var(--u) * 0.4) 0 #0005;
+  transform: rotate(2deg);
+}
+html[data-theme='cassette'] .hc-wish blockquote {
+  font-size: calc(var(--u) * 1.5);
+  line-height: 1.2;
+  -webkit-line-clamp: 3;
+}
+html[data-theme='cassette'] .hc-wish figcaption {
+  color: #6b5333;
+  font-size: calc(var(--u) * 1.15);
+}
+html[data-theme='cassette'] .hc-jcard {
+  padding: calc(var(--u) * 0.7) calc(var(--u) * 1.2);
+  border-left: calc(var(--u) * 1.4) solid #c8401f;
+  background: #f1ead9 repeating-linear-gradient(transparent 0 calc(var(--u) * 2.05), #c9b99b88 0 calc(var(--u) * 2.15));
+  color: #2b1c12;
+}
+html[data-theme='cassette'] .hc-jcard h2 {
+  color: #a8341a;
+  font: 400 calc(var(--u) * 1.1) / 1.4 var(--font-bungee);
+}
+html[data-theme='cassette'] .hc-jcard li,
+html[data-theme='cassette'] .hc-jcard .host-next-empty {
+  overflow: hidden;
+  font: 400 calc(var(--u) * 1.55) / 1.35 var(--font-patrick-hand);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-theme='cassette'] .hc-jcard li span {
+  color: #7a5a43;
+}
+/* Chat: the latest three as sticky notes. */
+html[data-theme='cassette'] .hc-notes ol {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: calc(var(--u) * 0.9);
+}
+html[data-theme='cassette'] .hc-notes li {
+  padding: calc(var(--u) * 0.6) calc(var(--u) * 0.7);
+  background: #f6d860;
+  color: #2b1c12;
+  font: 400 calc(var(--u) * 1.3) / 1.2 var(--font-patrick-hand);
+  box-shadow: calc(var(--u) * 0.2) calc(var(--u) * 0.3) 0 #0004;
+  -webkit-line-clamp: 3;
+}
+html[data-theme='cassette'] .hc-notes li:nth-child(3n + 1) {
+  transform: rotate(-2deg);
+}
+html[data-theme='cassette'] .hc-notes li:nth-child(3n + 2) {
+  background: #f4b0a0;
+  transform: rotate(1.5deg);
+}
+html[data-theme='cassette'] .hc-notes li:nth-child(3n) {
+  background: #bfe0c8;
+}
+html[data-theme='cassette'] .hc-notes .host-chat-empty {
+  color: #d9cbb4;
+  font-family: var(--font-patrick-hand);
+}
+html[data-theme='cassette'] .hc-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: calc(var(--u) * 1.2);
+}
+html[data-theme='cassette'] .hc-foot .host-listeners {
+  color: #d9cbb4;
+}
+html[data-theme='cassette'] .hc-foot .host-controls {
+  margin-left: auto;
+}
+html[data-theme='cassette'] .host-cassette .host-faces i {
+  box-shadow: 0 0 0 calc(var(--u) * 0.18) #2e1d13;
+}
+
+/* One column: the sticker row may wrap. */
+html[data-theme='cassette'] .host-cassette .hc-top {
+  flex-wrap: wrap;
+}
+
+@media (min-width: 960px) and (min-height: 540px) {
+  html[data-theme='cassette'] .host-cassette .host-grid {
+    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 54) calc(var(--u) * 2.6) minmax(0, 1fr) calc(var(--u) * 2);
+    grid-template-rows: calc(var(--u) * 2) auto minmax(0, 1fr) calc(var(--u) * 1.2);
+    grid-template-areas:
+      '. . . . .'
+      '. video . side .'
+      '. below . side .'
+      '. . . . .';
+  }
+  html[data-theme='cassette'] .host-cassette .hc-top {
+    flex-wrap: nowrap;
+  }
+  /* The tape window beside the label: reels on top, the time line under them. */
+  html[data-theme='cassette'] .hc-shell {
+    grid-template-columns: minmax(0, 1fr) calc(var(--u) * 13);
+    align-items: stretch;
+  }
+  html[data-theme='cassette'] .host-cassette .cs-window {
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: space-around;
+    row-gap: calc(var(--u) * 0.5);
+    padding: calc(var(--u) * 0.6) calc(var(--u) * 0.8);
+    border-radius: calc(var(--u) * 1.2);
+  }
+  html[data-theme='cassette'] .host-cassette .cs-window .prog {
+    order: 3;
+    flex-basis: 100%;
+    margin: 0;
+    font-size: calc(var(--u) * 1.2);
+  }
+}

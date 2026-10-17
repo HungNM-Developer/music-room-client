@@ -39,7 +39,7 @@ const subscribeHint = (fn: () => void) => {
   return () => hintListeners.delete(fn);
 };
 
-/** The room's theme (everyone's default; the speaker screen always uses it). */
+/** The room's theme: everyone's default, until a browser picks its own for this room. */
 export function useRoomTheme(): ThemeId {
   const code = useRoom((s) => s.code);
   const fromSnapshot = useRoom((s) => s.snapshot?.room.settings.theme ?? null);
@@ -55,9 +55,10 @@ export function useRoomTheme(): ThemeId {
   return toThemeId(fromSnapshot ?? hinted ?? 'default');
 }
 
-/** What this browser shows: its own choice, else the room's. */
+/** What this browser shows in this room (room page and speaker screen alike): its own choice for the room, else the room's. */
 export function useEffectiveTheme(): ThemeId {
-  const personal = usePersonalTheme();
+  const code = useRoom((s) => s.code);
+  const personal = usePersonalTheme(code);
   const roomTheme = useRoomTheme();
   return personal === 'room' ? roomTheme : personal;
 }

@@ -438,29 +438,3 @@ export function InlineChat({ title, placeholder, variant }: InlineChatSkin = {})
   );
 }
 
-export function HostChat() {
-  const t = useT();
-  const chat = useRoom((s) => s.chat);
-  const recent = chat.slice(-4);
-  return (
-    <section aria-labelledby="host-chat-title">
-      <h2 id="host-chat-title" className="type-display mb-2 text-[22px] font-bold">
-        {t.chat.title}
-      </h2>
-      {recent.length === 0 ? (
-        <p className="text-sage">{t.chat.hostEmpty}</p>
-      ) : (
-        <ol className="space-y-2.5" aria-live="polite">
-          {recent.map((m) => (
-            <li key={m.id} className="animate-rise">
-              <p className="text-[13px] text-sage">
-                {m.displayName}, {formatClock(m.createdAt)}
-              </p>
-              <p className="line-clamp-2 text-[16px] leading-snug [overflow-wrap:anywhere]">{m.content}</p>
-            </li>
-          ))}
-        </ol>
-      )}
-    </section>
-  );
-}

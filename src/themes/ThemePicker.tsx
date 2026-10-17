@@ -3,6 +3,7 @@
 import { Check } from 'lucide-react';
 import { Dialog } from '@/components/ui/Dialog';
 import { useT } from '@/i18n';
+import { useRoom } from '@/state/hooks';
 import { setPersonalTheme, usePersonalTheme } from './personal';
 import { THEME_GROUPS, THEMES, type ThemeId, type ThemeMeta, themeMeta } from './registry';
 import { useRoomTheme } from './useTheme';
@@ -22,13 +23,14 @@ function Swatch({ meta }: { meta: ThemeMeta }) {
   );
 }
 
+/** A fixed corner radius: some themes make rows pills (--radius-row: 999px), which turned these cards into circles. */
 function Card({ meta, label, selected, onPick }: { meta: ThemeMeta; label: string; selected: boolean; onPick: () => void }) {
   return (
     <button
       type="button"
       aria-pressed={selected}
       onClick={onPick}
-      className={`group relative flex flex-col gap-1.5 rounded-row border p-1.5 text-left transition-colors ${
+      className={`group relative flex flex-col gap-1.5 rounded-[14px] border p-1.5 text-left text-paper transition-colors ${
         selected ? 'border-amber bg-panel-hi' : 'border-line hover:border-sage/60'
       }`}
     >
@@ -73,14 +75,15 @@ export function ThemeGrid({ value, onPick, followRoom }: { value: Choice; onPick
   );
 }
 
-/** "Giao diện" in the room header: this browser's own theme, applied at once. */
+/** "Giao diện" in the room header and on the speaker screen: this browser's own theme for this room, applied at once. */
 export function ThemeDialog({ onClose }: { onClose: () => void }) {
   const t = useT();
-  const personal = usePersonalTheme();
+  const code = useRoom((s) => s.code);
+  const personal = usePersonalTheme(code);
   const roomTheme = useRoomTheme();
   return (
     <Dialog open onClose={onClose} title={t.theme.title} description={t.theme.personalHint}>
-      <ThemeGrid value={personal} onPick={setPersonalTheme} followRoom={{ roomTheme }} />
+      <ThemeGrid value={personal} onPick={(v) => code && setPersonalTheme(code, v)} followRoom={{ roomTheme }} />
     </Dialog>
   );
 }

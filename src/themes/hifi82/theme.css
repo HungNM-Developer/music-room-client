@@ -8,7 +8,7 @@ html[data-theme='hifi82'] {
   --color-line: #cfcac0;
   --color-paper: #1d1c1a;
   --color-sage: #5f5a52;
-  --color-amber: #c8441b;
+  --color-amber: #b53c16; /* 5:1 on the aluminium panels (was #c8441b, 4.3:1) */
   --color-amber-hi: #e0552b;
   --color-amber-ink: #ffffff;
   --color-onair: #e0552b;
@@ -37,6 +37,10 @@ html[data-theme='hifi82'] {
     border-radius: 50%;
     background: var(--color-onair);
     box-shadow: 0 0 6px var(--color-onair);
+  }
+  /* The code in a darker orange: the accent is just under 4.5:1 on the header. */
+  html[data-theme='hifi82'] .room-code {
+    color: #a3381a !important;
   }
   html[data-theme='hifi82'] .room-header button[aria-label] {
     border: 1px solid var(--color-line);

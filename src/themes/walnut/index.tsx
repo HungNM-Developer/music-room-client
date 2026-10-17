@@ -2,7 +2,21 @@
 
 import { MoreHorizontal, Plus } from 'lucide-react';
 import { ListenAlong, ListenersStrip } from '@/components/player/ListenAlong';
-import { InlineLyrics, LyricsButton } from '@/components/room/Lyrics';
+import { useHost } from '@/components/host/HostContext';
+import {
+  HostChatLines,
+  HostCode,
+  HostControls,
+  HostLamp,
+  HostLink,
+  HostListeners,
+  HostMeta,
+  HostNextEmpty,
+  HostQr,
+  HostTitle,
+  HostWish,
+} from '@/components/host/parts';
+import { HostLyrics, InlineLyrics, LyricsButton } from '@/components/room/Lyrics';
 import { HeartButton, hasItemMenu, useQueueView } from '@/components/room/QueueList';
 import { SaveButton } from '@/components/room/SaveButton';
 import { useLiveProgress } from '@/components/room/stage/useLiveProgress';
@@ -14,13 +28,14 @@ import { useT } from '@/i18n';
 import { addedByLabel } from '@/lib/added-by';
 import { formatDuration } from '@/lib/time';
 import { fraunces } from '../listening/fonts';
-import type { ThemeModule } from '../load';
+import type { HostSkin, ThemeModule } from '../load';
 import { CoverImage, NowCover, StageIdle, WishBlock } from '../stage/parts';
 import { StageControls } from '../stage/StageControls';
 import { StageVote } from '../stage/StageVote';
 import { useTopSuggestions } from '../stage/useTopSuggestions';
 import '../stage/stage.css';
 import './theme.css';
+import './host.css';
 
 /** The VU meter: its needle swings across the dial as the song plays. */
 function Vu({ large = false }: { large?: boolean }) {
@@ -171,10 +186,80 @@ function Stage({ openAdd }: { openAdd: () => void }) {
   );
 }
 
+/* ---- Speaker screen: the walnut cabinet ---- */
+
+/** The deck under the TV: turntable, the song, the VU meter; lyrics and the wish below. */
+function HostDeck() {
+  const { np, live } = useHost();
+  return (
+    <div className="hw-now">
+      <div className="hw-deck">
+        <div className="wal-turntable hw-tt" aria-hidden>
+          <span className="platter" data-playing={live}>
+            {np && <CoverImage url={np.item.track.thumbnailUrl} className="label" />}
+          </span>
+          <span className="arm" data-playing={live} />
+        </div>
+        <div className="hw-info">
+          <HostLamp />
+          <HostTitle />
+          <HostMeta />
+        </div>
+        {np && <Vu large />}
+      </div>
+      {np && <HostLyrics trackId={np.item.track.id} />}
+      <HostWish withFrom className="hw-wish host-wish-1" />
+    </div>
+  );
+}
+
+/** The brass plate (QR), the stack of sleeves, the guest book. */
+function HostShelf() {
+  const t = useT();
+  const { next } = useHost();
+  return (
+    <div className="hw-side">
+      <div className="hw-plate" role="group" aria-label={t.host.scan}>
+        <HostQr />
+        <div className="hw-plate-text">
+          <p className="hw-scan">{t.themeText.walnut.scan}</p>
+          <HostCode />
+          <HostLink />
+        </div>
+      </div>
+      <section className="hw-crate" aria-label={t.host.next}>
+        <h2>{t.themeText.walnut.next}</h2>
+        {next.length === 0 ? (
+          <HostNextEmpty />
+        ) : (
+          <ol>
+            {next.map((q) => (
+              <li key={q.id}>
+                <CoverImage url={q.track.thumbnailUrl} className="hw-sleeve" />
+                <span className="hw-q">
+                  <span className="t">{q.track.title}</span>
+                  <span className="p">{addedByLabel(q)}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+      <div className="hw-book">
+        <HostListeners max={4} />
+        <HostChatLines n={3} />
+        <HostControls />
+      </div>
+    </div>
+  );
+}
+
+const host: HostSkin = { className: 'host-walnut', videoClass: 'hw-bezel', Below: HostDeck, Side: HostShelf };
+
 const walnut: ThemeModule = {
   Stage,
   fontClass: fraunces.variable,
   chat: { title: (t) => t.themeText.walnut.chat, variant: 'walnut' },
-  HostDial: () => <Vu large />,
+  host,
 };
 export default walnut;

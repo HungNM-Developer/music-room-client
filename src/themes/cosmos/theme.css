@@ -130,14 +130,6 @@ html[data-theme='cosmos'] {
     color: var(--color-sage);
     font-size: 13px;
   }
-  .cosmos-host {
-    display: flex;
-    align-items: center;
-    gap: 22px;
-  }
-  .cosmos-host .stage-time {
-    font-size: 24px;
-  }
   .chat-inline[data-variant='cosmos'],
   .chat-window[data-variant='cosmos'] {
     background: color-mix(in oklab, var(--color-panel) 80%, transparent);
