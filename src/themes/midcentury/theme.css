@@ -54,6 +54,12 @@ html[data-theme='midcentury'] {
     padding-top: 24px;
     gap: 46px;
   }
+  @media (min-width: 1024px) {
+    /* The sun reaches 14% past the cover: the gap grows with it when the cover is enlarged. */
+    html[data-theme='midcentury'] .stage-hero {
+      gap: max(46px, calc(var(--stage-cover) * var(--stage-cover-scale) * 0.14 + 16px));
+    }
+  }
   html[data-theme='midcentury'] .stage-info {
     position: relative;
     z-index: 1;

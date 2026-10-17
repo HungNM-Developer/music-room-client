@@ -1,6 +1,6 @@
 'use client';
 
-import { Eye, EyeOff, MicVocal } from 'lucide-react';
+import { MicVocal } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Dialog } from '@/components/ui/Dialog';
 import type { LyricsView } from '@/contracts';
@@ -66,81 +66,47 @@ function SyncedLines({ lines }: { lines: { t: number; text: string }[] }) {
 
 /**
  * A7: karaoke lines under the title — the line before, the one being sung, the next (on the
- * speaker: the one being sung and the next only). Only for synced lyrics; the show / hide toggle is remembered
- * on the device (`storageKey`); the speaker has no toggle. `host`: the speaker screen; `stage`: a themed room page.
+ * speaker: the one being sung and the next only). Only for synced lyrics; always shown.
+ * `host`: the speaker screen; `stage`: a themed room page.
  */
-export function InlineLyrics({ trackId, size, storageKey, className = '' }: { trackId: string; size: 'host' | 'stage'; storageKey: string; className?: string }) {
+export function InlineLyrics({ trackId, size, className = '' }: { trackId: string; size: 'host' | 'stage'; className?: string }) {
   const t = useT();
   const lyrics = useLyrics(trackId);
   const pos = useSongPosition();
-  const [pref, setShown] = useState(true);
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- read the device preference after hydration
-  useEffect(() => setShown(readPref(storageKey)), [storageKey]);
   const host = size === 'host';
-  // The speaker screen always shows them: nobody stands at the TV to toggle.
-  const shown = host || pref;
   const lines = lyrics?.synced;
   if (!lines) return null;
-  const toggle = () => {
-    setShown((v) => {
-      writePref(storageKey, !v);
-      return !v;
-    });
-  };
   const at = lineAt(lines, pos);
   // Before the first line: the first lines, none highlighted yet.
   const picks = host ? (at < 0 ? [0, 1] : [at, at + 1]) : at < 0 ? [0, 1, 2] : [at - 1, at, at + 1];
   const windowLines = picks.map((i) => ({ i, line: lines[i] }));
   return (
     <section aria-label={t.lyrics.title} className={`lyrics-inline ${host ? 'max-w-3xl' : ''} ${className}`}>
-      {!host && (
-        <button type="button" onClick={toggle} className="mb-2 inline-flex items-center gap-1.5 text-[13px] text-sage hover:text-paper">
-          {shown ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
-          {shown ? t.lyrics.hide : t.lyrics.show}
-        </button>
-      )}
-      {shown && (
-        <div aria-live="off" className="space-y-1.5">
-          {windowLines.map(({ i, line }) => (
-            <p
-              key={i}
-              data-current={i === at || undefined}
-              className={`truncate leading-tight transition-colors motion-reduce:transition-none ${
-                host
-                  ? i === at
-                    ? 'text-[clamp(22px,2.6vw,34px)] font-bold text-paper'
-                    : 'text-[clamp(16px,1.8vw,22px)] text-sage/70'
-                  : i === at
-                    ? 'lyric-now text-[19px] font-semibold text-paper'
-                    : 'lyric-other text-[16px] text-sage/70'
-              }`}
-            >
-              {line ? line.text || '♪' : '\u00a0'}
-            </p>
-          ))}
-          <p className="lyrics-source pt-1 text-[11px] text-sage/60">{t.lyrics.source}</p>
-        </div>
-      )}
+      <div aria-live="off" className="space-y-1.5">
+        {windowLines.map(({ i, line }) => (
+          <p
+            key={i}
+            data-current={i === at || undefined}
+            className={`truncate leading-tight transition-colors motion-reduce:transition-none ${
+              host
+                ? i === at
+                  ? 'text-[clamp(22px,2.6vw,34px)] font-bold text-paper'
+                  : 'text-[clamp(16px,1.8vw,22px)] text-sage/70'
+                : i === at
+                  ? 'lyric-now text-[19px] font-semibold text-paper'
+                  : 'lyric-other text-[16px] text-sage/70'
+            }`}
+          >
+            {line ? line.text || '♪' : '\u00a0'}
+          </p>
+        ))}
+        <p className="lyrics-source pt-1 text-[11px] text-sage/60">{t.lyrics.source}</p>
+      </div>
     </section>
   );
 }
 
 /** The speaker screen's lyrics (A7). */
 export const HostLyrics = ({ trackId, className }: { trackId: string; className?: string }) => (
-  <InlineLyrics trackId={trackId} size="host" storageKey="mr:host-lyrics" className={className} />
+  <InlineLyrics trackId={trackId} size="host" className={className} />
 );
-
-function readPref(key: string): boolean {
-  try {
-    return window.localStorage.getItem(key) !== 'off';
-  } catch {
-    return true;
-  }
-}
-function writePref(key: string, on: boolean): void {
-  try {
-    window.localStorage.setItem(key, on ? 'on' : 'off');
-  } catch {
-    // storage blocked: the toggle still works for this page
-  }
-}

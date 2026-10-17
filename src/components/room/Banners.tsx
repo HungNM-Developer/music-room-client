@@ -120,7 +120,7 @@ export function Banners() {
   return (
     <div className="space-y-2" role="status" aria-live="polite">
       {items.map((b) => (
-        <div key={b.key} className="flex items-center gap-3 rounded-row border border-amber/35 bg-amber/10 px-4 py-3 text-[14px]">
+        <div key={b.key} className="flex items-center gap-3 rounded-box border border-amber/35 bg-amber/10 px-4 py-3 text-[14px]">
           <span className="text-amber">{b.icon}</span>
           {/* min-w-0 + anywhere-wrap: long URLs must not widen the page on phones */}
           <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">{b.text}</span>

@@ -13,7 +13,7 @@ export function DjPads() {
   const t = useT();
   const act = useAct();
   return (
-    <section aria-label={t.dj.title} className="animate-rise rounded-row bg-panel p-2">
+    <section aria-label={t.dj.title} className="animate-rise rounded-box bg-panel p-2">
       <p className="mb-1.5 flex items-center gap-1.5 px-1 text-[12px] text-sage">
         <AudioLines className="h-3.5 w-3.5 text-amber" aria-hidden />
         {t.dj.note}

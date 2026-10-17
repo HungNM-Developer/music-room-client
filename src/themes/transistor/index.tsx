@@ -165,7 +165,7 @@ function Stage({ openAdd }: { openAdd: () => void }) {
           </div>
         </div>
         <WishBlock className="tr-wish" />
-        <InlineLyrics trackId={track.id} size="stage" storageKey="mr:room-lyrics" className="max-lg:hidden" />
+        <InlineLyrics trackId={track.id} size="stage" className="max-lg:hidden" />
         <StageVote s={vote} meterAt="middle" className="max-lg:hidden" />
         <StageControls a={a} variant="knobs" />
         <div className="stage-listeners empty:hidden">

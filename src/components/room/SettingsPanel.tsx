@@ -185,7 +185,7 @@ function PinSettings() {
       <h3 className="flex items-center gap-2 font-semibold">
         <KeyRound className="h-4 w-4 text-sage" aria-hidden /> {t.settings.pinTitle}
       </h3>
-      <p className={`text-[13px] ${hasPin ? 'text-sage' : 'rounded-row border border-amber/35 bg-amber/10 p-3 text-paper'}`}>
+      <p className={`text-[13px] ${hasPin ? 'text-sage' : 'rounded-box border border-amber/35 bg-amber/10 p-3 text-paper'}`}>
         {hasPin ? t.settings.pinHint : t.settings.pinMissing}
       </p>
       <PinField label={t.settings.pinNew} value={pin} onChange={setPin} autoComplete="new-password" invalid={touched && !isPin(pin)} />

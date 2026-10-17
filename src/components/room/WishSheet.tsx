@@ -74,7 +74,7 @@ export function WishSheet({
   return (
     <Dialog open onClose={onClose} title={t.wish.title} description={item ? item.track.title : adding.title}>
       <div className="space-y-4">
-        <div className="rounded-row bg-paper p-3 text-dial">
+        <div className="rounded-box bg-paper p-3 text-dial">
           <label htmlFor={textId} className="text-[13px] font-medium text-dial/70">
             {t.wish.label}
           </label>
@@ -89,6 +89,7 @@ export function WishSheet({
             onChange={(e) => setText(e.target.value)}
             className="mt-1 w-full resize-none bg-transparent text-[16px] leading-snug text-dial outline-none placeholder:text-dial/40"
             style={{ caretColor: 'var(--color-dial)' }}
+            data-autofocus
           />
           <div className="flex items-center justify-between gap-2">
             {/* A pasted link whose title could not be looked up: the MC would not know the song. */}

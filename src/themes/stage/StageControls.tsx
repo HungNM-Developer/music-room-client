@@ -43,7 +43,14 @@ export function StageControls({ a, variant, className = '' }: { a: NowPlayingAct
             {a.skipping ? <Loader2 className="h-[18px] w-[18px] animate-spin" aria-hidden /> : <StepForward className="h-[18px] w-[18px]" aria-hidden />}
           </button>
           {a.isAdmin && (
-            <button type="button" className="stage-btn stage-icon" aria-label={t.block.more(a.track.title)} title={t.block.more(a.track.title)} onClick={a.openBlockMenu}>
+            <button
+              type="button"
+              className="stage-btn stage-icon"
+              aria-label={t.block.more(a.track.title)}
+              title={t.block.more(a.track.title)}
+              data-key-label={t.block.moreKey}
+              onClick={a.openBlockMenu}
+            >
               <MoreHorizontal className="h-[18px] w-[18px]" aria-hidden />
             </button>
           )}

@@ -156,6 +156,10 @@ html[data-theme='hifi82'] {
     line-height: 1.1;
     overflow-wrap: anywhere;
   }
+  /* ⋯ "Options for <title>" is too long to print: its short label instead. */
+  html[data-theme='hifi82'] .stage-controls[data-variant='keys'] > button[data-key-label]::after {
+    content: attr(data-key-label);
+  }
 
   html[data-theme='hifi82'] .stage-vote {
     border-color: var(--color-onair);

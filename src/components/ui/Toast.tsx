@@ -32,7 +32,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`flex w-full max-w-md animate-rise items-start gap-2.5 rounded-row border bg-panel px-4 py-3 text-[14px] shadow-[0_12px_32px_-12px_rgb(0_0_0/0.6)] ${
+            className={`flex w-full max-w-md animate-rise items-start gap-2.5 rounded-box border bg-panel px-4 py-3 text-[14px] shadow-[0_12px_32px_-12px_rgb(0_0_0/0.6)] ${
               t.tone === 'error' ? 'border-onair' : 'border-line'
             }`}
           >

@@ -172,7 +172,7 @@ function SongListDialog({ signedIn, onSaved, onClose }: { signedIn: boolean; onS
         <div className="space-y-3">
           <p className="text-[13px] text-sage">{t.songList.found(found.length, items.length)}</p>
           {stopText && (
-            <p role="status" className="rounded-row bg-dial-deep px-3 py-2 text-[13px]">
+            <p role="status" className="rounded-box bg-dial-deep px-3 py-2 text-[13px]">
               {stopText}
             </p>
           )}

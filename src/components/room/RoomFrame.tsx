@@ -20,6 +20,7 @@ import { onFindSongs } from '@/lib/find-songs';
 import { errorMessage, useT } from '@/i18n';
 import { useMe, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
+import './room-frame.css';
 
 // Loaded only when used: most members never see these.
 const PlayerEngine = dynamic(() => import('@/components/player/PlayerEngine').then((m) => m.PlayerEngine), { ssr: false });
@@ -118,12 +119,16 @@ export function RoomFrame({
       <MiniPlayerPortal />
       <RoomHeader onOpenLog={() => setLogOpen(true)} {...header} />
 
-      <main className="mx-auto max-w-[1360px] px-4 pt-4 md:px-8 lg:grid lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-x-11 lg:pt-6">
-        <div className="mb-4 empty:hidden lg:col-span-full">
+      <main className="mx-auto max-w-[1360px] px-4 pt-4 md:px-8 lg:grid lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-x-11 lg:pt-6 min-[1600px]:max-w-[1840px] min-[1600px]:grid-cols-[minmax(0,1fr)_480px] min-[2000px]:max-w-[2400px] min-[2000px]:grid-cols-[minmax(0,1fr)_520px]">
+        <div className="room-banners mb-4 empty:hidden lg:col-span-full">
           <Banners />
         </div>
 
-        <div {...panel('room')} className={`room-stage min-w-0 space-y-5 ${tab === 'room' ? '' : 'hidden lg:block'}`}>
+        <div
+          {...panel('room')}
+          data-player={isPlayer || undefined}
+          className={`room-stage min-w-0 space-y-5 ${tab === 'room' ? '' : 'hidden lg:block'}`}
+        >
           {isPlayer && <PlayerEngine caption />}
           {hasSnapshot ? stage(() => setTab('add')) : <RoomSkeleton />}
         </div>

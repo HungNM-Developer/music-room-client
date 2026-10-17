@@ -220,6 +220,10 @@ html[data-theme='cassette'] {
     content: attr(aria-label);
     white-space: nowrap;
   }
+  /* ⋯ "Options for <title>" is too long to print: its short label instead. */
+  html[data-theme='cassette'] .stage-controls[data-variant='tape'] > button[data-key-label]::after {
+    content: attr(data-key-label);
+  }
   html[data-theme='cassette'] .stage-controls[data-variant='tape'] > button[data-primary],
   html[data-theme='cassette'] .stage-controls[data-variant='tape'] > button[aria-pressed='true'] {
     background: linear-gradient(#e3a62b, #b9811a);
