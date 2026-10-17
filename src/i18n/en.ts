@@ -141,6 +141,8 @@ export const en: Dict = {
     searchYouTube: 'Search YouTube',
     tip: 'Type a song name to search, or paste a YouTube link to add it straight away.',
     results: 'Search results',
+    withWishShort: 'Add with a message',
+    withWish: (title: string) => `Add "${title}" with a message`,
   },
 
   djAsk: {
@@ -428,6 +430,9 @@ export const en: Dict = {
     voiceMale: 'Male voice',
     voiceFemale: 'Female voice',
     pickVoice: 'Choose a voice',
+    ask: 'Let the MC write it',
+    addSave: 'Add with message',
+    asking: 'The MC is writing…',
   },
 
   people: {

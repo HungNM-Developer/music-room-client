@@ -105,12 +105,14 @@ function PrivacyVi() {
         </li>
         <li>
           <strong>Nhà cung cấp AI (Google Gemini, Groq, OpenRouter):</strong> tiêu đề bài hát, yêu cầu gửi cho “Hỏi DJ”, lời chúc
-          (để kiểm tra trước khi đọc to) và số liệu tổng kết của phòng. Không gửi cho các nhà cung cấp này email, thông tin tài
-          khoản hay tên của bất kỳ ai: tên người chọn bài được thay bằng ký hiệu, máy chủ tự điền lại tên sau khi AI trả lời.
+          (để kiểm tra trước khi đọc to, để nhận ra ngôn ngữ, và để viết gợi ý khi bạn bấm “Nhờ MC viết”) và số liệu tổng kết của
+          phòng. Không gửi cho các nhà cung cấp này email hay thông tin tài khoản. Tên người chọn bài được thay bằng ký hiệu, máy chủ tự
+          điền lại tên sau khi AI trả lời; riêng chữ bạn tự gõ (lời chúc, yêu cầu “Hỏi DJ”, chữ đã có khi bấm “Nhờ MC viết”) được gửi
+          nguyên văn, kể cả tên bạn viết trong đó.
         </li>
         <li>
-          <strong>Microsoft (Edge Read Aloud):</strong> nội dung lời chúc và lời MC giới thiệu bài, có thể gồm tên hiển thị của
-          người trong phòng, để đọc thành giọng nói trên loa. Không gửi email hay thông tin tài khoản.
+          <strong>Microsoft (Edge Read Aloud):</strong> nội dung lời chúc bạn đã gửi và lời MC giới thiệu bài, có thể gồm tên hiển thị
+          của người trong phòng, để đọc thành giọng nói trên loa. Không gửi email hay thông tin tài khoản.
         </li>
         <li>
           <strong>Hạ tầng:</strong> Vercel (giao diện web), Render (máy chủ) và Neon (cơ sở dữ liệu, đặt tại Singapore).
@@ -152,8 +154,9 @@ function PrivacyVi() {
           myaccount.google.com/permissions
         </a>
         . YouTube data is refreshed or deleted within 30 days. Song titles and artist names are sent to Last.fm, LRCLIB and AI
-        providers to suggest songs, fetch lyrics and moderate wishes; people’s names are never sent to AI providers (they are
-        replaced by placeholders and filled back in on our server). Wishes and the MC’s song introductions, which may include
+        providers to suggest songs, fetch lyrics and moderate wishes; the names of people who pick songs are never sent to AI
+        providers (they are replaced by placeholders and filled back in on our server), while text you type yourself (wishes,
+        “Ask the DJ” requests) is sent as written. Wishes and the MC’s song introductions, which may include
         people’s display names, are sent to Microsoft (Edge Read Aloud) to be read aloud on the speaker. Music Room’s use and transfer to any other app of information
         received from Google APIs will adhere to the{' '}
         <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer">
@@ -261,13 +264,15 @@ function PrivacyEn() {
         </li>
         <li>
           <strong>AI providers (Google Gemini, Groq, OpenRouter):</strong> song titles, requests sent to “Ask the DJ”, wishes (to
-          check them before they are read out loud) and room recap figures. No emails, account details or anyone’s name are sent
-          to these providers: the names of people who picked songs are replaced by placeholders, and the server fills them back
-          in after the AI answers.
+          check them before they are read out loud, to detect their language, and to draft one when you press “Let the MC write it”)
+          and room recap figures. No emails or account details are sent to these providers. The names of people who picked songs are
+          replaced by placeholders, and the server fills them back in after the AI answers; text you type yourself (wishes, “Ask the
+          DJ” requests, what is already in the box when you press “Let the MC write it”) is sent as written, including any names in
+          it.
         </li>
         <li>
-          <strong>Microsoft (Edge Read Aloud):</strong> wish messages and the MC’s song introductions, which may include people’s
-          display names in the room, to turn them into speech for the speaker. No emails or account details are sent.
+          <strong>Microsoft (Edge Read Aloud):</strong> wish messages you send and the MC’s song introductions, which may include
+          people’s display names in the room, to turn them into speech for the speaker. No emails or account details are sent.
         </li>
         <li>
           <strong>Hosting:</strong> Vercel (web app), Render (server) and Neon (database, located in Singapore).

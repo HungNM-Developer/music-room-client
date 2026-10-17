@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import type { SuggestionView } from '@/contracts';
-import { useAddTrack } from '@/hooks/useAddTrack';
+import { type AddWithWish, useAddTrack } from '@/hooks/useAddTrack';
 import { useT, tr } from '@/i18n';
 import { formatDuration } from '@/lib/time';
 import { useBlockedIds, useMe, useRoom } from '@/state/hooks';
@@ -29,7 +29,7 @@ export function Suggestions() {
   // L5: signed in, the list can follow the person's own taste instead of the room's.
   const [mode, setMode] = useState<'room' | 'me'>('room');
   const forMe = mode === 'me' && Boolean(user);
-  const { add, added } = useAddTrack();
+  const { add, added, addWithWish, wishSheet } = useAddTrack();
 
   useEffect(() => {
     let alive = true;
@@ -73,13 +73,14 @@ export function Suggestions() {
       {items.length === 0 ? (
         <p className="px-1 text-[14px] text-sage">{forMe ? t.suggest.emptyMe : t.suggest.empty}</p>
       ) : (
-        <SuggestionList items={shown} label={t.suggest.listLabel} add={add} added={added} />
+        <SuggestionList items={shown} label={t.suggest.listLabel} add={add} added={added} addWithWish={addWithWish} />
       )}
       {items.length > COLLAPSED && (
         <Button size="sm" variant="ghost" className="w-full" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
           {open ? t.suggest.less : t.suggest.more(hidden)}
         </Button>
       )}
+      {wishSheet}
     </section>
   );
 }
@@ -98,11 +99,13 @@ export function SuggestionList({
   label,
   add,
   added,
+  addWithWish,
 }: {
   items: SuggestionView[];
   label: string;
   add: ReturnType<typeof useAddTrack>['add'];
   added: Set<string>;
+  addWithWish?: AddWithWish;
 }) {
   return (
     <ul aria-label={label} className="divide-y divide-line/70 rounded-panel bg-panel px-1">
@@ -113,6 +116,7 @@ export function SuggestionList({
             track={s.track}
             done={added.has(s.track.id)}
             onAdd={() => void add(s.track.id, s.track)}
+            onAddWithWish={addWithWish && (() => void addWithWish(s.track.id, s.track))}
             meta={
               <p className="flex gap-2">
                 <span className="min-w-0 truncate text-amber/90">{reasonText(s.reason, s.because)}</span>

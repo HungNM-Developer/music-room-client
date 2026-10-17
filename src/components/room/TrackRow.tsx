@@ -1,4 +1,4 @@
-import { Ban, Check, MoreHorizontal, Plus } from 'lucide-react';
+import { Ban, Check, MessageSquareHeart, MoreHorizontal, Plus } from 'lucide-react';
 import { Button, IconButton } from '@/components/ui/Button';
 import { Thumb } from '@/components/ui/Thumb';
 import type { TrackSummary } from '@/contracts';
@@ -6,13 +6,14 @@ import { useT } from '@/i18n';
 import { useRoom } from '@/state/hooks';
 import { SaveButton } from './SaveButton';
 
-/** A song in search results, "Đã phát" or "Yêu thích": artwork, title, details, Lưu and Thêm. */
+/** A song in search results, "Đã phát" or "Yêu thích": artwork, title, details, Lưu, Thêm and Thêm kèm lời chúc. */
 export function TrackRow({
   track,
   meta,
   done,
   addLabel,
   onAdd,
+  onAddWithWish,
   onMore,
 }: {
   track: TrackSummary;
@@ -22,6 +23,8 @@ export function TrackRow({
   done: boolean;
   addLabel?: string;
   onAdd: () => void;
+  /** Adds it with a wish (the sheet opens first); omitted where wishes do not apply. */
+  onAddWithWish?: () => void;
   /** Admin's ⋯ (block the song); omitted for everyone else. */
   onMore?: () => void;
 }) {
@@ -65,6 +68,11 @@ export function TrackRow({
               {done || inQueue ? <Check className="h-4 w-4 text-amber" aria-hidden /> : <Plus className="h-4 w-4" aria-hidden />}
               {inQueue ? t.library.inQueue : addLabel}
             </Button>
+          )}
+          {onAddWithWish && !blocked && !done && !inQueue && (
+            <IconButton label={t.add.withWish(track.title)} title={t.add.withWishShort} onClick={onAddWithWish}>
+              <MessageSquareHeart className="h-5 w-5" aria-hidden />
+            </IconButton>
           )}
           {onMore && !blocked && (
             <IconButton label={t.block.more(track.title)} onClick={onMore}>

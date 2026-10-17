@@ -8,7 +8,7 @@ import { PLAYER_ERROR_CODES } from '@/contracts/constants';
 import { PLAYER_PROGRESS_INTERVAL_MS } from '@/contracts/events';
 import { useT } from '@/i18n';
 import { memberName } from '@/i18n/activity';
-import { legacySpeech, playSpeech, stopSpeech } from '@/lib/speech';
+import { legacySpeech, SpeechCue } from '@/lib/speech';
 import { estimatePosition } from '@/lib/time';
 import { Button } from '@/components/ui/Button';
 import { HOST_RECLAIM_MS, useMe, useOtherLivePlayer, useRoom } from '@/state/hooks';
@@ -91,7 +91,17 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
   const cmdRef = useRef<PlayerCommand | null>(null);
   const claimedKey = useRef<string | null>(null);
   const offsetRef = useRef(offset);
-  const duckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The wish / MC line of the song now playing (read once, ducking the video).
+  const cueRef = useRef<SpeechCue | null>(null);
+  useEffect(() => {
+    const cue = new SpeechCue({
+      duck: () => adapterRef.current?.setVolume(DUCK_VOLUME),
+      restore: () => adapterRef.current?.setVolume(volumeRef.current),
+      volume: () => volumeRef.current,
+    });
+    cueRef.current = cue;
+    return () => cue.stop();
+  }, []);
 
   useEffect(() => {
     offsetRef.current = offset;
@@ -181,6 +191,7 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
       // from ▶ on the waiting video): keep it playing, the room's command follows in a moment.
       if (itemRef.current) a.pause();
       itemRef.current = null;
+      cueRef.current?.stop();
       return;
     }
     const expected = estimatePosition(playerCommand, offsetRef.current, Date.now());
@@ -189,7 +200,7 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
       itemRef.current = playerCommand.queueItemId;
       reported.current = { started: false, ended: false };
       // Never carry a ducked volume over to the next track (review P2-7).
-      if (duckTimer.current) clearTimeout(duckTimer.current);
+      cueRef.current?.stop();
       a.setVolume(volumeRef.current);
       if (!playerCommand.videoId) {
         a.pause();
@@ -200,7 +211,6 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
       const autoplay = playerCommand.status === 'PLAYING' || resume;
       // A wish first; otherwise the MC's line (AI3). An older server sends only the text.
       const speech = playerCommand.speech ?? legacySpeech(playerCommand.wish?.message ?? playerCommand.intro);
-      stopSpeech();
       const s = a.state();
       if (loadedVideo.current === playerCommand.videoId && (s === 1 || s === 3)) {
         // This song already plays here: keep it, only line it up with the room.
@@ -219,19 +229,13 @@ export function PlayerEngine({ volume = 100, caption = false }: { volume?: numbe
           () => room.send('playback:control', { action: 'play', queueItemId: itemId }),
         );
       }
-      if (speech && autoplay && expected < 3) {
-        const restore = () => {
-          if (duckTimer.current) clearTimeout(duckTimer.current);
-          a.setVolume(volumeRef.current);
-        };
-        if (playSpeech(speech, volumeRef.current, restore)) {
-          a.setVolume(DUCK_VOLUME);
-          // Safety net if neither the audio nor the browser voice reports the end: ~150 ms per character, at least 8 s.
-          duckTimer.current = setTimeout(restore, Math.max(8000, speech.text.length * 150));
-        }
-      }
+      cueRef.current?.begin(itemId, speech, autoplay && expected < 3);
       return;
     }
+    // Same song: its line's Edge audio may have just arrived (it was still being made at the start).
+    // Paused meanwhile: the line is dropped, never read over silence.
+    if (playerCommand.status === 'PAUSED') cueRef.current?.stop();
+    else cueRef.current?.update(playerCommand.queueItemId, playerCommand.speech);
     if (reported.current.ended) return; // this item is over; wait for the next command
     if (playerCommand.status === 'PAUSED') a.pause();
     if (playerCommand.status === 'PLAYING') {
