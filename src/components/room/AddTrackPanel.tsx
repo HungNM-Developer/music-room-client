@@ -83,6 +83,9 @@ function SearchPanel({
   // Where the results came from: the server's own library costs no YouTube quota.
   const [source, setSource] = useState<'library' | 'cache' | 'youtube' | null>(null);
   const [busy, setBusy] = useState(false);
+  // "Xem thêm": the search the results belong to (the box may have changed since) and its next page.
+  const [shownFor, setShownFor] = useState<{ q: string; remote: boolean; page: number; more: boolean } | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
   // A5: the playlist link being browsed, if any.
   const [picker, setPicker] = useState<PickerSource | null>(null);
   const kind = classifyInput(input);
@@ -91,6 +94,7 @@ function SearchPanel({
   function openPlaylist() {
     setResults(null);
     setSource(null);
+    setShownFor(null);
     const code = sharedPlaylistIn(input);
     setPicker(code ? { kind: 'shared', code } : { kind: 'youtube', url: input.trim() });
   }
@@ -118,10 +122,31 @@ function SearchPanel({
   /** `remote`: skip the server library and ask YouTube (uses the daily search quota). */
   async function search(remote: boolean) {
     setBusy(true);
-    const r = await act('search:query', remote ? { q: input, remote } : { q: input });
+    const q = input;
+    const r = await act('search:query', remote ? { q, remote } : { q });
     setResults(r ? r.results : null);
     setSource(r ? r.source : null);
+    setShownFor(r ? { q, remote, page: 0, more: Boolean(r.more) } : null);
     setBusy(false);
+  }
+
+  /** The next page of the same search, added under the songs already shown. */
+  async function showMore() {
+    if (!shownFor?.more || loadingMore) return;
+    setLoadingMore(true);
+    const page = shownFor.page + 1;
+    const r = await act('search:query', {
+      q: shownFor.q,
+      page,
+      ...(shownFor.remote ? { remote: true } : {}),
+    });
+    setLoadingMore(false);
+    if (!r) return;
+    setResults((cur) => {
+      const ids = new Set((cur ?? []).map((x) => x.id));
+      return [...(cur ?? []), ...r.results.filter((x) => !ids.has(x.id))];
+    });
+    setShownFor({ ...shownFor, page, more: Boolean(r.more) });
   }
 
   return (
@@ -214,6 +239,12 @@ function SearchPanel({
             />
           ))}
         </ul>
+      )}
+      {results && results.length > 0 && shownFor?.more && (
+        <Button size="sm" variant="ghost" className="w-full" disabled={loadingMore} aria-busy={loadingMore} onClick={() => void showMore()}>
+          {loadingMore ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
+          {t.add.more}
+        </Button>
       )}
     </div>
   );

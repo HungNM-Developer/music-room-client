@@ -141,6 +141,7 @@ export const vi = {
     searchYouTube: 'Tìm trên YouTube',
     tip: 'Gõ tên bài để tìm, hoặc dán link YouTube để thêm ngay.',
     results: 'Kết quả tìm kiếm',
+    more: 'Xem thêm',
     withWishShort: 'Thêm kèm lời chúc',
     withWish: (title: string) => `Thêm "${title}" kèm lời chúc`,
   },
