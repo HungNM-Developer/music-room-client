@@ -14,12 +14,14 @@ function Below() {
   const { np } = useHost();
   return (
     <div className="hd-now">
-      <HostLamp />
-      <HostTitle />
-      <HostMeta />
+      <div className="hd-song">
+        <HostLamp />
+        <HostTitle />
+        <HostMeta />
+      </div>
+      {np && <LiveDial size="large" />}
       {np && <HostLyrics trackId={np.item.track.id} />}
       <HostWish withFrom className="hd-wish host-wish-1" />
-      {np && <LiveDial size="large" />}
       <HostControls />
     </div>
   );

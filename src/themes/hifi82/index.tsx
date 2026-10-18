@@ -57,7 +57,7 @@ function Stage({ openAdd }: { openAdd: () => void }) {
 
 /* ---- Speaker screen: one brushed-aluminium deck ---- */
 
-/** Beside the video: the brand plate with the signal lamp, the QR, the wish. */
+/** Beside the video: the brand plate with the signal lamp, the QR, the wish, the keys and the people. */
 function HostPanel() {
   const t = useT();
   const { roomName } = useHost();
@@ -76,11 +76,12 @@ function HostPanel() {
         </div>
       </div>
       <HostWish withFrom className="hh-wish" />
+      <HostKeys />
     </div>
   );
 }
 
-/** The amber LCD across the deck: the song and the time on the left, the lyrics on the right. */
+/** The amber LCD under the video: the song and the time on the left, the lyrics on the right. */
 function HostLcdBand() {
   const { np } = useHost();
   return (
@@ -125,7 +126,7 @@ function HostKeys() {
   );
 }
 
-const host: HostSkin = { className: 'host-hifi82', videoClass: 'hh-video', Below: HostKeys, Side: HostPanel, Footer: HostLcdBand };
+const host: HostSkin = { className: 'host-hifi82', videoClass: 'hh-video', Below: HostLcdBand, Side: HostPanel };
 
 const hifi82: ThemeModule = {
   Stage,

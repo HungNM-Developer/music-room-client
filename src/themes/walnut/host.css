@@ -216,8 +216,8 @@ html[data-theme='walnut'] .host-walnut .hw-plate {
 
 @media (min-width: 960px) and (min-height: 540px) {
   html[data-theme='walnut'] .host-walnut .host-grid {
-    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 51) calc(var(--u) * 2.4) minmax(0, 1fr) calc(var(--u) * 2);
-    grid-template-rows: calc(var(--u) * 1.8) auto minmax(0, 1fr) calc(var(--u) * 1.4);
+    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 72) calc(var(--u) * 2.2) minmax(0, 1fr) calc(var(--u) * 2);
+    grid-template-rows: calc(var(--u) * 1.6) auto minmax(0, 1fr) calc(var(--u) * 1.2);
     grid-template-areas:
       '. . . . .'
       '. video . side .'
@@ -227,7 +227,115 @@ html[data-theme='walnut'] .host-walnut .hw-plate {
   html[data-theme='walnut'] .host-walnut .hw-deck {
     grid-template-columns: auto minmax(0, 1fr) auto;
   }
+  /* Layout B: the video 72 % wide. Under it the deck on the left (lamp and artist above the
+     title, the VU meter under them), three lyric lines and the wish on the right; the brass
+     plate stacked above its code in the narrow column. */
+  html[data-theme='walnut'] .hw-now {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'deck lyrics'
+      'deck wish';
+    grid-template-rows: auto 1fr;
+    column-gap: calc(var(--u) * 2);
+    row-gap: calc(var(--u) * 0.4);
+    padding-top: calc(var(--u) * 0.6);
+  }
+  html[data-theme='walnut'] .hw-deck {
+    grid-area: deck;
+    align-self: start;
+  }
+  html[data-theme='walnut'] .hw-now > .lyrics-inline {
+    grid-area: lyrics;
+  }
+  html[data-theme='walnut'] .hw-now > .hw-wish {
+    grid-area: wish;
+    align-self: start;
+  }
+  /* The deck: the turntable beside the song, the VU meter under the song. */
+  html[data-theme='walnut'] .host-walnut .hw-deck {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'tt info'
+      'tt vu';
+    column-gap: calc(var(--u) * 1.6);
+    row-gap: calc(var(--u) * 0.5);
+    padding: calc(var(--u) * 0.6) calc(var(--u) * 1.3);
+  }
+  html[data-theme='walnut'] .host-walnut .hw-tt {
+    grid-area: tt;
+  }
+  html[data-theme='walnut'] .hw-info {
+    grid-area: info;
+  }
+  html[data-theme='walnut'] .host-walnut .hw-deck .wal-vu {
+    grid-area: vu;
+  }
+  html[data-theme='walnut'] .host-walnut .hw-tt {
+    width: calc(var(--u) * 5.6);
+    height: calc(var(--u) * 5.6);
+  }
+  html[data-theme='walnut'] .hw-info {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: calc(var(--u) * 1);
+  }
+  html[data-theme='walnut'] .hw-info .host-title {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    -webkit-line-clamp: 1;
+  }
+  html[data-theme='walnut'] .host-walnut .wal-vu {
+    width: calc(var(--u) * 12);
+    padding: calc(var(--u) * 0.4) calc(var(--u) * 0.8);
+  }
+  html[data-theme='walnut'] .host-walnut .wal-vu .scale {
+    height: calc(var(--u) * 2.4);
+  }
+  html[data-theme='walnut'] .host-walnut .wal-vu .t {
+    margin-top: calc(var(--u) * 0.15);
+  }
+  html[data-theme='walnut'] .host-walnut .lyrics-inline p[data-current] {
+    font-size: calc(var(--u) * 1.8);
+  }
+  html[data-theme='walnut'] .hw-side {
+    gap: calc(var(--u) * 1);
+  }
   html[data-theme='walnut'] .host-walnut .hw-plate {
-    flex-wrap: nowrap;
+    flex-direction: column;
+    gap: calc(var(--u) * 0.6);
+    padding: calc(var(--u) * 0.9);
+    text-align: center;
+  }
+  html[data-theme='walnut'] .hw-plate .host-qr-code {
+    width: calc(var(--u) * 10);
+  }
+  html[data-theme='walnut'] .hw-plate .host-code {
+    margin: calc(var(--u) * 0.2) 0 0;
+    font-size: calc(var(--u) * 2.9);
+  }
+  html[data-theme='walnut'] .hw-plate .host-link {
+    display: none;
+  }
+  html[data-theme='walnut'] .hw-crate {
+    padding: calc(var(--u) * 0.8) calc(var(--u) * 1);
+  }
+  html[data-theme='walnut'] .hw-crate ol {
+    gap: calc(var(--u) * 0.5);
+  }
+  html[data-theme='walnut'] .hw-sleeve {
+    width: calc(var(--u) * 2.8);
+    height: calc(var(--u) * 2.8);
+  }
+  html[data-theme='walnut'] .hw-q .t {
+    font-size: calc(var(--u) * 1.2);
+  }
+  html[data-theme='walnut'] .hw-q .p {
+    font-size: calc(var(--u) * 1);
+  }
+  html[data-theme='walnut'] .hw-book {
+    padding: calc(var(--u) * 0.8) calc(var(--u) * 1);
+  }
+  html[data-theme='walnut'] .hw-book .host-chat li {
+    -webkit-line-clamp: 1;
   }
 }

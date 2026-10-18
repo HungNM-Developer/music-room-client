@@ -209,6 +209,22 @@
   [data-layout='canvas'] .host-grid > * {
     min-height: 0;
   }
+  /* The video takes most of the screen: under it, three lyric lines (the one being sung in the
+     middle) beside the song, without the source note. */
+  [data-layout='canvas'] .host-below .lyrics-inline .lyrics-source {
+    display: none;
+  }
+  [data-layout='canvas'] .host-below .lyrics-inline > div {
+    gap: calc(var(--u) * 0.15);
+  }
+  [data-layout='canvas'] .host-below .lyrics-inline p {
+    margin: 0;
+    font-size: calc(var(--u) * 1.35);
+  }
+  /* The narrow room column: the volume slider fills it instead of overflowing. */
+  [data-layout='canvas'] .host-side .host-volume {
+    max-width: 100%;
+  }
   [data-layout='canvas'] .host-header {
     grid-area: header;
   }
@@ -313,6 +329,14 @@ html[data-theme='pixel'] .host-lamp.bg-onair-deep > span {
 .host-default .hd-now > :not(.host-lamp) {
   justify-self: stretch;
 }
+.host-default .hd-song {
+  display: grid;
+  justify-items: start;
+  gap: calc(var(--u) * 0.35);
+}
+.host-default .hd-song > :not(.host-lamp) {
+  justify-self: stretch;
+}
 .host-default .host-title {
   font-size: calc(var(--u) * 2.6);
   line-height: 1.02;
@@ -406,13 +430,98 @@ html[data-theme='pixel'] .host-lamp.bg-onair-deep > span {
 }
 
 @media (min-width: 960px) and (min-height: 540px) {
+  /* Layout B: the video 72 % of the screen's width; the song on one line under it, the
+     room (QR, next songs, chat) in a narrow column beside it. */
   .host-default .host-grid {
-    grid-template-columns: calc(var(--u) * 2.4) calc(var(--u) * 44) calc(var(--u) * 3) minmax(0, 1fr) calc(var(--u) * 2.4);
-    grid-template-rows: calc(var(--u) * 2) auto minmax(0, 1fr) calc(var(--u) * 1.4);
+    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 72) calc(var(--u) * 2) minmax(0, 1fr) calc(var(--u) * 2);
+    grid-template-rows: calc(var(--u) * 2) auto minmax(0, 1fr) calc(var(--u) * 1.2);
     grid-template-areas:
       '. . . . .'
       '. video . side .'
       '. below . side .'
       '. . . . .';
+  }
+  /* Under the video: lamp, title and artist on one line; under them the dial and the controls
+     on the left, three lyric lines (and a wish) on the right. */
+  .host-default .hd-now {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr);
+    grid-template-areas:
+      'song song'
+      'dial lyrics'
+      'controls lyrics'
+      '. wish';
+    align-items: center;
+    column-gap: calc(var(--u) * 2.4);
+    row-gap: calc(var(--u) * 0.45);
+    padding-top: calc(var(--u) * 0.8);
+  }
+  .host-default .hd-song {
+    grid-area: song;
+    display: flex;
+    align-items: center;
+    gap: calc(var(--u) * 1.1);
+    min-width: 0;
+  }
+  .host-default .hd-song > .host-lamp {
+    flex: none;
+  }
+  .host-default .hd-song > .host-title {
+    min-width: 0;
+    font-size: calc(var(--u) * 2.3);
+    -webkit-line-clamp: 1;
+  }
+  .host-default .hd-song > .host-meta {
+    flex: 0 1 auto;
+    min-width: calc(var(--u) * 8);
+    margin-left: auto;
+  }
+  .host-default .hd-now > .dial {
+    grid-area: dial;
+  }
+  .host-default .dial-track {
+    height: calc(var(--u) * 2.4) !important;
+  }
+  .host-default .dial-needle {
+    height: calc(var(--u) * 1.7) !important;
+  }
+  .host-default .dial > div:last-child {
+    margin-top: calc(var(--u) * 0.2);
+    font-size: calc(var(--u) * 1.05);
+  }
+  .host-default .hd-now > .lyrics-inline {
+    grid-area: lyrics;
+    align-self: start;
+    min-width: 0;
+  }
+  .host-default .hd-now .lyrics-inline p[data-current] {
+    font-size: calc(var(--u) * 1.9);
+  }
+  .host-default .hd-now > .hd-wish {
+    grid-area: wish;
+  }
+  .host-default .hd-now > .host-controls {
+    grid-area: controls;
+    flex-wrap: nowrap;
+  }
+  .host-default .hd-now .host-volume {
+    width: calc(var(--u) * 17);
+  }
+  /* The narrow column: a smaller QR, next songs and chat in fewer lines. */
+  .host-default .hd-qr {
+    padding: calc(var(--u) * 1) calc(var(--u) * 0.8);
+  }
+  .host-default .hd-qr .host-qr-code {
+    width: calc(var(--u) * 12.5);
+  }
+  .host-default .hd-qr .host-code {
+    font-size: calc(var(--u) * 2.6);
+  }
+  .host-default .hd-qr .host-link {
+    font-size: calc(var(--u) * 0.9);
+    overflow-wrap: anywhere;
+  }
+  .host-default .hd-thumb {
+    width: calc(var(--u) * 3.6);
+    height: calc(var(--u) * 2.7);
   }
 }

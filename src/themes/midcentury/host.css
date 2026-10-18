@@ -150,8 +150,8 @@ html[data-theme='midcentury'] .hm-qr {
 
 @media (min-width: 960px) and (min-height: 540px) {
   html[data-theme='midcentury'] .host-midcentury .host-grid {
-    grid-template-columns: calc(var(--u) * 3) calc(var(--u) * 51) calc(var(--u) * 3.4) minmax(0, 1fr) calc(var(--u) * 2.4);
-    grid-template-rows: calc(var(--u) * 3) auto minmax(0, 1fr) calc(var(--u) * 1.4);
+    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 72) calc(var(--u) * 2.6) minmax(0, 1fr) calc(var(--u) * 2);
+    grid-template-rows: calc(var(--u) * 2.4) auto minmax(0, 1fr) calc(var(--u) * 1.2);
     grid-template-areas:
       '. . . . .'
       '. video . side .'
@@ -159,8 +159,76 @@ html[data-theme='midcentury'] .hm-qr {
       '. . . . .';
     z-index: 1;
   }
+  /* Layout B: the video 72 % wide. Under it the title, then on the left the lamp, artist and
+     time line, on the right three lyric lines; the poster's QR card stacks in the narrow column. */
+  html[data-theme='midcentury'] .hm-now {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'title title'
+      'row lyrics'
+      'dial lyrics'
+      'wish lyrics';
+    align-items: center;
+    column-gap: calc(var(--u) * 2);
+    row-gap: calc(var(--u) * 0.4);
+    padding-top: calc(var(--u) * 1.7);
+  }
+  html[data-theme='midcentury'] .hm-now > .host-title {
+    grid-area: title;
+    -webkit-line-clamp: 1;
+  }
+  html[data-theme='midcentury'] .hm-row {
+    grid-area: row;
+  }
+  html[data-theme='midcentury'] .hm-now > .line-dial {
+    grid-area: dial;
+  }
+  html[data-theme='midcentury'] .hm-now > .lyrics-inline {
+    grid-area: lyrics;
+    align-self: start;
+  }
+  html[data-theme='midcentury'] .hm-now > .hm-wish {
+    align-self: start;
+  }
+  html[data-theme='midcentury'] .hm-now > .hm-wish {
+    grid-area: wish;
+  }
+  html[data-theme='midcentury'] .host-midcentury .lyrics-inline p[data-current] {
+    font-size: calc(var(--u) * 1.8);
+  }
+  html[data-theme='midcentury'] .hm-side {
+    gap: calc(var(--u) * 1.1);
+  }
   html[data-theme='midcentury'] .hm-qr {
-    flex-wrap: nowrap;
+    flex-direction: column;
+    gap: calc(var(--u) * 0.7);
+    padding: calc(var(--u) * 1);
+    text-align: center;
+  }
+  html[data-theme='midcentury'] .hm-qr .host-qr-code {
+    width: calc(var(--u) * 10.5);
+  }
+  html[data-theme='midcentury'] .hm-qr .host-code {
+    margin-bottom: 0;
+  }
+  html[data-theme='midcentury'] .hm-qr .host-link {
+    display: none;
+  }
+  html[data-theme='midcentury'] .hm-next ol {
+    gap: calc(var(--u) * 0.7);
+  }
+  html[data-theme='midcentury'] .hm-round {
+    width: calc(var(--u) * 5);
+    height: calc(var(--u) * 5);
+  }
+  html[data-theme='midcentury'] .hm-next li .t {
+    font-size: calc(var(--u) * 1.05);
+  }
+  html[data-theme='midcentury'] .hm-next li .p {
+    font-size: calc(var(--u) * 0.95);
+  }
+  html[data-theme='midcentury'] .hm-people .host-chat li {
+    -webkit-line-clamp: 1;
   }
   html[data-theme='midcentury'] .host-midcentury .host-frame {
     overflow: hidden;
@@ -181,7 +249,7 @@ html[data-theme='midcentury'] .hm-qr {
     background: #e5b53e;
   }
   html[data-theme='midcentury'] .host-midcentury .host-frame::after {
-    left: calc(var(--u) * 36);
+    left: calc(var(--u) * 60);
     top: calc(var(--u) * -6);
     width: calc(var(--u) * 14);
     height: calc(var(--u) * 14);
