@@ -1,8 +1,8 @@
 'use client';
 
-import { Disc3, Pointer, Undo2 } from 'lucide-react';
+import { Check, Disc3, Pointer, Undo2, X } from 'lucide-react';
 import { Thumb } from '@/components/ui/Thumb';
-import type { ChatMessageView, DjReply, MemberView } from '@/contracts';
+import type { ChatMessageView, DjReply, DjStep, MemberView } from '@/contracts';
 import { useAct } from '@/hooks/useAct';
 import { type Dict, errorMessage, useT } from '@/i18n';
 import { showGuide } from '@/lib/guide';
@@ -18,6 +18,57 @@ function eta(t: Dict, sec: number | null | undefined): string {
   return sec < 45 ? t.djBot.etaSoon : t.djBot.eta(minutes(sec));
 }
 
+/** One task of a combo answer, in the viewer's language. */
+export function stepLine(t: Dict, s: DjStep): string {
+  const st = t.djBot.steps;
+  const song = t.djBot.song(s.track?.title ?? '', s.action === 'add' ? (s.fresh ?? null) : null);
+  if (s.ok)
+    switch (s.action) {
+      case 'add': {
+        const wish = s.wish ? st.wish(s.wish) : '';
+        if (s.position === 0) return st.addedNow(song) + wish;
+        return st.added(song, s.position ? t.djBot.queuePos(s.position, eta(t, s.etaSec)) : '') + wish;
+      }
+      case 'heart':
+        if (s.reason === 'alreadyHearted') return st.alreadyHearted(song);
+        return st.hearted(song) + (s.reason === 'oneHeart' ? st.oneHeart : '');
+      case 'remove':
+        return st.removed(song);
+      case 'pin':
+        return s.now ? st.pinnedNow(song) : st.pinned(song);
+      case 'skip':
+        return st.skipped(song);
+      case 'vote':
+        return st.voted(song);
+      case 'pause':
+        return st.paused;
+      case 'resume':
+        return st.resumed;
+    }
+  switch (s.reason) {
+    case 'notFound':
+      if (s.got !== undefined) return st.short(s.got, s.wanted ?? s.got);
+      return s.query ? st.notFound(s.query) : st.noneFound;
+    case 'busy':
+      return st.busy;
+    case 'nothingPlaying':
+      return st.nothingPlaying;
+    case 'notMine':
+      return st.notMine;
+  }
+  const why =
+    s.errorCode === 'FORBIDDEN'
+      ? s.action === 'remove'
+        ? st.notMine
+        : st.needControl
+      : s.errorCode && s.errorCode !== 'INTERNAL'
+        ? errorMessage(s.errorCode, s.errorParams)
+        : t.djBot.failed;
+  // Pause / resume are about the room, not a song.
+  const what = s.action === 'pause' || s.action === 'resume' ? '' : s.track ? ` "${s.track.title}"` : s.query ? ` "${s.query}"` : '';
+  return st.failed(st.verbs[s.action], what, why);
+}
+
 /** The DJ's answer in the viewer's language: "bạn" for the asker, their name for others. */
 export function djReplyText(t: Dict, r: DjReply, meId: string | null, me: MemberView | null): string {
   const mine = r.forMemberId === meId;
@@ -28,6 +79,8 @@ export function djReplyText(t: Dict, r: DjReply, meId: string | null, me: Member
       return t.djBot.hello;
     case 'other':
       return t.djBot.other;
+    case 'done':
+      return [t.djBot.done(who), ...(r.steps ?? []).map((s) => `- ${stepLine(t, s)}`)].join('\n');
     case 'guide': {
       if (r.guide === 'add' && r.query) return t.djBot.guide.addQuery(r.query);
       if (r.guide === 'myItem' && !mine) return t.djBot.guide.myItemFor(r.forName);
@@ -109,7 +162,18 @@ export function DjMessage({ m }: { m: ChatMessageView }) {
         <span className="font-semibold text-amber">{t.djBot.name}</span>, {formatClock(m.createdAt)}
       </span>
       <div className="chat-bubble max-w-[85%] rounded-[16px] rounded-bl-[4px] border border-amber/60 bg-panel-hi px-3 py-2">
-        <p className="whitespace-pre-wrap [overflow-wrap:anywhere]">{text}</p>
+        {r?.kind === 'done' ? (
+          <>
+            <p className="[overflow-wrap:anywhere]">{t.djBot.done(mine ? t.djBot.you : r.forName)}</p>
+            <ul className="mt-1.5 space-y-2">
+              {(r.steps ?? []).map((s, i) => (
+                <DoneStep key={i} step={s} mine={mine} />
+              ))}
+            </ul>
+          </>
+        ) : (
+          <p className="whitespace-pre-wrap [overflow-wrap:anywhere]">{text}</p>
+        )}
         {r?.kind === 'added' && r.track && (
           // The title is already in the sentence: the card is for the eyes only.
           <div className="mt-2 flex items-center gap-2.5" aria-hidden>
@@ -145,6 +209,42 @@ export function DjMessage({ m }: { m: ChatMessageView }) {
           </div>
         )}
       </div>
+    </li>
+  );
+}
+
+/** A task of a combo: done or not (and why); an added song with its card and "Gỡ" for the asker. */
+function DoneStep({ step, mine }: { step: DjStep; mine: boolean }) {
+  const t = useT();
+  const act = useAct();
+  const itemId = step.ok && step.action === 'add' ? step.queueItemId : undefined;
+  const stillQueued = useRoom((s) => Boolean(itemId && s.snapshot?.queue.some((q) => q.id === itemId)));
+  const Icon = step.ok ? Check : X;
+  return (
+    <li className="text-[14px] leading-snug">
+      <p className="flex gap-1.5 [overflow-wrap:anywhere]">
+        <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${step.ok ? 'text-amber' : 'text-sage'}`} aria-hidden />
+        <span className="min-w-0">{stepLine(t, step)}</span>
+      </p>
+      {itemId && step.track && (
+        <div className="mt-1.5 flex items-center gap-2 pl-5">
+          <Thumb url={step.track.thumbnailUrl} size={48} ratio="wide" />
+          <span className="min-w-0 flex-1 truncate text-[13px] text-sage sm:text-[12px]" aria-hidden>
+            {step.track.channel ?? step.track.title}
+          </span>
+          {mine && stillQueued && (
+            <button
+              type="button"
+              onClick={() => void act('queue:remove', { queueItemId: itemId })}
+              aria-label={`${t.djBot.undo}: ${step.track.title}`}
+              className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-full border border-line px-2.5 text-[13px] text-paper transition-colors hover:bg-panel"
+            >
+              <Undo2 className="h-3.5 w-3.5" aria-hidden />
+              {t.djBot.undoShort}
+            </button>
+          )}
+        </div>
+      )}
     </li>
   );
 }
