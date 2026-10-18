@@ -1,0 +1,119 @@
+/* The home page's night hill (HomeScenery): sky, moon, clouds and the CSS hill under the WebGL
+   canvas. Behind everything on the page, never in the way of the pointer. */
+.home-scenery {
+  --hs-moon-x: 80vw;
+  --hs-moon-y: 13vh;
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: #040c18;
+}
+
+.hs-sky {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(40vmax 30vmax at var(--hs-moon-x) var(--hs-moon-y), #2a4a7a2e, transparent 70%),
+    radial-gradient(70% 35% at 50% 62%, #1f5a5a40, transparent 70%),
+    linear-gradient(#040c18 0%, #081b2c 42%, #0f3140 68%, #164447 100%);
+}
+
+/* The moon: placed by HomeScenery above the tree, where the page leaves room. */
+.hs-moon {
+  position: absolute;
+  left: var(--hs-moon-x);
+  top: var(--hs-moon-y);
+  width: clamp(40px, 3.6vw, 64px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 62% 60%, #d7dbe2 0 9%, transparent 10%),
+    radial-gradient(circle at 34% 40%, #dcdfe5 0 7%, transparent 8%),
+    radial-gradient(circle at 40% 36%, #fffdf4, #e6e9ee 72%);
+  box-shadow:
+    0 0 36px 8px #dfe9ff45,
+    0 0 120px 50px #8fb4ff1c;
+}
+
+/* Soft clouds drifting across. */
+.hs-clouds span {
+  position: absolute;
+  height: 9vh;
+  border-radius: 50%;
+  filter: blur(22px);
+  background: #9fb7c6;
+  opacity: 0.1;
+  animation: hs-drift 160s linear infinite;
+}
+.hs-clouds span:nth-child(1) {
+  top: 9vh;
+  left: -10vw;
+  width: 34vw;
+}
+.hs-clouds span:nth-child(2) {
+  top: 24vh;
+  left: 30vw;
+  width: 26vw;
+  animation-duration: 200s;
+  animation-delay: -60s;
+}
+.hs-clouds span:nth-child(3) {
+  top: 4vh;
+  left: 62vw;
+  width: 22vw;
+  animation-duration: 240s;
+  animation-delay: -120s;
+}
+@keyframes hs-drift {
+  from {
+    transform: translateX(-20vw);
+  }
+  to {
+    transform: translateX(120vw);
+  }
+}
+
+/* The hill without WebGL (and while it loads). */
+.hs-hill {
+  position: absolute;
+  inset: auto -20vw 0;
+  height: 42vh;
+  border-radius: 50% 50% 0 0 / 34% 34% 0 0;
+  background: linear-gradient(#123726, #061810 60%);
+  transition: opacity 1.2s ease;
+}
+.hs-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+.home-scenery[data-live] .hs-canvas {
+  opacity: 1;
+}
+.home-scenery[data-live] .hs-hill {
+  opacity: 0;
+}
+
+/* The page's text stays readable over the lit grass. */
+.hs-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #030b1480 0%, #030b1433 40%, transparent 60%);
+}
+@media (max-width: 1023px) {
+  .hs-scrim {
+    background: linear-gradient(#030b1400 30%, #030b1466 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hs-clouds span {
+    animation: none;
+  }
+}
