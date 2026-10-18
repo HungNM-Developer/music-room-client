@@ -27,6 +27,7 @@ import { IconButton } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
 import { useT } from '@/i18n';
 import { addedByLabel } from '@/lib/added-by';
+import { artistAndPicker } from '@/lib/track-artist';
 import { formatDuration } from '@/lib/time';
 import type { HostSkin, ThemeModule } from '../load';
 import { NowCover, StageIdle, WishBlock } from '../stage/parts';
@@ -77,7 +78,7 @@ function Presets({ openAdd }: { openAdd: () => void }) {
         {items.map((q) => (
           <li key={q.id} className="key">
             <b title={q.track.title}>{q.track.title}</b>
-            <span className="who">{addedByLabel(q)}</span>
+            <span className="who">{artistAndPicker(q)}</span>
             <span className="acts">
               <HeartButton item={q} me={me} />
               {hasItemMenu(q, me) && (

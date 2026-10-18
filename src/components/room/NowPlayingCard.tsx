@@ -4,6 +4,7 @@ import { Loader2, MoreHorizontal, Pause, Play, SkipForward, StepForward } from '
 import { Button, IconButton } from '@/components/ui/Button';
 import { OnAirLamp } from '@/components/ui/OnAirLamp';
 import { Thumb } from '@/components/ui/Thumb';
+import { trackArtist } from '@/lib/track-artist';
 import { useT } from '@/i18n';
 import { LyricsButton } from './Lyrics';
 import { ListenButton, ListenersStrip } from '@/components/player/ListenAlong';
@@ -28,6 +29,7 @@ export function NowPlayingCard() {
   }
 
   const { np, track: item, playing, picker, canVote, canControl } = a;
+  const artist = trackArtist(item);
 
   return (
     <section aria-label={t.nowPlaying.title} data-guide="nowPlaying" className="np-card rounded-panel border border-paper/10 bg-panel/80 p-4 sm:p-5">
@@ -40,7 +42,7 @@ export function NowPlayingCard() {
             {item.title}
           </h2>
           <p className="mt-1 truncate text-[14px] text-sage">{a.pickerLabel}</p>
-          {item.channel && <p className="truncate text-[13px] text-sage/80">{item.channel}</p>}
+          {artist && <p className="truncate text-[13px] text-sage/80">{artist}</p>}
           <LyricsButton trackId={item.id} />
         </div>
         <div className="-mr-2 -mt-2 flex shrink-0 flex-col items-center">

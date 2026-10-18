@@ -8,6 +8,7 @@ import { Thumb } from '@/components/ui/Thumb';
 import { useT } from '@/i18n';
 import { addedByLabel } from '@/lib/added-by';
 import { formatDuration } from '@/lib/time';
+import { trackArtist } from '@/lib/track-artist';
 
 /**
  * "Tiếp theo" for themed stages: a flat list in play order (pinned songs first), each
@@ -58,6 +59,7 @@ export function StageQueue({
         <ol className="stage-list">
           {items.map((item, i) => {
             const mine = Boolean(me && item.addedBy?.id === me.id);
+            const artist = trackArtist(item.track);
             return (
               <li key={item.id} className="stage-q animate-rise">
                 {numbered && <span className="stage-q-n">{i + 1}</span>}
@@ -67,6 +69,7 @@ export function StageQueue({
                     {item.track.title}
                   </p>
                   <p className="stage-q-meta">
+                    {artist && <span className="stage-q-artist min-w-0 truncate">{artist}</span>}
                     <span className="truncate">
                       {addedByLabel(item)}
                       {mine && ` (${t.queue.you})`}
