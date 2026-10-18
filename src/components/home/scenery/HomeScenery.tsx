@@ -22,7 +22,7 @@ function layoutOf(): SceneLayout {
   const panel = document.querySelector('[data-scenery="panel"]')?.getBoundingClientRect();
   // One column (phones, tablets): the right side, above the form.
   if (!text || !panel || panel.left < text.right - 1)
-    return { focusX: W * 0.78, focusWidth: W * 0.4, moonX: W * 0.82, moonY: H * 0.07, guitarX: W * 0.5, guitarY: H * 0.9 };
+    return { focusX: W * 0.78, focusWidth: W * 0.4, moonX: W * 0.82, moonY: H * 0.07, guitarX: W * 0.5, guitarY: H * 0.9, trainX: W * 0.25, trainY: H * 0.94 };
   const textRight = text.left + Math.min(text.width, TEXT_WIDTH);
   const free = [
     [0, text.left],
@@ -37,9 +37,21 @@ function layoutOf(): SceneLayout {
   const below = footer ? H - footer.bottom : 0;
   const guitarX = text.left + Math.min(text.width, TEXT_WIDTH) * 0.45;
   const guitarY = below > 120 ? footer!.bottom + below * 0.55 : H * 0.9;
+  const trainSpot = () => {
+    const gap = [
+      { x: (panel.right + W) / 2, width: W - panel.right, y: H * 0.67 },
+      { x: (textRight + panel.left) / 2, width: panel.left - textRight, y: Math.max(guitarY + 20, H * 0.84) },
+    ].find((g) => g.width >= 110);
+    return gap
+      ? { trainX: gap.x, trainY: Math.min(H - 60, gap.y) }
+      : { trainX: text.left + Math.min(text.width, TEXT_WIDTH) * 0.88, trainY: guitarY + 10 };
+  };
   return {
     guitarX,
     guitarY,
+    // The toy train, away from the guitar: the corner right of the form, else the grass between
+    // the text and the form, else the far end of the text column.
+    ...trainSpot(),
     focusX: free.x,
     focusWidth: free.width,
     // Above the tree, a little to the side when there is room.
