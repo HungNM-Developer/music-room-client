@@ -1,7 +1,7 @@
 'use client';
 
 import { Plus } from 'lucide-react';
-import { ListenAlong, ListenersStrip } from '@/components/player/ListenAlong';
+import { ListenersStrip } from '@/components/player/ListenAlong';
 import { useHost } from '@/components/host/HostContext';
 import {
   HostChatLines,
@@ -121,7 +121,6 @@ function Stage({ openAdd }: { openAdd: () => void }) {
         <WishBlock className="cs-note" />
         <InlineLyrics trackId={track.id} size="stage" className="max-lg:hidden" />
       </div>
-      <ListenAlong />
       {queue}
       <Suggestions />
     </div>

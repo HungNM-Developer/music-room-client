@@ -4,7 +4,6 @@ import { useRoomDeleted } from '@/hooks/useRoomDeleted';
 import { useParams } from 'next/navigation';
 import { useEffect } from 'react';
 import { Backdrop } from '@/components/room/Backdrop';
-import { ListenAlong } from '@/components/player/ListenAlong';
 import { NowPlayingCard } from '@/components/room/NowPlayingCard';
 import { QueueList } from '@/components/room/QueueList';
 import { RoomFrame } from '@/components/room/RoomFrame';
@@ -36,7 +35,6 @@ export function RoomPage() {
         stage={(openAdd) => (
           <>
             <NowPlayingCard />
-            <ListenAlong />
             {/* The real queue first; suggestions are extra. */}
             <QueueList onAdd={openAdd} />
             <Suggestions />

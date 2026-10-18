@@ -1,7 +1,7 @@
 'use client';
 
 import { MoreHorizontal, Plus } from 'lucide-react';
-import { ListenAlong, ListenersStrip } from '@/components/player/ListenAlong';
+import { ListenersStrip } from '@/components/player/ListenAlong';
 import { useHost } from '@/components/host/HostContext';
 import {
   HostChatLines,
@@ -180,7 +180,6 @@ function Stage({ openAdd }: { openAdd: () => void }) {
         </div>
         {a.blockMenu}
       </section>
-      <ListenAlong />
       <Crate openAdd={openAdd} />
       <Suggestions />
     </div>

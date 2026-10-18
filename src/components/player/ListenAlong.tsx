@@ -113,14 +113,17 @@ export function useListenSession(): void {
   useEffect(() => () => setListening(false), []);
 }
 
-/** The visible player while "Nghe cùng" is on (placed by each layout). */
-export function ListenAlong() {
+/**
+ * The visible player while "Nghe cùng" is on. The room frame puts it where a speaker's video
+ * goes (beside the now-playing block on wide screens), in the theme's video frame.
+ */
+export function ListenAlong({ frameClass }: { frameClass?: string }) {
   const on = useListening();
   if (!on) return null;
-  return <ListenPlayer />;
+  return <ListenPlayer frameClass={frameClass} />;
 }
 
-function ListenPlayer() {
+function ListenPlayer({ frameClass }: { frameClass?: string }) {
   const t = useT();
   const np = useRoom((s) => s.snapshot?.nowPlaying ?? null);
   const offset = useRoom((s) => s.offset);
@@ -249,16 +252,10 @@ function ListenPlayer() {
 
 
   return (
-    <section aria-label={t.listen.title} className="space-y-3 rounded-panel border border-amber/40 bg-panel/80 p-3">
-      <div className="flex items-center gap-2">
-        <Headphones className="h-5 w-5 text-amber" aria-hidden />
-        <p className="min-w-0 flex-1 text-[14px] font-semibold">{t.listen.title}</p>
-        <Button size="sm" variant="ghost" onClick={() => setListening(false)}>
-          {t.listen.stop}
-        </Button>
-      </div>
-      {/* Visible and at least 200 px tall: YouTube API policy (TC-131). */}
-      <div className="relative aspect-video min-h-[200px] w-full overflow-hidden rounded-box bg-dial-deep">
+    <section aria-label={t.listen.title} className="space-y-2">
+      <div className={frameClass}>
+        {/* Visible and at least 200 px tall: YouTube API policy (TC-131). */}
+        <div className="player-screen relative aspect-video min-h-[200px] w-full overflow-hidden rounded-panel bg-dial-deep">
         <YouTubeAdapter
           adapterRef={adapterRef}
           onReady={() => {
@@ -271,10 +268,26 @@ function ListenPlayer() {
           onEnded={() => {}}
           onError={() => {}}
         />
-        {!np && <IdleCover />}
+          {!np && <IdleCover />}
+        </div>
       </div>
       {needsTap && <TapVideoHint text={t.listen.tapVideo} />}
-      <ListenVolume />
+      {/* Under the video, like the speaker's bar: what this is, its volume, the way out. */}
+      {/* Clear of a theme's frame around the video (its border and shadow reach past the box). */}
+      <div
+        className={`flex flex-wrap items-center gap-x-4 gap-y-1 rounded-panel border border-amber/40 bg-panel/80 px-3 py-1.5 ${frameClass ? 'mt-4!' : ''}`}
+      >
+        <p className="flex items-center gap-2 text-[14px] font-semibold">
+          <Headphones className="h-5 w-5 shrink-0 text-amber" aria-hidden />
+          {t.listen.title}
+        </p>
+        <div className="min-w-[160px] flex-1">
+          <ListenVolume />
+        </div>
+        <Button size="sm" variant="ghost" onClick={() => setListening(false)}>
+          {t.listen.stop}
+        </Button>
+      </div>
       {touch && <p className="text-[13px] text-sage">{t.listen.keepScreenOn}</p>}
     </section>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import { Mail, MoreHorizontal, Pin, Plus } from 'lucide-react';
-import { ListenAlong, ListenersStrip } from '@/components/player/ListenAlong';
+import { ListenersStrip } from '@/components/player/ListenAlong';
 import { HostLyrics, InlineLyrics, LyricsButton } from '@/components/room/Lyrics';
 import { HeartButton, hasItemMenu, useQueueView } from '@/components/room/QueueList';
 import { chatText } from '@/components/room/DjMessage';
@@ -275,7 +275,6 @@ function Stage({ openAdd }: { openAdd: () => void }) {
         </div>
         {a.blockMenu}
       </section>
-      <ListenAlong />
       <Board openAdd={openAdd} />
       <Suggestions />
     </div>
