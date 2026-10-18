@@ -1,10 +1,6 @@
-import { Barlow, Barlow_Condensed } from 'next/font/google';
+import '@/fonts/barlow.css';
+import '@/fonts/barlow-condensed.css';
 
-export const barlow = Barlow({ subsets: ['latin', 'vietnamese'], weight: ['400', '500', '600'], variable: '--font-barlow', display: 'swap', preload: false });
-export const barlowCondensed = Barlow_Condensed({
-  subsets: ['latin', 'vietnamese'],
-  weight: ['500', '600'],
-  variable: '--font-barlow-condensed',
-  display: 'swap',
-  preload: false,
-});
+/** Self-hosted (src/fonts): builds never fetch Google Fonts. `variable` sets the font's CSS variable. */
+export const barlow = { variable: 'fontvar-barlow' };
+export const barlowCondensed = { variable: 'fontvar-barlow-condensed' };

@@ -1,23 +1,16 @@
 import type { Metadata, Viewport } from 'next';
-import { Be_Vietnam_Pro, Bricolage_Grotesque } from 'next/font/google';
+import '@/fonts/be-vietnam-pro.css';
+import '@/fonts/bricolage-grotesque.css';
 import './globals.css';
 import { ToastProvider } from '@/components/ui/Toast';
 import { dictFor } from '@/i18n/dict';
 import { LangRuntime } from '@/i18n/LangRuntime';
 import { RoomRuntime } from '@/state/hooks';
 
-const body = Be_Vietnam_Pro({
-  variable: '--font-body',
-  subsets: ['latin', 'vietnamese'],
-  weight: ['400', '500', '600', '700'],
-  display: 'swap',
-});
-const display = Bricolage_Grotesque({
-  variable: '--font-display-face',
-  subsets: ['latin', 'vietnamese'],
-  axes: ['wdth', 'opsz'],
-  display: 'swap',
-});
+// Self-hosted fonts (src/fonts, made by scripts/selfhost-fonts.mjs): a build never depends on
+// Google Fonts answering in a shape the bundler can read. The classes set --font-body /
+// --font-display-face.
+const fontVars = 'fontvar-be-vietnam-pro fontvar-bricolage-grotesque';
 
 export const metadata: Metadata = {
   title: 'Music Room',
@@ -34,7 +27,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="vi" className={`${body.variable} ${display.variable}`} suppressHydrationWarning>
+    <html lang="vi" className={fontVars} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <RoomRuntime />
         <LangRuntime />

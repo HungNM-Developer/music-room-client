@@ -1,10 +1,4 @@
-import { Cormorant_Garamond } from 'next/font/google';
+import '@/fonts/cormorant-garamond.css';
 
-export const cormorant = Cormorant_Garamond({
-  subsets: ['latin', 'vietnamese'],
-  weight: ['500', '600'],
-  style: ['normal', 'italic'],
-  variable: '--font-cormorant',
-  display: 'swap',
-  preload: false,
-});
+/** Self-hosted (src/fonts): builds never fetch Google Fonts. `variable` sets the font's CSS variable. */
+export const cormorant = { variable: 'fontvar-cormorant-garamond' };

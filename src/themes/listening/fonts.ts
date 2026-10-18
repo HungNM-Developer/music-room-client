@@ -1,10 +1,4 @@
-import { Fraunces } from 'next/font/google';
+import '@/fonts/fraunces.css';
 
-export const fraunces = Fraunces({
-  subsets: ['latin', 'vietnamese'],
-  style: ['normal', 'italic'],
-  axes: ['opsz'],
-  variable: '--font-fraunces',
-  display: 'swap',
-  preload: false,
-});
+/** Self-hosted (src/fonts): builds never fetch Google Fonts. `variable` sets the font's CSS variable. */
+export const fraunces = { variable: 'fontvar-fraunces' };

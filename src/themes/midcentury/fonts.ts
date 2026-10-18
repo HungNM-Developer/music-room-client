@@ -1,3 +1,4 @@
-import { Archivo } from 'next/font/google';
+import '@/fonts/archivo.css';
 
-export const archivo = Archivo({ subsets: ['latin', 'vietnamese'], axes: ['wdth'], variable: '--font-archivo', display: 'swap', preload: false });
+/** Self-hosted (src/fonts): builds never fetch Google Fonts. `variable` sets the font's CSS variable. */
+export const archivo = { variable: 'fontvar-archivo' };

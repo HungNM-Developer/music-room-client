@@ -1,3 +1,4 @@
-import { Space_Grotesk } from 'next/font/google';
+import '@/fonts/space-grotesk.css';
 
-export const spaceGrotesk = Space_Grotesk({ subsets: ['latin', 'vietnamese'], variable: '--font-space-grotesk', display: 'swap', preload: false });
+/** Self-hosted (src/fonts): builds never fetch Google Fonts. `variable` sets the font's CSS variable. */
+export const spaceGrotesk = { variable: 'fontvar-space-grotesk' };
