@@ -57,9 +57,10 @@ export function djReplyText(t: Dict, r: DjReply, meId: string | null, me: Member
       return t.djBot.failed;
     }
     case 'added': {
-      const title = r.track?.title ?? '';
-      const say = r.fresh === 'latest' ? t.djBot.addedLatest : r.fresh === 'popular' ? t.djBot.addedPopular : t.djBot.added;
-      return say(title, who, r.position ?? 1, eta(t, r.etaSec));
+      const song = t.djBot.song(r.track?.title ?? '', r.fresh ?? null);
+      // 0: the room was idle and the song started at once.
+      if (r.position === 0) return t.djBot.addedNow(song, who);
+      return t.djBot.added(song, who, r.position ? t.djBot.queuePos(r.position, eta(t, r.etaSec)) : '');
     }
     case 'busy':
       if (!r.retryAfterSec) return t.djBot.busy;
