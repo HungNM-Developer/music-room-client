@@ -121,6 +121,17 @@ function stepOf(t: Dict, item: Item): GuideStep {
   return { ...t.help.items[item.id], selectors: item.selectors ?? [], tab: item.tab };
 }
 
+/** A "Hướng dẫn" item as a one-step guide (the DJ's "Chỉ cho tôi" for how-to questions). */
+export function helpStep(t: Dict, id: string): GuideStep | null {
+  const item = ITEMS.get(id as ItemId);
+  return item ? stepOf(t, item) : null;
+}
+
+/** The text of a "Hướng dẫn" item, or null when there is no such item. */
+export function helpText(t: Dict, id: string): { title: string; body: string } | null {
+  return id in t.help.items ? t.help.items[id as ItemId] : null;
+}
+
 function tourSteps(t: Dict): GuideStep[] {
   return TOUR.flatMap((id) => {
     const item = ITEMS.get(id);

@@ -624,6 +624,8 @@ export const vi = {
   /** "@DJ" in the room chat (spec 2026-10-18-dj-chat). `who` = "bạn" or the asker's name. */
   djBot: {
     name: 'DJ',
+    /** While the DJ works on "@DJ …" (screen readers; the dots are the visual). */
+    thinking: (who: string) => `DJ đang trả lời ${who}`,
     hintTitle: 'DJ – trợ lý của phòng',
     hintTry: 'Thử hỏi',
     examples: ['bật vài bài chill cho buổi chiều', 'bài mới của Sơn Tùng', 'còn bao lâu tới bài của tôi'],
@@ -744,6 +746,9 @@ export const vi = {
       kept: (n: number, by: string) => `Đã giữ lại ${n} bài${by}`,
       keptUnsure: (n: number) => ` (${n} bài giữ lại vì chưa chắc ca sĩ)`,
       saved: (song: string) => `Đã lưu ${song} vào bài đã lưu`,
+      savedMany: (n: number) => `Đã lưu ${n} bài vào bài đã lưu`,
+      playlistSavedMany: (n: number, name: string, created: boolean) =>
+        `Đã lưu ${n} bài vào playlist "${name}"${created ? ' (playlist mới)' : ''}`,
       playlistSaved: (song: string, name: string, created: boolean) =>
         `Đã lưu ${song} vào playlist "${name}"${created ? ' (playlist mới)' : ''}`,
       playlistCreated: (name: string, created: boolean, added: number, by: string) =>

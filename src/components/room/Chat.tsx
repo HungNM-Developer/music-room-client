@@ -8,7 +8,7 @@ import type { ChatMessageView } from '@/contracts';
 import { LIMITS, REACTIONS } from '@/contracts/constants';
 import { useAct } from '@/hooks/useAct';
 import { DjMentionHint, insertMention, mentionAt } from './DjMentionHint';
-import { chatText, DjMessage } from './DjMessage';
+import { chatText, DjMessage, DjThinking, useDjThinking } from './DjMessage';
 import { triggerReaction } from './HeartCanvas';
 import { errorMessage, useT } from '@/i18n';
 import { onGuide } from '@/lib/guide';
@@ -28,13 +28,14 @@ function ChatMessages({ className = '' }: { className?: string }) {
   const chat = useRoom((s) => s.chat);
   const chatPending = useRoom((s) => s.chatPending);
   const meId = useRoom((s) => s.memberId);
+  const thinking = useDjThinking();
   const ref = useRef<HTMLOListElement>(null);
   const atBottom = useRef(true);
 
   useEffect(() => {
     const el = ref.current;
     if (el && atBottom.current) el.scrollTop = el.scrollHeight;
-  }, [chat.length, chatPending.length]);
+  }, [chat.length, chatPending.length, thinking.length]);
 
   return (
     <ol
@@ -50,6 +51,9 @@ function ChatMessages({ className = '' }: { className?: string }) {
       {chat.map((m) => (m.kind === 'dj' ? <DjMessage key={m.id} m={m} /> : <Bubble key={m.id} m={m} mine={m.memberId === meId} />))}
       {chatPending.map((m) => (
         <PendingBubble key={m.id} m={m} />
+      ))}
+      {thinking.map((w) => (
+        <DjThinking key={`${w.memberId}-${w.at}`} memberId={w.memberId} name={w.name} />
       ))}
     </ol>
   );

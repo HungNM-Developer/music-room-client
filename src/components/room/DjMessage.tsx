@@ -1,11 +1,13 @@
 'use client';
 
 import { Check, Disc3, Plus, Pointer, Undo2, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Thumb } from '@/components/ui/Thumb';
 import type { ChatMessageView, DjReply, DjStep, MemberView, TrackSummary } from '@/contracts';
 import { useAct } from '@/hooks/useAct';
 import { type Dict, errorMessage, useT } from '@/i18n';
 import { showGuide } from '@/lib/guide';
+import { helpText } from './HelpButton';
 import { formatClock } from '@/lib/time';
 import { useMe, useRoom } from '@/state/hooks';
 
@@ -34,8 +36,10 @@ export function stepLine(t: Dict, s: DjStep): string {
       case 'suggest':
         return `${st.suggested(by)} ${titles.join(', ')}`;
       case 'save':
+        if (!s.track && s.added) return st.savedMany(s.added);
         return st.saved(song);
       case 'playlistSave':
+        if (!s.track && s.added) return st.playlistSavedMany(s.added, s.playlist?.name ?? '', Boolean(s.playlist?.created));
         return st.playlistSaved(song, s.playlist?.name ?? '', Boolean(s.playlist?.created));
       case 'playlistCreate':
         return st.playlistCreated(s.playlist?.name ?? '', Boolean(s.playlist?.created), s.added ?? 0, by);
@@ -114,7 +118,10 @@ export function djReplyText(t: Dict, r: DjReply, meId: string | null, me: Member
         const control = Boolean(me && (me.role === 'ADMIN' || me.canControl));
         return control ? t.djBot.guide.skipNow : t.djBot.guide.skipVote;
       }
-      return t.djBot.guide[r.guide ?? 'add'];
+      const g = r.guide ?? 'add';
+      if (g in t.djBot.guide) return t.djBot.guide[g as keyof Dict['djBot']['guide']] as string;
+      // How-to topics: the "Hướng dẫn" item's own words.
+      return helpText(t, g)?.body ?? t.djBot.other;
     }
     case 'info': {
       const i = r.info;
@@ -322,6 +329,58 @@ function SuggestCard({ track }: { track: TrackSummary }) {
         {inRoom ? <Check className="h-3.5 w-3.5" aria-hidden /> : <Plus className="h-3.5 w-3.5" aria-hidden />}
         {inRoom ? t.djBot.steps.alreadyIn : t.djBot.steps.addOne}
       </button>
+    </li>
+  );
+}
+
+/** How long the dots wait for the DJ's answer (an AI call takes a few seconds). */
+const THINKING_MS = 45_000;
+const MENTION = /(^|[\s([{"'“])@dj(?=$|[\s,.:;!?)\]}"'”])/i;
+
+/**
+ * "@DJ …" messages the DJ has not answered yet, from the chat everyone sees: the latest
+ * request of each member until a DJ message for them arrives (or THINKING_MS pass).
+ */
+export function useDjThinking(): { memberId: string; name: string; at: string }[] {
+  const chat = useRoom((s) => s.chat);
+  const offset = useRoom((s) => s.offset);
+  const [now, setNow] = useState(() => Date.now());
+  const waiting = new Map<string, { memberId: string; name: string; at: string }>();
+  for (const m of chat) {
+    if (m.kind === 'dj') {
+      if (m.dj) waiting.delete(m.dj.forMemberId);
+    } else if (MENTION.test(m.content)) waiting.set(m.memberId, { memberId: m.memberId, name: m.displayName, at: m.createdAt });
+  }
+  const serverNow = now + offset;
+  const open = [...waiting.values()].filter((w) => serverNow - Date.parse(w.at) < THINKING_MS);
+  const oldest = open.length ? Math.min(...open.map((w) => Date.parse(w.at))) : null;
+  // Re-check once the oldest request runs out of time (the answer usually comes first).
+  useEffect(() => {
+    if (oldest === null) return;
+    const id = setTimeout(() => setNow(Date.now()), Math.max(500, oldest + THINKING_MS - (Date.now() + offset)));
+    return () => clearTimeout(id);
+  }, [oldest, offset, chat.length]);
+  return open;
+}
+
+/** The DJ's bubble with three rising dots while it works on someone's request. */
+export function DjThinking({ memberId, name }: { memberId: string; name: string }) {
+  const t = useT();
+  const meId = useRoom((s) => s.memberId);
+  const who = memberId === meId ? t.djBot.you : name;
+  return (
+    <li className="chat-msg chat-dj flex flex-col items-start" role="status" aria-label={t.djBot.thinking(who)}>
+      <span className="mb-0.5 flex items-center gap-1 px-1 text-[13px] text-sage sm:text-[12px]" aria-hidden>
+        <Disc3 className="h-3.5 w-3.5 animate-spin text-amber [animation-duration:2.4s]" />
+        <span className="font-semibold text-amber">{t.djBot.name}</span>
+      </span>
+      <div className="chat-bubble rounded-[16px] rounded-bl-[4px] border border-amber/60 bg-panel-hi px-3 py-2" aria-hidden>
+        <span className="dj-dots flex h-5 items-center gap-1 text-amber">
+          <span />
+          <span />
+          <span />
+        </span>
+      </div>
     </li>
   );
 }
