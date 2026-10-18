@@ -858,6 +858,8 @@ export const vi = {
     autoReturn: 'Tự phát lại khi máy kia tắt',
     volume: 'Âm lượng',
     roomSpeaker: 'Máy này là máy phát của phòng.',
+    fullscreen: 'Toàn màn hình',
+    exitFullscreen: 'Thoát toàn màn hình',
   },
 
   banners: {

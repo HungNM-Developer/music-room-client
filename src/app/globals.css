@@ -232,3 +232,16 @@ html[data-theme='hifi82'] .host-qr p:last-child,
 html[data-theme='saigon'] .host-qr p:last-child {
   color: var(--color-sage);
 }
+
+/* The video covering the page (no full screen API: iPhone, some embedded browsers): nothing above
+   it may trap position: fixed, and the page under it stays still. */
+:where(*):has(.player-full[data-covering]) {
+  transform: none !important;
+  filter: none !important;
+  perspective: none !important;
+  contain: none !important;
+  will-change: auto !important;
+}
+html:has(.player-full[data-covering]) {
+  overflow: hidden;
+}

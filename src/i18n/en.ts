@@ -839,6 +839,8 @@ export const en: Dict = {
     autoReturn: 'Takes over when the other one stops',
     volume: 'Volume',
     roomSpeaker: "This device is the room's speaker.",
+    fullscreen: 'Full screen',
+    exitFullscreen: 'Exit full screen',
   },
 
   banners: {

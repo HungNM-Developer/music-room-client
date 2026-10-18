@@ -9,6 +9,7 @@ import { PLAYER_PROGRESS_INTERVAL_MS } from '@/contracts/events';
 import { useT } from '@/i18n';
 import { memberName } from '@/i18n/activity';
 import { legacySpeech, SpeechCue } from '@/lib/speech';
+import { FullscreenButton, useVideoFullscreen } from './FullscreenButton';
 import { IdleCover } from './IdleCover';
 import { PlayerCover } from './PlayerCover';
 import { estimatePosition } from '@/lib/time';
@@ -70,6 +71,8 @@ export function playDj(src: string): void {
  */
 export function PlayerEngine({ volume = 100, caption = false, frameClass }: { volume?: number; caption?: boolean; frameClass?: string }) {
   const t = useT();
+  /** The video and its bar: what goes full screen. */
+  const playerRef = useRef<HTMLDivElement>(null);
   // The room has no song at all (not merely paused): the cover replaces the empty video.
   const idle = useRoom((s) => !s.snapshot?.nowPlaying);
   const playerCommand = useRoom((s) => s.playerCommand);
@@ -437,6 +440,10 @@ export function PlayerEngine({ volume = 100, caption = false, frameClass }: { vo
   // The video starts on its own when the browser allows it; otherwise (or when the room is
   // paused) its own ▶ starts this speaker. A hint says so — never over the video.
   // The room page also says why this page plays: it is the room's speaker.
+  // Full screen while there is something to watch (not when the room ran out of songs).
+  const watching = !idle && !waitingForOther;
+  const full = useVideoFullscreen(playerRef, watching);
+
   const waitingHint = `${caption ? `${t.host.roomSpeaker} ` : ''}${touch ? t.host.startTouch : t.host.start}`;
 
   // A tap on "move the sound here": take over from the other speaker right now.
@@ -447,7 +454,9 @@ export function PlayerEngine({ volume = 100, caption = false, frameClass }: { vo
   };
 
   const screen = (
-    <div className="relative aspect-video w-full overflow-hidden rounded-panel bg-dial-deep">
+    <div
+      className={`player-screen relative w-full overflow-hidden ${full.expanded ? 'min-h-0 flex-1 bg-black' : 'aspect-video rounded-panel bg-dial-deep'}`}
+    >
       <YouTubeAdapter
         adapterRef={adapterRef}
         onReady={() => {
@@ -480,8 +489,21 @@ export function PlayerEngine({ volume = 100, caption = false, frameClass }: { vo
 
   return (
     <div className="space-y-2">
-      {/* Always this wrapper, only its class changes: a theme switch never remounts the iframe. */}
-      <div className={frameClass}>{screen}</div>
+      {/* Always these wrappers, only their classes change: a theme switch or full screen never
+          remounts the iframe. Full screen takes the video and the bar under it (its way out). */}
+      <div
+        ref={playerRef}
+        data-covering={full.covers || undefined}
+        className={full.expanded ? `player-full flex flex-col bg-black ${full.covers ? 'fixed inset-0 z-[80] h-dvh' : 'h-full w-full'}` : ''}
+      >
+        <div className={full.expanded ? 'flex min-h-0 flex-1' : frameClass}>{screen}</div>
+        {/* YouTube's own full screen is off with its controls. */}
+        {watching && (
+          <div className={`flex justify-end ${full.expanded ? 'px-2 py-1' : '-mb-1'}`}>
+            <FullscreenButton expanded={full.expanded} onToggle={() => void full.toggle()} />
+          </div>
+        )}
+      </div>
       {!started
         ? !waitingForOther && preview && (!previewPlaying || needsTap) && <TapVideoHint text={waitingHint} />
         : needsTap && <TapVideoHint text={t.host.tapVideo} />}
