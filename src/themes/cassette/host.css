@@ -222,7 +222,7 @@ html[data-theme='cassette'] .host-cassette .hc-top {
 
 @media (min-width: 960px) and (min-height: 540px) {
   html[data-theme='cassette'] .host-cassette .host-grid {
-    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 54) calc(var(--u) * 2.6) minmax(0, 1fr) calc(var(--u) * 2);
+    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 72) calc(var(--u) * 2.2) minmax(0, 1fr) calc(var(--u) * 2);
     grid-template-rows: calc(var(--u) * 2) auto minmax(0, 1fr) calc(var(--u) * 1.2);
     grid-template-areas:
       '. . . . .'
@@ -251,5 +251,105 @@ html[data-theme='cassette'] .host-cassette .hc-top {
     flex-basis: 100%;
     margin: 0;
     font-size: calc(var(--u) * 1.2);
+  }
+  /* Layout B: the video 72 % wide. Side A (label and tape window) on the left under it, three
+     lyric lines on the right; side B stacks the sticker, the Dymo code and the wish note. */
+  html[data-theme='cassette'] .hc-now {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    align-items: start;
+    column-gap: calc(var(--u) * 2);
+    padding-top: calc(var(--u) * 0.6);
+  }
+  html[data-theme='cassette'] .hc-shell {
+    grid-template-columns: minmax(0, 1fr) calc(var(--u) * 12.5);
+    padding: calc(var(--u) * 0.6);
+  }
+  html[data-theme='cassette'] .hc-label {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'side'
+      'title'
+      'meta';
+    padding: calc(var(--u) * 0.5) calc(var(--u) * 1) calc(var(--u) * 0.4);
+  }
+  html[data-theme='cassette'] .hc-now > .lyrics-inline {
+    padding-top: calc(var(--u) * 0.4);
+  }
+  html[data-theme='cassette'] .hc-label .hc-side {
+    grid-area: side;
+  }
+  html[data-theme='cassette'] .hc-label .host-title {
+    grid-area: title;
+    -webkit-line-clamp: 1;
+  }
+  html[data-theme='cassette'] .hc-label .host-meta {
+    grid-area: meta;
+  }
+  html[data-theme='cassette'] .host-cassette .lyrics-inline p[data-current] {
+    font-size: calc(var(--u) * 1.9);
+  }
+  html[data-theme='cassette'] .hc-side-b {
+    gap: calc(var(--u) * 1);
+  }
+  html[data-theme='cassette'] .host-cassette .hc-top {
+    flex-direction: column;
+    align-items: center;
+    gap: calc(var(--u) * 0.9);
+  }
+  html[data-theme='cassette'] .hc-sticker {
+    padding: calc(var(--u) * 0.7);
+  }
+  html[data-theme='cassette'] .hc-sticker .host-qr-code {
+    width: calc(var(--u) * 10.5);
+  }
+  html[data-theme='cassette'] .hc-sticker p {
+    margin-top: calc(var(--u) * 0.2);
+    font-size: calc(var(--u) * 1.25);
+  }
+  html[data-theme='cassette'] .hc-tags {
+    justify-items: center;
+    width: 100%;
+    padding-top: 0;
+  }
+  html[data-theme='cassette'] .hc-tags .host-link {
+    display: none;
+  }
+  html[data-theme='cassette'] .hc-wish {
+    justify-self: stretch;
+    margin-top: calc(var(--u) * 0.2);
+  }
+  html[data-theme='cassette'] .hc-wish blockquote {
+    font-size: calc(var(--u) * 1.35);
+    -webkit-line-clamp: 2;
+  }
+  html[data-theme='cassette'] .hc-jcard {
+    padding: calc(var(--u) * 0.5) calc(var(--u) * 0.9);
+    border-left-width: calc(var(--u) * 1);
+  }
+  html[data-theme='cassette'] .hc-jcard li,
+  html[data-theme='cassette'] .hc-jcard .host-next-empty {
+    font-size: calc(var(--u) * 1.4);
+  }
+  /* The two latest chat notes side by side. */
+  html[data-theme='cassette'] .hc-notes ol {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: calc(var(--u) * 0.7);
+  }
+  html[data-theme='cassette'] .hc-notes li:nth-last-child(n + 3) {
+    display: none;
+  }
+  /* Vertical room as a transparent border: a clamped note's next line stays hidden instead of
+     showing through the padding. */
+  html[data-theme='cassette'] .hc-notes li {
+    padding-block: 0;
+    border-block: calc(var(--u) * 0.6) solid transparent;
+    font-size: calc(var(--u) * 1.15);
+  }
+  html[data-theme='cassette'] .hc-foot {
+    gap: calc(var(--u) * 0.6) calc(var(--u) * 1);
+  }
+  html[data-theme='cassette'] .hc-foot .host-controls {
+    margin-left: 0;
   }
 }

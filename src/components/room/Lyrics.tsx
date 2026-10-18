@@ -66,8 +66,8 @@ function SyncedLines({ lines }: { lines: { t: number; text: string }[] }) {
 }
 
 /**
- * A7: karaoke lines under the title — the line before, the one being sung, the next (on the
- * speaker: the one being sung and the next only). Only for synced lyrics; always shown.
+ * A7: karaoke lines under the title — the line before, the one being sung (in the middle),
+ * the next. Only for synced lyrics; always shown.
  * `host`: the speaker screen; `stage`: a themed room page.
  */
 export function InlineLyrics({ trackId, size, className = '' }: { trackId: string; size: 'host' | 'stage'; className?: string }) {
@@ -78,8 +78,9 @@ export function InlineLyrics({ trackId, size, className = '' }: { trackId: strin
   const lines = lyrics?.synced;
   if (!lines) return null;
   const at = lineAt(lines, pos);
-  // Before the first line: the first lines, none highlighted yet.
-  const picks = host ? (at < 0 ? [0, 1] : [at, at + 1]) : at < 0 ? [0, 1, 2] : [at - 1, at, at + 1];
+  // Before the first line: the first lines, none highlighted yet (on the speaker the first
+  // line already sits in the middle, where it lights up once sung).
+  const picks = at >= 0 ? [at - 1, at, at + 1] : host ? [-1, 0, 1] : [0, 1, 2];
   const windowLines = picks.map((i) => ({ i, line: lines[i] }));
   return (
     <section aria-label={t.lyrics.title} className={`lyrics-inline ${host ? 'max-w-3xl' : ''} ${className}`}>

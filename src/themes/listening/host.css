@@ -179,15 +179,84 @@ html[data-theme='listening'] .hl-qr {
 
 @media (min-width: 960px) and (min-height: 540px) {
   html[data-theme='listening'] .host-listening .host-grid {
-    grid-template-columns: calc(var(--u) * 2.4) calc(var(--u) * 48) calc(var(--u) * 3) minmax(0, 1fr) calc(var(--u) * 2.4);
-    grid-template-rows: calc(var(--u) * 2.2) auto minmax(0, 1fr) calc(var(--u) * 1.4);
+    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 72) calc(var(--u) * 2.2) minmax(0, 1fr) calc(var(--u) * 2);
+    grid-template-rows: calc(var(--u) * 2) auto minmax(0, 1fr) calc(var(--u) * 1.2);
     grid-template-areas:
       '. . . . .'
       '. video . side .'
       '. below . side .'
       '. . . . .';
   }
+  /* Layout B: the video 72 % wide. Under it the sleeve, title and dial on the left, three lyric
+     lines on the right; the coaster stacks above its code in the narrow column. */
+  html[data-theme='listening'] .hl-now {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'song lyrics'
+      'dial lyrics';
+    align-items: center;
+    column-gap: calc(var(--u) * 2.4);
+    row-gap: calc(var(--u) * 0.5);
+    padding-top: calc(var(--u) * 0.8);
+  }
+  html[data-theme='listening'] .hl-song {
+    grid-area: song;
+    gap: calc(var(--u) * 2.6);
+    min-width: 0;
+  }
+  html[data-theme='listening'] .hl-cover {
+    width: calc(var(--u) * 6);
+    height: calc(var(--u) * 6);
+  }
+  html[data-theme='listening'] .hl-info .host-title {
+    font-size: calc(var(--u) * 2.4);
+    -webkit-line-clamp: 1;
+  }
+  html[data-theme='listening'] .hl-now > .dial {
+    grid-area: dial;
+  }
+  html[data-theme='listening'] .host-listening .dial-track {
+    height: calc(var(--u) * 2.6) !important;
+  }
+  html[data-theme='listening'] .host-listening .dial-needle {
+    height: calc(var(--u) * 1.9) !important;
+  }
+  html[data-theme='listening'] .hl-now > .lyrics-inline {
+    grid-area: lyrics;
+    align-self: start;
+  }
+  html[data-theme='listening'] .host-listening .lyrics-inline p[data-current] {
+    font-size: calc(var(--u) * 1.8);
+  }
+  html[data-theme='listening'] .hl-side {
+    gap: calc(var(--u) * 1);
+  }
   html[data-theme='listening'] .hl-qr {
-    flex-wrap: nowrap;
+    flex-direction: column;
+    gap: calc(var(--u) * 0.8);
+    text-align: center;
+  }
+  html[data-theme='listening'] .hl-coaster {
+    width: calc(var(--u) * 15);
+    height: calc(var(--u) * 15);
+  }
+  html[data-theme='listening'] .hl-coaster .host-qr-code {
+    width: calc(var(--u) * 10.4);
+  }
+  html[data-theme='listening'] .hl-scan {
+    margin-bottom: calc(var(--u) * 0.3);
+    font-size: calc(var(--u) * 1.4);
+  }
+  html[data-theme='listening'] .hl-qr .host-link {
+    display: none;
+  }
+  html[data-theme='listening'] .hl-menu {
+    padding: calc(var(--u) * 0.8) calc(var(--u) * 1);
+  }
+  html[data-theme='listening'] .hl-menu li {
+    font-size: calc(var(--u) * 1.2);
+  }
+  html[data-theme='listening'] .hl-people .host-chat li {
+    -webkit-line-clamp: 1;
   }
 }

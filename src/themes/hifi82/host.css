@@ -1,6 +1,6 @@
 /* Speaker screen · Dàn máy Nhật 1982 (light): the whole screen is one brushed-aluminium deck.
-   Video top left; the brand plate with the orange signal lamp, the QR and the wish beside it;
-   an amber LCD across the deck (song + time | lyrics); numbered keys for what plays next.
+   Video top left with an amber LCD under it (song + time | lyrics); beside them the brand plate
+   with the orange signal lamp, the QR, the wish, numbered keys for what plays next and the people.
    Sizes in --u. */
 html[data-theme='hifi82'] .host-hifi82 {
   background: repeating-linear-gradient(0deg, #e7e4dd 0 2px, #dedad2 2px 4px);
@@ -191,18 +191,9 @@ html[data-theme='hifi82'] .hh-people input {
   accent-color: #c8441b;
 }
 
-/* One column: the song (LCD band) right under the video, then the panel, then the keys. */
+/* One column: the song (LCD band) right under the video, then the panel. */
 html[data-theme='hifi82'] .hh-qr {
   flex-wrap: wrap;
-}
-html[data-theme='hifi82'] .host-hifi82 .host-footer {
-  order: 1;
-}
-html[data-theme='hifi82'] .host-hifi82 .host-side {
-  order: 2;
-}
-html[data-theme='hifi82'] .host-hifi82 .host-below {
-  order: 3;
 }
 html[data-theme='hifi82'] .hh-lcd,
 html[data-theme='hifi82'] .hh-bottom {
@@ -210,25 +201,77 @@ html[data-theme='hifi82'] .hh-bottom {
 }
 
 @media (min-width: 960px) and (min-height: 540px) {
+  /* Layout B: the video 72 % wide, the LCD under it; the deck's controls in the narrow column. */
   html[data-theme='hifi82'] .host-hifi82 .host-grid {
-    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 47) calc(var(--u) * 2.4) minmax(0, 1fr) calc(var(--u) * 2);
-    grid-template-rows: calc(var(--u) * 1.8) auto calc(var(--u) * 1) auto calc(var(--u) * 1) minmax(0, 1fr) calc(var(--u) * 1.4);
+    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 72) calc(var(--u) * 2.2) minmax(0, 1fr) calc(var(--u) * 2);
+    grid-template-rows: calc(var(--u) * 1.8) auto minmax(0, 1fr) calc(var(--u) * 1.2);
     grid-template-areas:
       '. . . . .'
       '. video . side .'
-      '. . . . .'
-      '. footer footer footer .'
-      '. . . . .'
-      '. below below below .'
+      '. below . side .'
       '. . . . .';
-  }
-  html[data-theme='hifi82'] .hh-qr {
-    flex-wrap: nowrap;
   }
   html[data-theme='hifi82'] .hh-lcd {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: calc(var(--u) * 2);
+    margin-top: calc(var(--u) * 1.1);
+    padding: calc(var(--u) * 0.7) calc(var(--u) * 1.4);
+  }
+  html[data-theme='hifi82'] .hh-lcd .host-title {
+    -webkit-line-clamp: 1;
+  }
+  html[data-theme='hifi82'] .hh-lcd .hifi-lcd {
+    margin-top: 0;
+    font-size: calc(var(--u) * 2.1);
+  }
+  html[data-theme='hifi82'] .hh-lcd .lyrics-inline p[data-current] {
+    font-size: calc(var(--u) * 2);
+  }
+  html[data-theme='hifi82'] .hh-side {
+    gap: calc(var(--u) * 0.9);
+  }
+  html[data-theme='hifi82'] .hh-qr {
+    flex-direction: column;
+    gap: calc(var(--u) * 0.6);
+    padding: calc(var(--u) * 0.9);
+    text-align: center;
+  }
+  html[data-theme='hifi82'] .hh-qr .host-qr-code {
+    width: calc(var(--u) * 10.5);
+  }
+  html[data-theme='hifi82'] .hh-qr .host-code {
+    margin: calc(var(--u) * 0.2) 0 0;
+    font-size: calc(var(--u) * 3);
+  }
+  html[data-theme='hifi82'] .hh-qr .host-link {
+    display: none;
   }
   html[data-theme='hifi82'] .hh-bottom {
-    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
+    gap: calc(var(--u) * 0.9);
+    height: auto;
+  }
+  /* The keys in a column: number, then the title and who picked it. */
+  html[data-theme='hifi82'] .hh-keys ol {
+    grid-template-columns: minmax(0, 1fr);
+    gap: calc(var(--u) * 0.6);
+  }
+  html[data-theme='hifi82'] .hh-keys li {
+    grid-template-columns: calc(var(--u) * 1.8) minmax(0, 1fr);
+    align-items: center;
+    column-gap: calc(var(--u) * 0.6);
+    min-height: 0;
+    padding: calc(var(--u) * 0.45) calc(var(--u) * 0.7);
+    font-size: calc(var(--u) * 1.15);
+  }
+  html[data-theme='hifi82'] .hh-keys li b {
+    grid-row: span 2;
+  }
+  html[data-theme='hifi82'] .hh-keys li .t {
+    -webkit-line-clamp: 1;
+  }
+  html[data-theme='hifi82'] .hh-keys li .p {
+    font-size: calc(var(--u) * 1);
   }
 }

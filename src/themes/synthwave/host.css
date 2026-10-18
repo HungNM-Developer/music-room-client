@@ -162,18 +162,85 @@ html[data-theme='synthwave'] .hy-qr {
 
 @media (min-width: 960px) and (min-height: 540px) {
   html[data-theme='synthwave'] .host-synthwave .host-grid {
-    grid-template-columns: calc(var(--u) * 2.4) calc(var(--u) * 51) calc(var(--u) * 2.8) minmax(0, 1fr) calc(var(--u) * 2.4);
-    grid-template-rows: calc(var(--u) * 2.2) auto minmax(0, 1fr) calc(var(--u) * 1.6);
+    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 72) calc(var(--u) * 2.4) minmax(0, 1fr) calc(var(--u) * 2);
+    grid-template-rows: calc(var(--u) * 2) auto minmax(0, 1fr) calc(var(--u) * 1.2);
     grid-template-areas:
       '. . . . .'
       '. video . side .'
       '. below . side .'
       '. . . . .';
   }
-  html[data-theme='synthwave'] .hy-qr {
-    flex-wrap: nowrap;
+  /* Layout B: the video 72 % wide. Under it, on the left the lamp beside the title, the
+     artist, the time line; on the right three lyric lines. The QR panel stacks in the narrow
+     column. */
+  html[data-theme='synthwave'] .hy-now {
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.1fr);
+    align-content: start;
+    grid-template-areas:
+      'lamp title lyrics'
+      'meta meta lyrics'
+      'dial dial lyrics'
+      'wish wish lyrics';
+    align-items: center;
+    column-gap: calc(var(--u) * 1.4);
+    row-gap: calc(var(--u) * 0.35);
   }
-  /* The sun between the columns, sinking into the horizon grid. */
+  html[data-theme='synthwave'] .hy-now > .host-lamp {
+    grid-area: lamp;
+  }
+  html[data-theme='synthwave'] .hy-now > .host-title {
+    grid-area: title;
+    -webkit-line-clamp: 1;
+  }
+  html[data-theme='synthwave'] .hy-now > .host-meta {
+    grid-area: meta;
+  }
+  html[data-theme='synthwave'] .hy-now > .line-dial {
+    grid-area: dial;
+  }
+  html[data-theme='synthwave'] .hy-now > .lyrics-inline {
+    grid-area: lyrics;
+    align-self: start;
+  }
+  html[data-theme='synthwave'] .hy-now > .hy-wish {
+    grid-area: wish;
+  }
+  html[data-theme='synthwave'] .host-synthwave .lyrics-inline p[data-current] {
+    font-size: calc(var(--u) * 1.9);
+  }
+  html[data-theme='synthwave'] .hy-side {
+    gap: calc(var(--u) * 1);
+  }
+  /* Solid panels: the sun sits behind this column now and must not show through the text. */
+  html[data-theme='synthwave'] .hy-frame {
+    padding: calc(var(--u) * 0.8) calc(var(--u) * 1);
+    background: #140428f2;
+  }
+  html[data-theme='synthwave'] .hy-qr {
+    flex-direction: column;
+    gap: calc(var(--u) * 0.7);
+    text-align: center;
+  }
+  html[data-theme='synthwave'] .hy-qr .host-qr-code {
+    width: calc(var(--u) * 10.5);
+  }
+  html[data-theme='synthwave'] .hy-qr .host-link {
+    display: none;
+  }
+  html[data-theme='synthwave'] .hy-next li {
+    grid-template-columns: calc(var(--u) * 2.2) minmax(0, 1fr);
+    row-gap: 0;
+    padding: calc(var(--u) * 0.15) 0;
+    font-size: calc(var(--u) * 1.2);
+  }
+  html[data-theme='synthwave'] .hy-next li .p {
+    grid-column: 2;
+    font-size: calc(var(--u) * 1);
+  }
+  html[data-theme='synthwave'] .hy-people .host-chat li {
+    -webkit-line-clamp: 1;
+  }
+  /* The sun behind the narrow column, sinking into the horizon grid. */
   html[data-theme='synthwave'] .host-synthwave .host-frame::before,
   html[data-theme='synthwave'] .host-synthwave .host-frame::after {
     content: '';
@@ -181,9 +248,9 @@ html[data-theme='synthwave'] .hy-qr {
     pointer-events: none;
   }
   html[data-theme='synthwave'] .host-synthwave .host-frame::before {
-    left: 64%;
-    top: 30%;
-    width: 24%;
+    left: 87%;
+    top: 34%;
+    width: 22%;
     aspect-ratio: 1;
     border-radius: 50%;
     transform: translateX(-50%);

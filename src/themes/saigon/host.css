@@ -176,8 +176,8 @@ html[data-theme='saigon'] .hg-sign {
   html[data-theme='saigon'] .host-saigon .host-grid {
     inset: calc(var(--u) * 1.4);
     background: #f3ead6;
-    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 47) calc(var(--u) * 2.8) minmax(0, 1fr) calc(var(--u) * 2);
-    grid-template-rows: calc(var(--u) * 1) auto calc(var(--u) * 1.4) auto minmax(0, 1fr) calc(var(--u) * 0.9);
+    grid-template-columns: calc(var(--u) * 1.8) calc(var(--u) * 70) calc(var(--u) * 2.4) minmax(0, 1fr) calc(var(--u) * 1.8);
+    grid-template-rows: calc(var(--u) * 0.8) calc(var(--u) * 2.8) calc(var(--u) * 1.3) auto minmax(0, 1fr) calc(var(--u) * 0.6);
     grid-template-areas:
       '. . . . .'
       '. header header header .'
@@ -189,5 +189,77 @@ html[data-theme='saigon'] .hg-sign {
   html[data-theme='saigon'] .hg-qr,
   html[data-theme='saigon'] .hg-sign {
     flex-wrap: nowrap;
+  }
+  /* Layout B: the video 70 % wide (the tile border and the sign take the rest). Under it the
+     title, artist and tape on the left, three lyric lines on the right; the QR stacks in the
+     narrow column. */
+  html[data-theme='saigon'] .hg-sign {
+    padding: calc(var(--u) * 0.4) calc(var(--u) * 1.4);
+  }
+  html[data-theme='saigon'] .hg-name {
+    font-size: calc(var(--u) * 1.9);
+  }
+  html[data-theme='saigon'] .hg-now {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'title lyrics'
+      'meta lyrics'
+      'dial lyrics';
+    align-items: center;
+    column-gap: calc(var(--u) * 2);
+    row-gap: calc(var(--u) * 0.3);
+    padding-top: calc(var(--u) * 1.1);
+  }
+  html[data-theme='saigon'] .hg-now > .host-title {
+    grid-area: title;
+    font-size: calc(var(--u) * 2.1);
+    -webkit-line-clamp: 1;
+  }
+  html[data-theme='saigon'] .hg-now > .host-meta {
+    grid-area: meta;
+  }
+  html[data-theme='saigon'] .hg-now > .line-dial {
+    grid-area: dial;
+    font-size: calc(var(--u) * 1.3);
+  }
+  html[data-theme='saigon'] .hg-now > .lyrics-inline {
+    grid-area: lyrics;
+    align-self: start;
+  }
+  html[data-theme='saigon'] .host-saigon .lyrics-inline p[data-current] {
+    font-size: calc(var(--u) * 1.7);
+  }
+  html[data-theme='saigon'] .hg-side {
+    gap: calc(var(--u) * 0.9);
+  }
+  html[data-theme='saigon'] .hg-qr {
+    flex-direction: column;
+    gap: calc(var(--u) * 0.5);
+    padding: calc(var(--u) * 0.8);
+    text-align: center;
+  }
+  html[data-theme='saigon'] .hg-qr .host-qr-code {
+    width: calc(var(--u) * 10);
+  }
+  html[data-theme='saigon'] .hg-qr .host-code {
+    margin: calc(var(--u) * 0.3) 0 0;
+  }
+  html[data-theme='saigon'] .hg-qr .host-link {
+    display: none;
+  }
+  html[data-theme='saigon'] .hg-chalk {
+    padding: calc(var(--u) * 0.6) calc(var(--u) * 0.9);
+    border-width: calc(var(--u) * 0.5);
+  }
+  html[data-theme='saigon'] .hg-chalk li,
+  html[data-theme='saigon'] .hg-chalk .host-next-empty {
+    font-size: calc(var(--u) * 1.4);
+  }
+  html[data-theme='saigon'] .hg-card blockquote {
+    font-size: calc(var(--u) * 1.35);
+    -webkit-line-clamp: 2;
+  }
+  html[data-theme='saigon'] .hg-people .host-chat li {
+    -webkit-line-clamp: 1;
   }
 }

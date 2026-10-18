@@ -205,15 +205,87 @@ html[data-theme='cosmos'] .hc2-qr {
 
 @media (min-width: 960px) and (min-height: 540px) {
   html[data-theme='cosmos'] .host-cosmos .host-grid {
-    grid-template-columns: calc(var(--u) * 2.4) calc(var(--u) * 51) calc(var(--u) * 3) minmax(0, 1fr) calc(var(--u) * 2.4);
-    grid-template-rows: calc(var(--u) * 2) auto minmax(0, 1fr) calc(var(--u) * 1.4);
+    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 72) calc(var(--u) * 2.2) minmax(0, 1fr) calc(var(--u) * 2);
+    grid-template-rows: calc(var(--u) * 1.6) auto minmax(0, 1fr) calc(var(--u) * 1);
     grid-template-areas:
       '. . . . .'
       '. video . side .'
       '. below . side .'
       '. . . . .';
   }
+  /* Layout B: the porthole 72 % wide. Under it, on the left a smaller planet beside the lamp
+     and title, artist and time; on the right three lyric lines. The QR panel stacks in the
+     narrow column. */
+  html[data-theme='cosmos'] .hc2-now {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'song lyrics'
+      'wish lyrics';
+    align-content: start;
+    column-gap: calc(var(--u) * 2.4);
+    row-gap: calc(var(--u) * 0.4);
+    padding-top: calc(var(--u) * 0.7);
+  }
+  html[data-theme='cosmos'] .hc2-song {
+    grid-area: song;
+    min-width: 0;
+  }
+  html[data-theme='cosmos'] .hc2-now > .lyrics-inline {
+    grid-area: lyrics;
+  }
+  html[data-theme='cosmos'] .hc2-now > .hc2-wish {
+    grid-area: wish;
+  }
+  html[data-theme='cosmos'] .hc2-planet {
+    width: calc(var(--u) * 5.6);
+    height: calc(var(--u) * 5.6);
+  }
+  html[data-theme='cosmos'] .hc2-info {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: calc(var(--u) * 1);
+  }
+  html[data-theme='cosmos'] .hc2-info .host-title {
+    grid-column: 2 / -1;
+    font-size: calc(var(--u) * 2.3);
+    -webkit-line-clamp: 1;
+  }
+  html[data-theme='cosmos'] .hc2-info .host-meta {
+    grid-column: 1 / 3;
+  }
+  html[data-theme='cosmos'] .hc2-info .stage-time {
+    grid-column: 3;
+  }
+  html[data-theme='cosmos'] .host-cosmos .lyrics-inline p[data-current] {
+    font-size: calc(var(--u) * 1.8);
+  }
+  html[data-theme='cosmos'] .hc2-side {
+    gap: calc(var(--u) * 0.9);
+  }
+  html[data-theme='cosmos'] .hc2-panel {
+    padding: calc(var(--u) * 0.8) calc(var(--u) * 1);
+  }
   html[data-theme='cosmos'] .hc2-qr {
-    flex-wrap: nowrap;
+    flex-direction: column;
+    gap: calc(var(--u) * 0.6);
+    text-align: center;
+  }
+  html[data-theme='cosmos'] .hc2-qr .host-qr-code {
+    width: calc(var(--u) * 10.5);
+  }
+  html[data-theme='cosmos'] .hc2-qr h2 {
+    margin-bottom: calc(var(--u) * 0.3);
+  }
+  html[data-theme='cosmos'] .hc2-qr .host-link {
+    display: none;
+  }
+  html[data-theme='cosmos'] .hc2-orbits ol {
+    gap: calc(var(--u) * 0.6);
+  }
+  html[data-theme='cosmos'] .hc2-orbits li .t {
+    font-size: calc(var(--u) * 1.05);
+  }
+  html[data-theme='cosmos'] .hc2-orbits li .p {
+    font-size: calc(var(--u) * 0.95);
   }
 }
