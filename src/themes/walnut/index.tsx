@@ -26,6 +26,7 @@ import { Suggestions } from '@/components/room/Suggestions';
 import { IconButton } from '@/components/ui/Button';
 import { useT } from '@/i18n';
 import { addedByLabel } from '@/lib/added-by';
+import { artistAndPicker } from '@/lib/track-artist';
 import { formatDuration } from '@/lib/time';
 import { fraunces } from '../listening/fonts';
 import type { HostSkin, ThemeModule } from '../load';
@@ -85,7 +86,7 @@ function Crate({ openAdd }: { openAdd: () => void }) {
               {(q.pinned || q.wishMessage) && <span className="tag">{[q.pinned && t.queue.pinnedGroup, q.wishMessage && t.queue.hasWish].filter(Boolean).join(' · ')}</span>}
             </div>
             <b title={q.track.title}>{q.track.title}</b>
-            <span className="who">{addedByLabel(q)}</span>
+            <span className="who">{artistAndPicker(q)}</span>
             <span className="acts">
               <HeartButton item={q} me={me} />
               <SaveButton track={q.track} />

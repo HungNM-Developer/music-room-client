@@ -21,6 +21,7 @@ import { Dialog } from '@/components/ui/Dialog';
 import type { QueueItemView } from '@/contracts';
 import { useT } from '@/i18n';
 import { addedByLabel } from '@/lib/added-by';
+import { artistAndPicker } from '@/lib/track-artist';
 import { ytThumb } from '@/lib/thumbs';
 import { formatDuration } from '@/lib/time';
 import { useRoom } from '@/state/hooks';
@@ -88,7 +89,7 @@ function Orbits({ openAdd }: { openAdd: () => void }) {
             height: sizes[i],
             backgroundImage: `url(${ytThumb(q.track.thumbnailUrl) ?? ''})`,
           }}
-          aria-label={`${i + 1}. ${q.track.title}, ${addedByLabel(q)}`}
+          aria-label={`${i + 1}. ${q.track.title}, ${artistAndPicker(q)}`}
           title={q.track.title}
           onClick={() => setOpen(q)}
         />
@@ -100,7 +101,7 @@ function Orbits({ openAdd }: { openAdd: () => void }) {
     <>
       <StageQueue openAdd={openAdd} title={t.themeText.cosmos.next} variant="cosmos" lead={planets} />
       {shown && (
-        <Dialog open onClose={() => setOpen(null)} title={shown.track.title} description={addedByLabel(shown)}>
+        <Dialog open onClose={() => setOpen(null)} title={shown.track.title} description={artistAndPicker(shown)}>
           <div className="flex flex-wrap items-center gap-3">
             {shown.track.durationSec ? <span className="text-sage tabular-nums">{formatDuration(shown.track.durationSec)}</span> : null}
             {shown.wishMessage && <p className="w-full whitespace-pre-wrap text-[15px] [overflow-wrap:anywhere]">{shown.wishMessage}</p>}

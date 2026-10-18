@@ -10,6 +10,7 @@ import { StageIdle, WishBlock } from './parts';
 import { StageControls } from './StageControls';
 import { StageQueue } from './StageQueue';
 import { StageVote } from './StageVote';
+import { trackArtist } from '@/lib/track-artist';
 import './stage.css';
 
 export interface StageProps {
@@ -59,6 +60,7 @@ export function StageLayout(p: StageProps) {
   }
 
   const { track, playing } = a;
+  const artist = trackArtist(track);
   return (
     <div className="stage">
       <section aria-label={t.nowPlaying.title} data-guide="nowPlaying" className="stage-now">
@@ -73,7 +75,7 @@ export function StageLayout(p: StageProps) {
               {track.title}
             </h2>
             <p className="stage-by">{a.pickerLabel}</p>
-            {track.channel && <p className="stage-channel">{track.channel}</p>}
+            {artist && <p className="stage-channel">{artist}</p>}
             <LyricsButton trackId={track.id} />
             {p.dialInInfo && <div className="stage-dial">{p.dial}</div>}
           </div>

@@ -280,6 +280,10 @@
     font-size: 13px;
     color: var(--color-sage);
   }
+  /* Who sings it: the meta line's own colour (themes set it), a little heavier than the picker. */
+  .stage-q-artist {
+    font-weight: 600;
+  }
   .stage-q-actions {
     display: flex;
     align-items: center;

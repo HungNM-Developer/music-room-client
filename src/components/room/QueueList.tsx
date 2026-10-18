@@ -13,6 +13,7 @@ import type { MemberView, QueueItemView } from '@/contracts';
 import { useAct } from '@/hooks/useAct';
 import { useT, tr } from '@/i18n';
 import { formatDuration } from '@/lib/time';
+import { trackArtist } from '@/lib/track-artist';
 import { useMe, useRoom } from '@/state/hooks';
 import { type AddOp, applyQueue } from '@/state/optimistic';
 
@@ -181,6 +182,7 @@ const QueueRow = memo(function QueueRow({
   const t = useT();
   const mine = Boolean(me && item.addedBy?.id === me.id);
   const hasMenu = hasItemMenu(item, me);
+  const artist = trackArtist(item.track);
 
   return (
     <li className="flex animate-rise items-center gap-3 py-2.5 pl-2.5 pr-1">
@@ -190,6 +192,7 @@ const QueueRow = memo(function QueueRow({
           {item.track.title}
         </p>
         <p className="flex items-center gap-2 text-[13px] text-sage">
+          {artist && <span className="min-w-0 truncate text-paper/80">{artist}</span>}
           <span className="truncate">
             {addedByLabel(item)}
             {mine && ` (${t.queue.you})`}

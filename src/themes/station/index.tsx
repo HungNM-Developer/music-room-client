@@ -14,6 +14,7 @@ import { Suggestions } from '@/components/room/Suggestions';
 import { IconButton } from '@/components/ui/Button';
 import { useT } from '@/i18n';
 import { addedByLabel } from '@/lib/added-by';
+import { trackArtist } from '@/lib/track-artist';
 import { estimatePosition, formatDuration } from '@/lib/time';
 import { useNowPlaying, useRoom } from '@/state/hooks';
 import { barlowCondensed } from '../hifi82/fonts';
@@ -146,6 +147,7 @@ function Board({ openAdd }: { openAdd: () => void }) {
                 <span className="title" title={q.track.title}>
                   {q.track.title}
                 </span>
+                {trackArtist(q.track) && <span className="s">{trackArtist(q.track)}</span>}
                 <span className="md:hidden s">{addedByLabel(q)}</span>
               </td>
               <td className="max-md:hidden">{addedByLabel(q)}</td>
