@@ -2,6 +2,7 @@
 
 import { ChevronDown, CircleHelp, ExternalLink, Pointer, Signpost } from 'lucide-react';
 import { useEffect, useId, useState } from 'react';
+import { SoundSettingGuide } from '@/components/player/SoundSettingGuide';
 import { Button, IconButton } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
 import type { MemberView } from '@/contracts';
@@ -22,6 +23,8 @@ interface Item {
   need?: 'control' | 'admin' | 'dj';
   /** A link under the explanation. */
   link?: 'host';
+  /** The explanation is the step-by-step sound setting (SoundSettingGuide). */
+  guide?: true;
 }
 
 const at = (name: string) => `[data-guide="${name}"]`;
@@ -94,7 +97,7 @@ const GROUPS: { id: GroupId; items: Item[] }[] = [
   },
   {
     id: 'outside',
-    items: [{ id: 'host', link: 'host' }, { id: 'slack' }],
+    items: [{ id: 'host', link: 'host' }, { id: 'autoplay', guide: true }, { id: 'slack' }],
   },
 ];
 
@@ -235,7 +238,7 @@ function ExplainedItem({ item, code }: { item: Item; code: string }) {
   const t = useT();
   const [shown, setShown] = useState(false);
   const id = useId();
-  if (!item.link) {
+  if (!item.link && !item.guide) {
     return (
       <div className="flex min-h-14 items-center gap-3 px-3 py-2.5">
         <ItemText item={item} />
@@ -256,7 +259,7 @@ function ExplainedItem({ item, code }: { item: Item; code: string }) {
       </button>
       {shown && (
         <div id={id} className="space-y-3 px-3 pb-3">
-          <p className="text-[13px] leading-snug text-sage">{t.help.items[item.id].body}</p>
+          {item.guide ? <SoundSettingGuide /> : <p className="text-[13px] leading-snug text-sage">{t.help.items[item.id].body}</p>}
           {item.link === 'host' && code && (
             <a
               href={`/r/${code}/host`}

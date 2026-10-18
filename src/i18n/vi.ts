@@ -608,6 +608,16 @@ export const vi = {
         title: 'Dùng trên Slack',
         body: 'Nếu nhóm đã kết nối Slack, gõ /music help trong kênh để xem các lệnh, hoặc nhắn tự nhiên cho Music Room.',
       },
+      autoplay: {
+        title: 'Để máy phát luôn tự có tiếng',
+        body: 'Chrome / Edge: bấm biểu tượng bên trái thanh địa chỉ, vào Cài đặt trang web, đặt Âm thanh là Cho phép.',
+        /** {info} {tune} {gear} {sound}: the icons Chrome shows at that place. */
+        steps: [
+          'Bấm biểu tượng {info} hoặc {tune} bên trái thanh địa chỉ.',
+          'Chọn {gear} Cài đặt trang web (Site settings).',
+          'Ở dòng {sound} Âm thanh (Sound), chọn Cho phép (Allow). Nếu nút gạt {sound} Âm thanh đã có ngay trong bảng ở bước 1, bật nó lên là xong.',
+        ],
+      },
     },
   },
 
@@ -841,6 +851,11 @@ export const vi = {
     pin: 'Mã PIN quản trị',
     start: 'Bấm ▶ trên video để bật loa.',
     startTouch: 'Chạm ▶ trên video để bật loa.',
+    /** Playing muted: the browser refused sound until someone taps the page (SoundOverlay). */
+    soundTap: 'Bấm vào bất kỳ đâu để bật loa',
+    soundTapTouch: 'Chạm vào bất kỳ đâu để bật loa',
+    soundWhy: 'Trình duyệt chặn tự phát có tiếng. Video vẫn chạy theo phòng, chỉ chưa có tiếng.',
+    soundHowTo: 'Xem cách để lần sau tự có tiếng',
     tapVideo: 'Chạm ▶ trên video một lần để bật loa.',
     scan: 'Quét để chọn bài',
     onAir: 'ON AIR',

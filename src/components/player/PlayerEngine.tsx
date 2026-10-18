@@ -12,6 +12,9 @@ import { legacySpeech, SpeechCue } from '@/lib/speech';
 import { FullscreenButton, useVideoFullscreen } from './FullscreenButton';
 import { IdleCover } from './IdleCover';
 import { PlayerCover } from './PlayerCover';
+import { SoundOverlay } from './SoundOverlay';
+import { SoundSettingGuide } from './SoundSettingGuide';
+import { Dialog } from '@/components/ui/Dialog';
 import { estimatePosition } from '@/lib/time';
 import { Button } from '@/components/ui/Button';
 import { HOST_RECLAIM_MS, useMe, useOtherLivePlayer, useRoom } from '@/state/hooks';
@@ -25,6 +28,8 @@ export interface PlayerAdapter {
   seek(sec: number): void;
   currentTime(): number;
   setVolume(v: number): void;
+  setMuted(on: boolean): void;
+  muted(): boolean;
   /** YouTube state: -1 unstarted, 0 ended, 1 playing, 2 paused, 3 buffering, 5 cued. */
   state(): number;
 }
@@ -153,6 +158,14 @@ export function PlayerEngine({ volume = 100, caption = false, frameClass }: { vo
 
   // The room plays but the browser blocked this video after starting. Shown under the video.
   const [needsTap, setNeedsTap] = useState(false);
+  // Opened without a tap and the browser refused sound: the video follows the room muted (always
+  // allowed) and any tap or key on the page turns the sound on. Not the speaker until then.
+  const [silent, setSilent] = useState(false);
+  const silentRef = useRef(false);
+  // The tap that asks for sound happened: the layer goes at once, sound is confirmed behind it.
+  const [soundAsked, setSoundAsked] = useState(false);
+  // "Xem cách để lần sau tự có tiếng" from the layer: outlives the layer, which goes on that tap.
+  const [tipsOpen, setTipsOpen] = useState(false);
   // The loaded video has really played since our last load(). Loading over a playing video
   // makes YouTube report "paused" first; only a pause after real playback is someone's ⏸.
   const playedSinceLoad = useRef(false);
@@ -266,6 +279,21 @@ export function PlayerEngine({ volume = 100, caption = false, frameClass }: { vo
   }, [preview]);
   const previewId = preview?.item.id ?? null;
   const previewPlaying = preview?.status === 'PLAYING';
+  /** Sound refused before this device started: play muted (the picture follows the room). */
+  const playSilently = useCallback(() => {
+    const a = adapterRef.current;
+    if (!a) return;
+    a.setMuted(true);
+    a.play();
+    silentRef.current = true;
+    setSilent(true);
+    setSoundAsked(false);
+    // Even a muted video can be refused: then ▶ on the video, as before.
+    window.setTimeout(() => {
+      const s = adapterRef.current?.state();
+      if (s !== 1 && s !== 3) setNeedsTap(true);
+    }, 2500);
+  }, []);
   useEffect(() => {
     const a = adapterRef.current;
     const np = previewRef.current;
@@ -278,10 +306,10 @@ export function PlayerEngine({ volume = 100, caption = false, frameClass }: { vo
     // Blocked without a word (no onAutoplayBlocked): still not playing after a moment.
     const t = setTimeout(() => {
       const s = adapterRef.current?.state();
-      if (s !== 1 && s !== 3) setNeedsTap(true);
+      if (s !== 1 && s !== 3) playSilently();
     }, 2500);
     return () => clearTimeout(t);
-  }, [ready, started, previewId, previewPlaying, waitingForOther]);
+  }, [ready, started, previewId, previewPlaying, waitingForOther, playSilently]);
 
   useEffect(() => {
     volumeRef.current = volume;
@@ -395,6 +423,59 @@ export function PlayerEngine({ volume = 100, caption = false, frameClass }: { vo
     keep.play().catch(() => undefined);
   }, []);
 
+  // ---------------------------------------------------------------- sound on with any tap
+  // Playing muted: the first tap, click or key anywhere on the page (a tap on the video too: it
+  // takes the focus) asks for sound. Sound and still playing a moment later = this device is the
+  // speaker; refused = muted again, with ▶ on the video as the way in.
+  useEffect(() => {
+    if (!silent || started) return;
+    let trying = false;
+    const unmute = () => {
+      const a = adapterRef.current;
+      if (!a || trying) return;
+      trying = true;
+      // After this event is handled: a tap on "Xem cách…" on the layer still reaches its button.
+      window.setTimeout(() => setSoundAsked(true), 0);
+      a.setMuted(false);
+      a.setVolume(volumeRef.current);
+      a.play();
+      // Sound and still playing for a short while (a browser that refuses pauses the video at
+      // once): this device is the speaker. Checked every 100 ms, given up after 1.5 s.
+      const began = Date.now();
+      let good = 0;
+      const check = window.setInterval(() => {
+        const b = adapterRef.current;
+        const s = b?.state();
+        good = b && (s === 1 || s === 3) && !b.muted() ? good + 1 : 0;
+        const elapsed = Date.now() - began;
+        if (good >= 2 && elapsed >= 300) {
+          window.clearInterval(check);
+          trying = false;
+          silentRef.current = false;
+          setSilent(false);
+          start();
+        } else if (elapsed >= 1500) {
+          window.clearInterval(check);
+          trying = false;
+          b?.setMuted(true);
+          b?.play();
+          setNeedsTap(true);
+        }
+      }, 100);
+    };
+    const onBlur = () => {
+      if (document.activeElement instanceof HTMLIFrameElement) unmute();
+    };
+    window.addEventListener('pointerdown', unmute, true);
+    window.addEventListener('keydown', unmute, true);
+    window.addEventListener('blur', onBlur);
+    return () => {
+      window.removeEventListener('pointerdown', unmute, true);
+      window.removeEventListener('keydown', unmute, true);
+      window.removeEventListener('blur', onBlur);
+    };
+  }, [silent, started, start]);
+
   // ---------------------------------------------------------------- player events
   const onPlaying = useCallback(() => {
     playingRef.current = true;
@@ -403,6 +484,13 @@ export function PlayerEngine({ volume = 100, caption = false, frameClass }: { vo
     // ▶ pressed on the waiting video: playback is allowed now. Take the lease; the room's
     // command then reloads the song at the room's position.
     if (!started) {
+      // Playing muted (sound refused): not the speaker yet — a tap on the page turns it on.
+      // Playing with sound (▶ pressed on the video): it is.
+      if (silentRef.current) {
+        if (adapterRef.current?.muted() !== false) return;
+        silentRef.current = false;
+        setSilent(false);
+      }
       // ▶ on the waiting video of a paused room means "play": resume the room once we lead it.
       if (previewRef.current?.status === 'PAUSED') wantResume.current = true;
       return start();
@@ -468,7 +556,7 @@ export function PlayerEngine({ volume = 100, caption = false, frameClass }: { vo
         onPaused={() => void fromVideo('PAUSED')}
         onEnded={onEnded}
         onError={onError}
-        onAutoplayBlocked={() => setNeedsTap(true)}
+        onAutoplayBlocked={() => (!started && previewPlaying ? playSilently() : setNeedsTap(true))}
       />
       {/* No song in the room: nothing is loaded, and YouTube's own ▶ would only show an error. */}
       {idle && !waitingForOther && <IdleCover forHost={!caption} />}
@@ -500,8 +588,21 @@ export function PlayerEngine({ volume = 100, caption = false, frameClass }: { vo
       >
         <div className={full.expanded ? 'flex min-h-0 flex-1' : frameClass}>{screen}</div>
       </div>
+      {/* Muted because the browser refused sound: one tap anywhere turns the speaker on. */}
+      {!started && !waitingForOther && silent && previewPlaying && !needsTap && !soundAsked && (
+        <SoundOverlay touch={touch} onTips={() => setTipsOpen(true)} />
+      )}
+      {tipsOpen && (
+        <Dialog open onClose={() => setTipsOpen(false)} title={t.help.items.autoplay.title}>
+          <SoundSettingGuide />
+        </Dialog>
+      )}
       {!started
-        ? !waitingForOther && preview && (!previewPlaying || needsTap) && <TapVideoHint text={waitingHint} />
+        ? !waitingForOther &&
+          preview &&
+          // Muted with the layer up: the layer says it; no second hint under the video.
+          !(silent && previewPlaying && !needsTap && !soundAsked) &&
+          (!previewPlaying || needsTap) && <TapVideoHint text={waitingHint} />
         : needsTap && <TapVideoHint text={t.host.tapVideo} />}
     </div>
   );
@@ -583,6 +684,8 @@ export function YouTubeAdapter({ adapterRef, onReady, onPlaying, onPaused, onEnd
           seek: safe((s: number) => void p.seekTo(s, true), undefined),
           currentTime: safe(() => Number(p.getCurrentTime?.() ?? 0), 0),
           setVolume: safe((v: number) => void p.setVolume(v), undefined),
+          setMuted: safe((on: boolean) => void (on ? p.mute() : p.unMute()), undefined),
+          muted: safe(() => Boolean(p.isMuted?.()), false),
           state: safe(() => Number(p.getPlayerState?.() ?? -1), -1),
         };
         onReady();
