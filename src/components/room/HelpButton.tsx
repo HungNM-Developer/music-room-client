@@ -2,6 +2,7 @@
 
 import { ChevronDown, CircleHelp, ExternalLink, Pointer, Signpost } from 'lucide-react';
 import { useEffect, useId, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { SoundSettingGuide } from '@/components/player/SoundSettingGuide';
 import { Button, IconButton } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
@@ -179,45 +180,48 @@ export function HelpButton() {
       <IconButton label={t.help.button} data-guide="help" onClick={() => setOpen(true)}>
         <CircleHelp className="h-5 w-5" aria-hidden />
       </IconButton>
-      {open && (
-        <Dialog open onClose={() => setOpen(false)} title={t.help.title} description={t.help.intro}>
-          <Button variant="secondary" className="mb-5 w-full" onClick={() => guide({ steps: tourSteps(t), tour: true })}>
-            <Signpost className="h-4 w-4" aria-hidden />
-            {t.help.tour}
-          </Button>
-          <div className="space-y-5">
-            {GROUPS.map((g) => {
-              const items = g.items.filter((i) => allowed(i, me));
-              if (!items.length) return null;
-              return (
-                <section key={g.id} aria-labelledby={`help-${g.id}`}>
-                  <h3 id={`help-${g.id}`} className="mb-1.5 px-1 text-[15px] font-semibold">
-                    {t.help.groups[g.id]}
-                  </h3>
-                  <ul className="divide-y divide-line/70 rounded-panel bg-panel-hi/60">
-                    {items.map((item) => (
-                      <li key={item.id}>
-                        {item.selectors ? (
-                          <button
-                            type="button"
-                            onClick={() => guide({ steps: [stepOf(t, item)] })}
-                            className="flex min-h-14 w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-panel-hi"
-                          >
-                            <ItemText item={item} />
-                            <Pointer className="h-[18px] w-[18px] shrink-0 text-amber" aria-hidden />
-                          </button>
-                        ) : (
-                          <ExplainedItem item={item} code={code} />
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              );
-            })}
-          </div>
-        </Dialog>
-      )}
+      {/* Out of the header (portal): themes style the header's buttons, never the sheet's. */}
+      {open &&
+        createPortal(
+          <Dialog open onClose={() => setOpen(false)} title={t.help.title} description={t.help.intro}>
+            <Button variant="secondary" className="mb-5 w-full" onClick={() => guide({ steps: tourSteps(t), tour: true })}>
+              <Signpost className="h-4 w-4" aria-hidden />
+              {t.help.tour}
+            </Button>
+            <div className="space-y-5">
+              {GROUPS.map((g) => {
+                const items = g.items.filter((i) => allowed(i, me));
+                if (!items.length) return null;
+                return (
+                  <section key={g.id} aria-labelledby={`help-${g.id}`}>
+                    <h3 id={`help-${g.id}`} className="mb-1.5 px-1 text-[15px] font-semibold">
+                      {t.help.groups[g.id]}
+                    </h3>
+                    <ul className="divide-y divide-line/70 rounded-panel bg-panel-hi/60">
+                      {items.map((item) => (
+                        <li key={item.id}>
+                          {item.selectors ? (
+                            <button
+                              type="button"
+                              onClick={() => guide({ steps: [stepOf(t, item)] })}
+                              className="flex min-h-14 w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-panel-hi"
+                            >
+                              <ItemText item={item} />
+                              <Pointer className="h-[18px] w-[18px] shrink-0 text-amber" aria-hidden />
+                            </button>
+                          ) : (
+                            <ExplainedItem item={item} code={code} />
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                );
+              })}
+            </div>
+          </Dialog>,
+          document.body,
+        )}
     </>
   );
 }

@@ -24,6 +24,11 @@
   .room-stage[data-player] > .stage {
     display: contents;
   }
+  /* Beside the now-playing block the row gap clears the frame's shadow; a margin under the
+     video would push it above the centre. */
+  .room-stage[data-player] .room-video-frame {
+    margin-bottom: 0;
+  }
   /* The video; centred beside a now-playing block taller than it. */
   .room-stage[data-player] > :first-child {
     grid-column: 1;
@@ -167,6 +172,12 @@ html[data-theme='midcentury'] .room-stage[data-player] .stage-hero {
 /* Midcentury's offset shadow is the page colour on the room page: the sun's yellow instead. */
 html[data-theme='midcentury'] .room-video-frame.hm-video > * {
   box-shadow: calc(var(--u) * 1.1) calc(var(--u) * 1.1) 0 #e5b53e;
+}
+/* Transistor: the same chrome edge as the dial beside it (.tr-dial), not the speaker
+   screen's ring in --u. */
+html[data-theme='transistor'] .room-video-frame.ht-video > * {
+  border-radius: 14px;
+  box-shadow: 0 0 0 3px #c7cdd1;
 }
 /* Cassette's speaker frame applies inside the speaker screen only: a dark tape-shell edge
    with a cream line, so it shows on the room page's dark wood. */
