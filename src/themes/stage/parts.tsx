@@ -47,7 +47,7 @@ export function StageIdle({ openAdd }: { openAdd: () => void }) {
   const t = useT();
   const me = useMe();
   return (
-    <section aria-label={t.nowPlaying.title} className="stage-idle">
+    <section aria-label={t.nowPlaying.title} data-guide="nowPlaying" className="stage-idle">
       <p className="stage-state">
         <span className="stage-dot" data-live="false" aria-hidden />
         {t.nowPlaying.paused}

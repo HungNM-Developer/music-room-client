@@ -41,7 +41,7 @@ export function RecapCard() {
   const busiest = recap && recap.plays ? recap.byHour.indexOf(Math.max(...recap.byHour)) : -1;
 
   return (
-    <section aria-labelledby="recap-title" className="space-y-3 rounded-panel bg-panel p-4">
+    <section aria-labelledby="recap-title" data-guide="recap" className="space-y-3 rounded-panel bg-panel p-4">
       <div className="flex items-center justify-between gap-3">
         <h2 id="recap-title" className="type-display text-[20px] font-bold">
           {t.recap.title}

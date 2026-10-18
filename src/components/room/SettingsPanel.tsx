@@ -45,7 +45,7 @@ export function SettingsPanel() {
   }
 
   return (
-    <details className="group rounded-panel bg-panel">
+    <details className="group rounded-panel bg-panel" data-guide="settings">
       <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 px-4 [&::-webkit-details-marker]:hidden">
         <Settings2 className="h-5 w-5 text-sage" aria-hidden />
         <span className="flex-1 font-semibold">{t.settings.title}</span>

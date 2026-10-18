@@ -187,7 +187,7 @@ const QueueRow = memo(function QueueRow({
       <SaveButton track={item.track} />
       <HeartButton item={item} me={me} />
       {hasMenu && (
-        <IconButton label={t.queue.actions(item.track.title)} onClick={() => onMenu(item)}>
+        <IconButton label={t.queue.actions(item.track.title)} data-guide="itemMenu" onClick={() => onMenu(item)}>
           <MoreHorizontal className="h-5 w-5" aria-hidden />
         </IconButton>
       )}

@@ -70,7 +70,7 @@ export function TrackRow({
             </Button>
           )}
           {onAddWithWish && !blocked && !done && !inQueue && (
-            <IconButton label={t.add.withWish(track.title)} title={t.add.withWishShort} onClick={onAddWithWish}>
+            <IconButton label={t.add.withWish(track.title)} title={t.add.withWishShort} data-guide="wish" onClick={onAddWithWish}>
               <MessageSquareHeart className="h-5 w-5" aria-hidden />
             </IconButton>
           )}

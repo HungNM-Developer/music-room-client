@@ -81,7 +81,7 @@ function Presets({ openAdd }: { openAdd: () => void }) {
             <span className="acts">
               <HeartButton item={q} me={me} />
               {hasItemMenu(q, me) && (
-                <IconButton label={t.queue.actions(q.track.title)} onClick={() => openMenu(q)}>
+                <IconButton label={t.queue.actions(q.track.title)} data-guide="itemMenu" onClick={() => openMenu(q)}>
                   <MoreHorizontal className="h-5 w-5" aria-hidden />
                 </IconButton>
               )}
@@ -149,7 +149,7 @@ function Stage({ openAdd }: { openAdd: () => void }) {
   const { track, playing } = a;
   return (
     <div className="stage transistor">
-      <section aria-label={t.nowPlaying.title} className="tr-dial">
+      <section aria-label={t.nowPlaying.title} data-guide="nowPlaying" className="tr-dial">
         <Band />
         <div className="tr-np">
           <NowCover className="art" />

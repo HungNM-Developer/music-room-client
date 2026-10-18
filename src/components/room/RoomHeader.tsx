@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/Toast';
 import { useT } from '@/i18n';
 import { getLang } from '@/i18n/lang';
 import { shareUrl } from '@/lib/share-url';
+import { HelpButton } from './HelpButton';
 import { useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 
@@ -55,7 +56,7 @@ export function RoomHeader({ onOpenLog, title, code: codeSlot, extra, variant }:
   return (
     <>
       <header data-variant={variant} className="room-header sticky top-0 z-40 border-b border-line/70 bg-dial/80 pt-[env(safe-area-inset-top)] backdrop-blur-md">
-        <div className="mx-auto flex max-w-[1360px] items-center gap-2 px-4 py-2.5 md:px-8 min-[1600px]:max-w-[1840px] min-[2000px]:max-w-[2400px]">
+        <div className="mx-auto flex max-w-[1360px] items-center gap-2 px-4 py-2.5 max-sm:gap-0 md:px-8 min-[1600px]:max-w-[1840px] min-[2000px]:max-w-[2400px]">
           <div className="min-w-0 flex-1">
             <h1 aria-label={title ? name : undefined} className="room-name type-display truncate text-[20px] font-bold leading-tight">
               {title ?? name}
@@ -75,17 +76,19 @@ export function RoomHeader({ onOpenLog, title, code: codeSlot, extra, variant }:
           {extra}
           {/* Phones: the room name needs the room; the switch sits in the People tab instead. */}
           <LangSwitch compact className="max-sm:hidden" />
-          <IconButton label={t.theme.button} onClick={() => setThemeOpen(true)}>
+          <HelpButton />
+          <IconButton label={t.theme.button} data-guide="theme" onClick={() => setThemeOpen(true)}>
             <Palette className="h-5 w-5" aria-hidden />
           </IconButton>
           <IconButton label={t.share.button} data-guide="share" onClick={() => setShareOpen(true)}>
             <Share2 className="h-5 w-5" aria-hidden />
           </IconButton>
-          <IconButton label={t.header.log} onClick={onOpenLog}>
+          <IconButton label={t.header.log} data-guide="history" onClick={onOpenLog}>
             <History className="h-5 w-5" aria-hidden />
           </IconButton>
           <IconButton
             label={t.header.leave}
+            data-guide="leave"
             tone="danger"
             onClick={async () => {
               await room.leave();
