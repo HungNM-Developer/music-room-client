@@ -595,6 +595,15 @@ export const en: Dict = {
         body: "The computer connected to the office speakers opens the speaker page to play for the whole room. Open it there, then press play on the video.",
       },
       slack: { title: 'On Slack', body: 'If your team connected Slack, type /music help in the channel to see the commands, or just write to Music Room.' },
+      autoplay: {
+        title: 'Keep the speaker playing with sound',
+        body: 'Chrome / Edge: press the icon to the left of the address bar, open Site settings and set Sound to Allow.',
+        steps: [
+          'Press the {info} or {tune} icon to the left of the address bar.',
+          'Choose {gear} Site settings.',
+          'On the {sound} Sound row, choose Allow. If the {sound} Sound switch is already in the panel from step 1, turning it on is enough.',
+        ],
+      },
     },
   },
 
@@ -822,6 +831,10 @@ export const en: Dict = {
     pin: 'Admin PIN',
     start: 'Press ▶ on the video to turn on the speaker.',
     startTouch: 'Tap ▶ on the video to turn on the speaker.',
+    soundTap: 'Click anywhere to turn on the speaker',
+    soundTapTouch: 'Tap anywhere to turn on the speaker',
+    soundWhy: 'The browser blocked autoplay with sound. The video follows the room, just without sound yet.',
+    soundHowTo: 'How to have sound on its own next time',
     tapVideo: 'Tap ▶ on the video once to turn on the speaker.',
     scan: 'Scan to pick songs',
     onAir: 'ON AIR',
