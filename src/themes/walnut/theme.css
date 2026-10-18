@@ -52,6 +52,10 @@ html[data-theme='walnut'] {
     color: #2a1a0a !important;
     box-shadow: 0 2px 0 #0008;
   }
+  /* A brighter knob on hover: IconButton's dark hover:bg-panel-hi would hide the dark icon. */
+  html[data-theme='walnut'] .room-header button[aria-label]:hover {
+    background: radial-gradient(circle at 35% 30%, #fff4d2, #c99c45 60%, #7e5f22) !important;
+  }
 
   html[data-theme='walnut'] .stage {
     --stage-btn-radius: 8px;

@@ -44,7 +44,7 @@ export function IconButton({ label, tone = 'default', className = '', type = 'bu
       aria-label={label}
       title={label}
       className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-row transition-colors hover:bg-panel-hi disabled:opacity-45 ${
-        tone === 'danger' ? 'text-sage hover:text-onair' : 'text-sage hover:text-paper'
+        tone === 'danger' ? 'text-sage hover:text-alert' : 'text-sage hover:text-paper'
       } ${className}`}
       {...rest}
     />
