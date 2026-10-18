@@ -718,6 +718,22 @@ export const en: Dict = {
       ownSong: (song: string) => `Could not heart ${song}: it is the asker's own song`,
       tooMany: (max: number, wanted: number) => `The DJ adds at most ${max} songs at a time (${wanted} asked)`,
       needControl: 'needs playback control',
+      by: (artist: string) => ` by ${artist}`,
+      suggested: (by: string) => `Suggestions${by}:`,
+      addOne: 'Add',
+      alreadyIn: 'In queue',
+      kept: (n: number, by: string) => `Kept ${n} ${n === 1 ? 'song' : 'songs'}${by}`,
+      keptUnsure: (n: number) => ` (${n} kept because the artist is not certain)`,
+      saved: (song: string) => `Saved ${song} to your saved songs`,
+      playlistSaved: (song: string, name: string, created: boolean) =>
+        `Saved ${song} to the playlist "${name}"${created ? ' (new playlist)' : ''}`,
+      playlistCreated: (name: string, created: boolean, added: number, by: string) =>
+        `${created ? 'Created' : 'Updated'} the playlist "${name}"${added ? `, with ${added} ${added === 1 ? 'song' : 'songs'}${by}` : ''}`,
+      playlistPlayed: (added: number, total: number, name: string) =>
+        `Queued ${added} of ${total} songs from the playlist "${name}"`,
+      playlistEmpty: (name: string) => `The playlist "${name}" has no songs yet`,
+      needSignIn: 'Sign in with Google to use playlists',
+      noPlaylist: (name: string) => `You have no playlist called "${name}"`,
       failed: (verb: string, what: string, why: string) => `Could not ${verb}${what}: ${why}`,
       verbs: {
         add: 'add',
@@ -728,6 +744,11 @@ export const en: Dict = {
         vote: 'vote to skip',
         pause: 'pause',
         resume: 'resume',
+        suggest: 'suggest songs',
+        save: 'save the song',
+        playlistSave: 'save to the playlist',
+        playlistCreate: 'create the playlist',
+        playlistPlay: 'play the playlist',
         skipTo: 'jump to',
       },
     },
@@ -739,6 +760,11 @@ export const en: Dict = {
     denied: 'You do not have permission to do this.',
     deniedFor: (name: string) => `${name} does not have permission to do this.`,
     notFound: 'I could not find a matching song; try typing its name in the Add songs box.',
+    clarify: {
+      removeScope: 'Which songs should I remove? For example: "remove my last song", "remove Lan\'s songs", "remove all my songs except the ones by Den".',
+      whichSong: 'Which song (and artist) do you mean?',
+      whichPlaylist: 'Which playlist?',
+    },
     failed: 'I could not do that, please try again later.',
   },
 

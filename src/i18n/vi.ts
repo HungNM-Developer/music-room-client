@@ -736,6 +736,23 @@ export const vi = {
       ownSong: (song: string) => `Không thả tim được ${song}: đó là bài của chính người hỏi`,
       tooMany: (max: number, wanted: number) => `Mỗi lần DJ thêm tối đa ${max} bài (đã xin ${wanted} bài)`,
       needControl: 'cần quyền điều khiển',
+      /** " của Jack - J97": the artist as the DJ understood it. */
+      by: (artist: string) => ` của ${artist}`,
+      suggested: (by: string) => `Gợi ý bài${by}:`,
+      addOne: 'Thêm',
+      alreadyIn: 'Đã có',
+      kept: (n: number, by: string) => `Đã giữ lại ${n} bài${by}`,
+      keptUnsure: (n: number) => ` (${n} bài giữ lại vì chưa chắc ca sĩ)`,
+      saved: (song: string) => `Đã lưu ${song} vào bài đã lưu`,
+      playlistSaved: (song: string, name: string, created: boolean) =>
+        `Đã lưu ${song} vào playlist "${name}"${created ? ' (playlist mới)' : ''}`,
+      playlistCreated: (name: string, created: boolean, added: number, by: string) =>
+        `Đã ${created ? 'tạo' : 'cập nhật'} playlist "${name}"${added ? `, thêm ${added} bài${by}` : ''}`,
+      playlistPlayed: (added: number, total: number, name: string) =>
+        `Đã thêm ${added}/${total} bài của playlist "${name}" vào hàng chờ`,
+      playlistEmpty: (name: string) => `Playlist "${name}" chưa có bài nào`,
+      needSignIn: 'Cần đăng nhập Google để dùng playlist',
+      noPlaylist: (name: string) => `Bạn chưa có playlist "${name}"`,
       failed: (verb: string, what: string, why: string) => `Không ${verb} được${what}: ${why}`,
       verbs: {
         add: 'thêm bài',
@@ -746,6 +763,11 @@ export const vi = {
         vote: 'bỏ phiếu bỏ qua',
         pause: 'tạm dừng',
         resume: 'phát tiếp',
+        suggest: 'gợi ý bài',
+        save: 'lưu bài',
+        playlistSave: 'lưu vào playlist',
+        playlistCreate: 'tạo playlist',
+        playlistPlay: 'phát playlist',
         /** pin "now": "skip đến bài cuối", "chuyển sang …". */
         skipTo: 'chuyển tới bài',
       },
@@ -758,6 +780,12 @@ export const vi = {
     denied: 'Bạn chưa có quyền làm việc này.',
     deniedFor: (name: string) => `${name} chưa có quyền làm việc này.`,
     notFound: 'Mình chưa tìm được bài hợp yêu cầu, bạn thử gõ tên bài vào ô Thêm bài nhé.',
+    /** Too vague to act on: the DJ asks back. */
+    clarify: {
+      removeScope: 'Bạn muốn gỡ bài nào? Ví dụ: "gỡ bài cuối của tôi", "gỡ bài của Lan", "gỡ hết bài của tôi trừ bài của Đen".',
+      whichSong: 'Bạn nói rõ tên bài (và ca sĩ) giúp mình nhé.',
+      whichPlaylist: 'Playlist nào vậy?',
+    },
     failed: 'Mình chưa làm được việc này, bạn thử lại sau nhé.',
   },
 
