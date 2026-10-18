@@ -7,8 +7,11 @@ import { Button, IconButton } from '@/components/ui/Button';
 import type { ChatMessageView } from '@/contracts';
 import { LIMITS, REACTIONS } from '@/contracts/constants';
 import { useAct } from '@/hooks/useAct';
+import { DjMentionHint, insertMention, mentionAt } from './DjMentionHint';
+import { chatText, DjMessage } from './DjMessage';
 import { triggerReaction } from './HeartCanvas';
 import { errorMessage, useT } from '@/i18n';
+import { onGuide } from '@/lib/guide';
 import { formatClock } from '@/lib/time';
 import { useMe, useRoom } from '@/state/hooks';
 import { type PendingChat, room } from '@/state/room-store';
@@ -44,14 +47,28 @@ function ChatMessages({ className = '' }: { className?: string }) {
       aria-live="polite"
     >
       {chat.length === 0 && chatPending.length === 0 && <li className="py-8 text-center text-sage">{t.chat.empty}</li>}
-      {chat.map((m) => (
-        <Bubble key={m.id} m={m} mine={m.memberId === meId} />
-      ))}
+      {chat.map((m) => (m.kind === 'dj' ? <DjMessage key={m.id} m={m} /> : <Bubble key={m.id} m={m} mine={m.memberId === meId} />))}
       {chatPending.map((m) => (
         <PendingBubble key={m.id} m={m} />
       ))}
     </ol>
   );
+}
+
+const MENTION = /(^|[\s([{"'“])(@dj)(?=$|[\s,.:;!?)\]}"'”])/gi;
+
+/** "@DJ" stands out in a member's message (the same word the server listens for). */
+function withMentions(content: string): React.ReactNode {
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  for (const m of content.matchAll(MENTION)) {
+    const at = (m.index ?? 0) + m[1].length;
+    parts.push(content.slice(last, at), <b key={at}>{m[2]}</b>);
+    last = at + m[2].length;
+  }
+  if (!parts.length) return content;
+  parts.push(content.slice(last));
+  return parts;
 }
 
 function Bubble({ m, mine }: { m: ChatMessageView; mine: boolean }) {
@@ -63,7 +80,7 @@ function Bubble({ m, mine }: { m: ChatMessageView; mine: boolean }) {
           mine ? 'rounded-br-[4px] bg-amber text-amber-ink' : 'rounded-bl-[4px] bg-panel-hi'
         }`}
       >
-        {m.content}
+        {withMentions(m.content)}
       </p>
     </li>
   );
@@ -79,7 +96,7 @@ function PendingBubble({ m }: { m: PendingChat }) {
           m.failed ? 'border border-onair/60 bg-onair/15' : 'bg-amber/70 text-amber-ink'
         }`}
       >
-        {m.content}
+        {withMentions(m.content)}
       </p>
       {m.failed ? (
         <span className="mt-0.5 flex max-w-[85%] flex-wrap items-center justify-end gap-x-2 px-1 text-right text-[13px] sm:text-[12px] text-alert">
@@ -130,7 +147,20 @@ function ChatComposer({ inputRef, placeholder }: { inputRef: React.RefObject<HTM
   const t = useT();
   placeholder ??= t.chat.placeholder;
   const [text, setText] = useState('');
+  const [caret, setCaret] = useState(0);
+  const [hintOff, setHintOff] = useState(false);
   const id = useId();
+  const hintId = useId();
+  const optionId = useId();
+  const hint = !hintOff && mentionAt(text, caret) !== null;
+
+  const pick = () => {
+    const el = inputRef.current;
+    const next = insertMention(text, el?.selectionStart ?? caret);
+    setText(next.text);
+    setCaret(next.caret);
+    requestAnimationFrame(() => el?.setSelectionRange(next.caret, next.caret));
+  };
 
   /** Optimistic: the box clears and the message shows at once ("Đang gửi…"). */
   function submit(e: React.FormEvent) {
@@ -138,12 +168,14 @@ function ChatComposer({ inputRef, placeholder }: { inputRef: React.RefObject<HTM
     const content = text.trim();
     if (!content) return;
     setText('');
+    setCaret(0);
     // Failures (rate limit, network) are explained under the bubble, next to "Gửi lại".
     void room.sendChat(content);
   }
 
   return (
-    <form onSubmit={submit} className="flex gap-2">
+    <form onSubmit={submit} className="relative flex gap-2">
+      {hint && <DjMentionHint id={hintId} optionId={optionId} onPick={pick} />}
       <label className="sr-only" htmlFor={id}>
         {t.chat.label}
       </label>
@@ -152,7 +184,31 @@ function ChatComposer({ inputRef, placeholder }: { inputRef: React.RefObject<HTM
         id={id}
         value={text}
         maxLength={LIMITS.chat}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) => {
+          setText(e.target.value);
+          setCaret(e.target.selectionStart ?? e.target.value.length);
+          setHintOff(false);
+        }}
+        onSelect={(e) => setCaret(e.currentTarget.selectionStart ?? 0)}
+        onBlur={() => setHintOff(true)}
+        onFocus={() => setHintOff(false)}
+        onKeyDown={(e) => {
+          if (!hint) return;
+          if (e.key === 'Enter' || e.key === 'Tab') {
+            e.preventDefault();
+            pick();
+          } else if (e.key === 'Escape') {
+            // Closes the list only, not the chat window.
+            e.preventDefault();
+            e.nativeEvent.stopImmediatePropagation();
+            setHintOff(true);
+          }
+        }}
+        role="combobox"
+        aria-expanded={hint}
+        aria-controls={hint ? hintId : undefined}
+        aria-activedescendant={hint ? optionId : undefined}
+        aria-autocomplete="list"
         placeholder={placeholder}
         className="field min-w-0 flex-1 !min-h-11 rounded-full"
         autoComplete="off"
@@ -231,6 +287,9 @@ export function ChatOverlay({ title, placeholder, variant }: InlineChatSkin = {}
     // offsetParent is always null for position:fixed, so test for rendered boxes instead.
     (barRef.current?.getClientRects().length ? barRef : headRef).current?.focus();
   }, [open]);
+
+  // "Chỉ cho tôi": the sheet steps aside so the lit button can be seen.
+  useEffect(() => onGuide(() => setOpen(false)), []);
 
   // Read while open.
   useEffect(() => {
@@ -338,7 +397,7 @@ export function ChatOverlay({ title, placeholder, variant }: InlineChatSkin = {}
           <MessageCircle className="h-5 w-5 shrink-0 text-amber" aria-hidden />
           <span className="type-display shrink-0 text-[16px] font-bold">{t.chat.title}</span>
           <span className="min-w-0 flex-1 truncate text-[13px] text-sage">
-            {last && `${last.memberId === me?.id ? t.chat.you : last.displayName}: ${last.content}`}
+            {last && `${last.memberId === me?.id ? t.chat.you : last.displayName}: ${chatText(t, last, me?.id ?? null, me)}`}
           </span>
           {badge}
           <ChevronUp className="h-4 w-4 shrink-0 text-sage" aria-hidden />
@@ -358,7 +417,7 @@ export function ChatOverlay({ title, placeholder, variant }: InlineChatSkin = {}
             className="mb-1 max-w-[240px] animate-rise rounded-[16px] rounded-br-[4px] border border-line bg-panel px-3 py-2 text-left text-[14px] shadow-[0_12px_32px_-12px_rgb(0_0_0/0.7)]"
           >
             <span className="block text-[13px] sm:text-[12px] text-sage">{preview.displayName}</span>
-            <span className="line-clamp-2 [overflow-wrap:anywhere]">{preview.content}</span>
+            <span className="line-clamp-2 [overflow-wrap:anywhere]">{chatText(t, preview, me?.id ?? null, me)}</span>
           </button>
         )}
         <button

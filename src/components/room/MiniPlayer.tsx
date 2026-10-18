@@ -87,7 +87,7 @@ export function MiniPlayerButton() {
   const supported = useMiniPlayerSupported();
   if (!supported) return null;
   return (
-    <IconButton label={t.miniPlayer.open} onClick={() => void openMiniPlayer().catch(() => {})}>
+    <IconButton label={t.miniPlayer.open} data-guide="mini" onClick={() => void openMiniPlayer().catch(() => {})}>
       <PictureInPicture2 className="h-5 w-5" aria-hidden />
     </IconButton>
   );

@@ -63,7 +63,7 @@ export function NowPlayingCard() {
       {(canVote || canControl) && (
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {canVote && (
-            <Button size="sm" disabled={a.voteDisabled} aria-pressed={a.voted} onClick={a.voteSkip} className="flex-1 sm:flex-none">
+            <Button size="sm" data-guide="skip" disabled={a.voteDisabled} aria-pressed={a.voted} onClick={a.voteSkip} className="flex-1 sm:flex-none">
               <SkipForward className="h-4 w-4" aria-hidden />
               {a.voteLabel}
             </Button>
@@ -74,17 +74,18 @@ export function NowPlayingCard() {
               <Button
                 size="sm"
                 variant="primary"
+                data-guide="pause"
                 aria-label={playing ? t.nowPlaying.pause : t.nowPlaying.play}
                 onClick={a.togglePlay}
                 className="w-12 !px-0"
               >
                 {playing ? <Pause className="h-5 w-5" aria-hidden /> : <Play className="h-5 w-5" aria-hidden />}
               </Button>
-              <IconButton label={t.nowPlaying.skipNow} disabled={a.skipping} aria-busy={a.skipping} onClick={a.skipNow}>
+              <IconButton label={t.nowPlaying.skipNow} data-guide="skipNow" disabled={a.skipping} aria-busy={a.skipping} onClick={a.skipNow}>
                 {a.skipping ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden /> : <StepForward className="h-5 w-5" aria-hidden />}
               </IconButton>
               {a.isAdmin && (
-                <IconButton label={t.block.more(item.title)} onClick={a.openBlockMenu}>
+                <IconButton label={t.block.more(item.title)} data-guide="block" onClick={a.openBlockMenu}>
                   <MoreHorizontal className="h-5 w-5" aria-hidden />
                 </IconButton>
               )}

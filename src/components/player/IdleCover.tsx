@@ -57,7 +57,7 @@ export function IdleCover({ forHost = false }: { forHost?: boolean }) {
               <span className="truncate">{t.nowPlaying.playNow(pick.title)}</span>
             </Button>
           )}
-          <Button size="sm" variant="ghost" onClick={findSongs} className="pc-ghost">
+          <Button size="sm" variant="ghost" onClick={() => findSongs()} className="pc-ghost">
             <Search className="h-4 w-4" aria-hidden />
             {t.nowPlaying.findSong}
           </Button>

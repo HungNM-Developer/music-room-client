@@ -71,7 +71,7 @@ export function ListenToggle({ short = false }: { short?: boolean }) {
   const t = useT();
   const on = useListening();
   return (
-    <button type="button" className="stage-btn" data-on={on || undefined} aria-pressed={on} onClick={() => setListening(!on)}>
+    <button type="button" className="stage-btn" data-guide="listen" data-on={on || undefined} aria-pressed={on} onClick={() => setListening(!on)}>
       <Headphones className="h-[18px] w-[18px]" aria-hidden />
       <span className={short ? 'max-lg:sr-only' : ''}>{on ? t.listen.on : t.listen.start}</span>
     </button>

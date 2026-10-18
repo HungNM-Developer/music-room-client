@@ -4,6 +4,7 @@ import { Mail, MoreHorizontal, Pin, Plus } from 'lucide-react';
 import { ListenAlong, ListenersStrip } from '@/components/player/ListenAlong';
 import { HostLyrics, InlineLyrics, LyricsButton } from '@/components/room/Lyrics';
 import { HeartButton, hasItemMenu, useQueueView } from '@/components/room/QueueList';
+import { chatText } from '@/components/room/DjMessage';
 import { SaveButton } from '@/components/room/SaveButton';
 import { useNow } from '@/components/room/SkipVote';
 import { useLiveProgress } from '@/components/room/stage/useLiveProgress';
@@ -210,10 +211,12 @@ function Board({ openAdd }: { openAdd: () => void }) {
 
 /** The station loudspeaker: the latest chat lines running across. */
 function Ticker() {
+  const t = useT();
   const chat = useRoom((s) => s.chat);
+  const meId = useRoom((s) => s.memberId);
   const recent = chat.slice(-5);
   if (!recent.length) return null;
-  const line = recent.map((m) => `${m.displayName}: ${m.content}`).join('   ·   ');
+  const line = recent.map((m) => `${m.displayName}: ${chatText(t, m, meId)}`).join('   ·   ');
   return (
     <div className="st-ticker" aria-hidden>
       <span className="run">
@@ -368,7 +371,7 @@ function HostHall() {
 function HostAnnounce() {
   const t = useT();
   const recent = useHostChat(5);
-  const line = recent.map((m) => `${m.displayName}: ${m.content}`).join('   ·   ');
+  const line = recent.map((m) => `${m.displayName}: ${chatText(t, m)}`).join('   ·   ');
   return (
     <div className="hs-foot">
       <div className="st-ticker hs-ticker" aria-hidden>

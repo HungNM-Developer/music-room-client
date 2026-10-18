@@ -17,6 +17,7 @@ export function LyricsButton({ trackId }: { trackId: string }) {
     <>
       <button
         type="button"
+        data-guide="lyrics"
         onClick={() => setOpen(true)}
         className="mt-1.5 inline-flex min-h-8 items-center gap-1.5 text-[13px] font-medium text-amber hover:text-amber-hi"
       >

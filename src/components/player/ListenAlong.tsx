@@ -64,7 +64,7 @@ export function ListenButton() {
   const t = useT();
   const on = useListening();
   return (
-    <Button size="sm" variant={on ? 'primary' : 'secondary'} aria-pressed={on} onClick={() => setListening(!on)}>
+    <Button size="sm" variant={on ? 'primary' : 'secondary'} data-guide="listen" aria-pressed={on} onClick={() => setListening(!on)}>
       <Headphones className="h-4 w-4" aria-hidden />
       {on ? t.listen.on : t.listen.start}
     </Button>
