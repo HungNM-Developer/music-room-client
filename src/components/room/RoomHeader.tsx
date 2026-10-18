@@ -78,7 +78,7 @@ export function RoomHeader({ onOpenLog, title, code: codeSlot, extra, variant }:
           <IconButton label={t.theme.button} onClick={() => setThemeOpen(true)}>
             <Palette className="h-5 w-5" aria-hidden />
           </IconButton>
-          <IconButton label={t.share.button} onClick={() => setShareOpen(true)}>
+          <IconButton label={t.share.button} data-guide="share" onClick={() => setShareOpen(true)}>
             <Share2 className="h-5 w-5" aria-hidden />
           </IconButton>
           <IconButton label={t.header.log} onClick={onOpenLog}>

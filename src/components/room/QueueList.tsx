@@ -83,10 +83,12 @@ export function HeartButton({ item, me, className = '' }: { item: QueueItemView;
   const t = useT();
   const act = useAct();
   const hearted = Boolean(me && item.heartedBy.includes(me.id));
-  if (!me || me.isDevice) return item.hearts > 0 ? <span className={`px-2 text-[13px] text-sage ${className}`}>{t.queue.hearts(item.hearts)}</span> : null;
+  if (!me || me.isDevice) return item.hearts > 0 ? <span data-guide-item={item.id} className={`px-2 text-[13px] text-sage ${className}`}>{t.queue.hearts(item.hearts)}</span> : null;
   return (
     <button
       type="button"
+      data-guide="heart"
+      data-guide-item={item.id}
       aria-label={hearted ? t.queue.unheart : t.queue.heart}
       aria-pressed={hearted}
       onClick={() => act('queue:heart', { queueItemId: item.id }, { optimistic: { kind: 'heart', itemId: item.id, hearted: !hearted } })}

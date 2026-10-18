@@ -18,7 +18,7 @@ export function StageControls({ a, variant, className = '' }: { a: NowPlayingAct
   return (
     <div className={`stage-controls ${className}`} data-variant={variant}>
       {canVote && (
-        <button type="button" className="stage-btn" data-primary disabled={a.voteDisabled} aria-pressed={a.voted} onClick={a.voteSkip}>
+        <button type="button" className="stage-btn" data-primary data-guide="skip" disabled={a.voteDisabled} aria-pressed={a.voted} onClick={a.voteSkip}>
           <SkipForward className="h-[18px] w-[18px]" aria-hidden />
           <span>{a.voteLabel}</span>
         </button>
@@ -28,12 +28,13 @@ export function StageControls({ a, variant, className = '' }: { a: NowPlayingAct
       <MiniPlayerButton />
       {canControl && (
         <>
-          <button type="button" className="stage-btn stage-icon" aria-label={playing ? t.nowPlaying.pause : t.nowPlaying.play} title={playing ? t.nowPlaying.pause : t.nowPlaying.play} onClick={a.togglePlay}>
+          <button type="button" className="stage-btn stage-icon" data-guide="pause" aria-label={playing ? t.nowPlaying.pause : t.nowPlaying.play} title={playing ? t.nowPlaying.pause : t.nowPlaying.play} onClick={a.togglePlay}>
             {playing ? <Pause className="h-[18px] w-[18px]" aria-hidden /> : <Play className="h-[18px] w-[18px]" aria-hidden />}
           </button>
           <button
             type="button"
             className="stage-btn stage-icon"
+            data-guide="skipNow"
             aria-label={t.nowPlaying.skipNow}
             title={t.nowPlaying.skipNow}
             disabled={a.skipping}
@@ -46,6 +47,7 @@ export function StageControls({ a, variant, className = '' }: { a: NowPlayingAct
             <button
               type="button"
               className="stage-btn stage-icon"
+              data-guide="block"
               aria-label={t.block.more(a.track.title)}
               title={t.block.more(a.track.title)}
               data-key-label={t.block.moreKey}

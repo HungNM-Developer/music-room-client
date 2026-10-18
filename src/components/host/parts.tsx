@@ -12,6 +12,7 @@ import { PlayerCover } from '@/components/player/PlayerCover';
 import { useT } from '@/i18n';
 import { addedByLabel } from '@/lib/added-by';
 import { readableInk } from '@/lib/readable-ink';
+import { chatText } from '@/components/room/DjMessage';
 import { formatClock } from '@/lib/time';
 import { useMe, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
@@ -142,8 +143,9 @@ export function HostChatLines({ n, showTime = false, className = '' }: { n: numb
         <ol aria-live="polite">
           {recent.map((m) => (
             <li key={m.id} className="line-clamp-2 [overflow-wrap:anywhere]">
-              <b className="host-chat-name">{m.displayName}</b>
-              {showTime && <span className="host-chat-time"> {formatClock(m.createdAt)}</span>} {m.content}
+              <b className="host-chat-name">{m.kind === 'dj' ? t.djBot.name : m.displayName}</b>
+              {showTime && <span className="host-chat-time"> {formatClock(m.createdAt)}</span>}{' '}
+              {chatText(t, m)}
             </li>
           ))}
         </ol>

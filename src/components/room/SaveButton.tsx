@@ -27,6 +27,7 @@ export function SaveButton({ track }: { track: TrackSummary }) {
     <>
       <IconButton
         label={user ? t.playlists.saveTo : t.library.save}
+        data-guide="save"
         aria-pressed={user ? undefined : saved}
         aria-haspopup={user ? 'dialog' : undefined}
         className={saved ? '!text-amber' : ''}

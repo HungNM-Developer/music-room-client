@@ -7,6 +7,7 @@ import { useListenSession } from '@/components/player/ListenAlong';
 import { AddTrackPanel } from '@/components/room/AddTrackPanel';
 import { Banners } from '@/components/room/Banners';
 import { ChatOverlay, InlineChat, type InlineChatSkin } from '@/components/room/Chat';
+import { GuideSpotlight } from '@/components/room/GuideSpotlight';
 import { HeartCanvas, triggerReaction } from '@/components/room/HeartCanvas';
 import { MiniPlayerPortal } from '@/components/room/MiniPlayer';
 import { PeoplePanel } from '@/components/room/PeoplePanel';
@@ -120,6 +121,7 @@ export function RoomFrame({
         <SkipVote variant="member" />
       </div>
       <MiniPlayerPortal />
+      <GuideSpotlight showTab={setTab} />
       <RoomHeader onOpenLog={() => setLogOpen(true)} {...header} />
 
       <main className="mx-auto max-w-[1360px] px-4 pt-4 md:px-8 lg:grid lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-x-11 lg:pt-6 min-[1600px]:max-w-[1840px] min-[1600px]:grid-cols-[minmax(0,1fr)_480px] min-[2000px]:max-w-[2400px] min-[2000px]:grid-cols-[minmax(0,1fr)_520px]">

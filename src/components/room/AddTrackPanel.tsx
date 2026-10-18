@@ -7,13 +7,12 @@ import { panelId, tabId, TabList } from '@/components/ui/Tabs';
 import type { TrackSummary } from '@/contracts';
 import { useAct } from '@/hooks/useAct';
 import { type AddWithWish, useAddTrack } from '@/hooks/useAddTrack';
-import { onFindSongs } from '@/lib/find-songs';
+import { onFindSongs, takeFindQuery } from '@/lib/find-songs';
 import { useT } from '@/i18n';
 import { classifyInput, playlistIn, sharedPlaylistIn } from '@/lib/add-input';
 import { formatDuration } from '@/lib/time';
 import { useMe, useRoom } from '@/state/hooks';
 import { BlockedList } from './BlockedList';
-import { DjAsk } from './DjAsk';
 import { PlayedList, SavedList } from './LibraryLists';
 import { MyPlaylists } from './MyPlaylists';
 import { TasteCard } from './TasteCard';
@@ -21,7 +20,7 @@ import { type PickerSource, PlaylistPicker } from './PlaylistPicker';
 import { SongListImport } from './SongListImport';
 import { TrackRow } from './TrackRow';
 
-type Source = 'search' | 'played' | 'saved' | 'dj' | 'blocked';
+type Source = 'search' | 'played' | 'saved' | 'blocked';
 
 export function AddTrackPanel() {
   const t = useT();
@@ -29,7 +28,6 @@ export function AddTrackPanel() {
   const [source, setSource] = useState<Source>('search');
   // "Tìm bài khác" from the idle speaker: the search box, whatever list was open.
   useEffect(() => onFindSongs(() => setSource('search')), []);
-  const aiEnabled = useRoom((s) => s.snapshot?.aiEnabled ?? false);
   const blockedCount = useRoom((s) => s.snapshot?.room.blockedTrackIds.length ?? 0);
   const isAdmin = me?.role === 'ADMIN';
   // The tab is admin only: someone who stops being admin falls back to search.
@@ -51,7 +49,6 @@ export function AddTrackPanel() {
           { key: 'search', label: t.library.tabSearch },
           { key: 'played', label: t.library.tabPlayed },
           { key: 'saved', label: t.library.tabSaved },
-          ...(aiEnabled ? [{ key: 'dj' as const, label: t.djAsk.tab }] : []),
           ...(isAdmin ? [{ key: 'blocked' as const, label: t.block.tab, badge: blockedCount }] : []),
         ]}
         value={shown}
@@ -61,7 +58,6 @@ export function AddTrackPanel() {
         {shown === 'search' && <SearchPanel add={add} added={added} addWithWish={addWithWish} />}
         {shown === 'played' && <PlayedList add={add} added={added} addWithWish={addWithWish} />}
         {shown === 'saved' && <MineTab add={add} added={added} addWithWish={addWithWish} />}
-        {shown === 'dj' && <DjAsk add={add} added={added} addWithWish={addWithWish} />}
         {shown === 'blocked' && <BlockedList />}
       </div>
       {wishSheet}
@@ -93,6 +89,20 @@ function SearchPanel({
   const [picker, setPicker] = useState<PickerSource | null>(null);
   const kind = classifyInput(input);
   const alsoPlaylist = kind === 'link' && playlistIn(input) !== null;
+
+  // The DJ's "Chỉ cho tôi" with a song name: the box is filled, the member presses Enter.
+  useEffect(() => {
+    const fill = () => {
+      const q = takeFindQuery();
+      if (!q) return;
+      setInput(q);
+      setResults(null);
+      setSource(null);
+      setPicker(null);
+    };
+    fill();
+    return onFindSongs(fill);
+  }, []);
 
   function openPlaylist() {
     setResults(null);
@@ -163,6 +173,7 @@ function SearchPanel({
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-sage" aria-hidden />
             <input
               id="add-input"
+              data-guide="add"
               value={input}
               onChange={(e) => {
                 setInput(e.target.value);
