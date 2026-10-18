@@ -619,6 +619,7 @@ export const en: Dict = {
     showMe: 'Show me',
     undo: 'Remove this song',
     undoShort: 'Remove',
+    undoRemove: (n: number) => (n === 1 ? 'Add the removed song back' : `Add the ${n} removed songs back`),
     gotIt: 'Got it',
     addQueryBody: 'The song name is already in the box. Press Search (or Enter), then pick the song.',
     guideMissing: 'This button is not on your screen right now (you may not have the right, or nothing is playing).',
@@ -679,6 +680,7 @@ export const en: Dict = {
       queueLength: (n: number, min: number | null) => `${n} ${n === 1 ? 'song' : 'songs'} in the queue${min ? `, about ${min} min` : ''}.`,
       queueEmpty: 'The queue is empty.',
       myCount: (who: string, n: number) => `${who === 'You' ? 'You have' : `${who} has`} ${n} ${n === 1 ? 'song' : 'songs'} in the queue.`,
+      nextSong: (title: string, by: string | null, eta: string) => `Up next: ${title}${by ? ` (picked by ${by})` : ''}${eta}.`,
     },
     song: (title: string, fresh: 'latest' | 'popular' | null) =>
       fresh === 'latest'

@@ -139,6 +139,8 @@ export function djReplyText(t: Dict, r: DjReply, meId: string | null, me: Member
           return i.count ? t.djBot.info.queueLength(i.count, i.totalSec ? minutes(i.totalSec) : null) : t.djBot.info.queueEmpty;
         case 'myCount':
           return t.djBot.info.myCount(whoCap, i.count ?? 0);
+        case 'nextSong':
+          return i.title ? t.djBot.info.nextSong(i.title, i.pickedBy ?? null, eta(t, i.etaSec)) : t.djBot.info.queueEmpty;
       }
       return t.djBot.failed;
     }
@@ -210,6 +212,7 @@ export function DjMessage({ m }: { m: ChatMessageView }) {
                 <DoneStep key={i} step={s} mine={mine} />
               ))}
             </ul>
+            {mine && <UndoRemove steps={r.steps ?? []} />}
           </>
         ) : (
           <p className="whitespace-pre-wrap [overflow-wrap:anywhere]">{text}</p>
@@ -382,5 +385,32 @@ export function DjThinking({ memberId, name }: { memberId: string; name: string 
         </span>
       </div>
     </li>
+  );
+}
+
+/**
+ * The DJ removed songs for the asker: one button puts the ones not back yet into the queue
+ * (at the end, the room's usual rules apply). Gone once they are all back.
+ */
+function UndoRemove({ steps }: { steps: DjStep[] }) {
+  const t = useT();
+  const act = useAct();
+  const removed = steps.filter((s) => s.ok && s.action === 'remove' && s.reason !== 'kept' && s.track).map((s) => s.track!);
+  const back = useRoom((st) => {
+    const q = st.snapshot;
+    const ids = new Set([...(q?.queue ?? []).map((x) => x.track.id), q?.nowPlaying?.item.track.id]);
+    return removed.filter((tr) => !ids.has(tr.id)).map((tr) => tr.id).join(',');
+  });
+  if (!back) return null;
+  const trackIds = back.split(',');
+  return (
+    <button
+      type="button"
+      onClick={() => void act('queue:add-many', { trackIds })}
+      className="mt-2 inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line px-3 text-[14px] text-paper transition-colors hover:bg-panel"
+    >
+      <Undo2 className="h-4 w-4" aria-hidden />
+      {t.djBot.undoRemove(trackIds.length)}
+    </button>
   );
 }

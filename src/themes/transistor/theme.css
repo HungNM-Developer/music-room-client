@@ -213,9 +213,12 @@ html[data-theme='transistor'] {
     font-weight: 600;
   }
   /* Knobs: each control is a chrome knob with its name under it; Bỏ qua is the red one. */
+  /* Knobs in one row on their tops: a label on two lines ("Lưu vào Yêu thích") grows
+     downwards instead of lifting its knob above the others. */
   html[data-theme='transistor'] .stage-controls[data-variant='knobs'] {
     gap: 14px;
     margin-top: 16px;
+    align-items: flex-start;
   }
   html[data-theme='transistor'] .stage-controls[data-variant='knobs'] > button {
     width: auto !important;

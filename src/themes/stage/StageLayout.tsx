@@ -1,6 +1,6 @@
 'use client';
 
-import { ListenAlong, ListenersStrip } from '@/components/player/ListenAlong';
+import { ListenersStrip } from '@/components/player/ListenAlong';
 import { InlineLyrics, LyricsButton } from '@/components/room/Lyrics';
 import { useNowPlayingActions } from '@/components/room/stage/useNowPlayingActions';
 import { useSkipVoteState, type VoteMeterProps } from '@/components/room/stage/useSkipVoteState';
@@ -89,7 +89,6 @@ export function StageLayout(p: StageProps) {
         <InlineLyrics trackId={track.id} size="stage" className="max-lg:hidden" />
         {a.blockMenu}
       </section>
-      <ListenAlong />
       {queue}
       <Suggestions />
     </div>

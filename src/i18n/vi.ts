@@ -635,6 +635,8 @@ export const vi = {
     showMe: 'Chỉ cho tôi',
     undo: 'Gỡ bài này',
     undoShort: 'Gỡ',
+    /** The asker takes back what the DJ removed: the songs go back into the queue. */
+    undoRemove: (n: number) => (n === 1 ? 'Thêm lại bài vừa gỡ' : `Thêm lại ${n} bài vừa gỡ`),
     gotIt: 'Đã hiểu',
     addQueryBody: 'Tên bài đã có sẵn trong ô. Bấm Tìm (hoặc Enter) rồi chọn bài để thêm.',
     guideMissing: 'Nút này đang không hiện trên màn hình của bạn (có thể bạn chưa có quyền, hoặc chưa có bài đang phát).',
@@ -695,6 +697,7 @@ export const vi = {
       queueLength: (n: number, min: number | null) => `Hàng chờ còn ${n} bài${min ? `, khoảng ${min} phút` : ''}.`,
       queueEmpty: 'Hàng chờ đang trống.',
       myCount: (who: string, n: number) => `${who} đang có ${n} bài trong hàng chờ.`,
+      nextSong: (title: string, by: string | null, eta: string) => `Bài tiếp theo: ${title}${by ? ` (${by} chọn)` : ''}${eta}.`,
     },
     /** The song the DJ added: its title when known, and how it was found. */
     song: (title: string, fresh: 'latest' | 'popular' | null) =>

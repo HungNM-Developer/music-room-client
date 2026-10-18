@@ -198,13 +198,16 @@ html[data-theme='cassette'] {
     background: #e9dccb;
     transition: left 250ms linear;
   }
-  /* Mechanical keys with printed names; the one in effect is pressed in. */
+  /* Mechanical keys with printed names; the one in effect is lit in amber. */
   html[data-theme='cassette'] .stage-controls[data-variant='tape'] {
     gap: 6px;
     margin-top: 14px;
   }
   html[data-theme='cassette'] .stage-controls[data-variant='tape'] > button {
     width: auto !important;
+    /* One height for text and icon keys: their tops line up. */
+    height: 42px !important;
+    min-height: 42px;
     min-width: 42px;
     padding: 0 12px;
     border: 0;
@@ -224,11 +227,11 @@ html[data-theme='cassette'] {
   html[data-theme='cassette'] .stage-controls[data-variant='tape'] > button[data-key-label]::after {
     content: attr(data-key-label);
   }
+  /* The key in effect is lit, not sunk: every key keeps the same top edge. */
   html[data-theme='cassette'] .stage-controls[data-variant='tape'] > button[data-primary],
   html[data-theme='cassette'] .stage-controls[data-variant='tape'] > button[aria-pressed='true'] {
     background: linear-gradient(#e3a62b, #b9811a);
-    box-shadow: 0 2px 0 #6f4a0c;
-    transform: translateY(2px);
+    box-shadow: 0 4px 0 #6f4a0c;
   }
   html[data-theme='cassette'] .stage-controls[data-variant='tape'] > button:active {
     transform: translateY(3px);

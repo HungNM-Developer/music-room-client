@@ -3,7 +3,7 @@
 import { ListPlus, Radio, Users } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
-import { useListenSession } from '@/components/player/ListenAlong';
+import { ListenAlong, useListening, useListenSession } from '@/components/player/ListenAlong';
 import { AddTrackPanel } from '@/components/room/AddTrackPanel';
 import { Banners } from '@/components/room/Banners';
 import { ChatOverlay, InlineChat, type InlineChatSkin } from '@/components/room/Chat';
@@ -70,6 +70,7 @@ export function RoomFrame({
   const [tab, setTab] = useState<TabKey>('room');
   const [logOpen, setLogOpen] = useState(false);
   useListenSession();
+  const listening = useListening();
   // "Tìm bài khác" (idle speaker cover): the add panel, on the search box.
   useEffect(
     () =>
@@ -94,6 +95,8 @@ export function RoomFrame({
 
   // Legacy path (TC-129): a member granted canPlay plays from this page; the engine claims the lease.
   const isPlayer = Boolean(me?.canPlay && !me.isDevice);
+  // This device plays the room, for the room or for itself ("Nghe cùng"): the video leads the stage.
+  const hasVideo = isPlayer || listening;
   const needsJoin = connection === 'connected' && !memberId;
   const canChat = Boolean(memberId && me && !me.isDevice);
   const notice = revoked === 'kicked' ? t.banners.kicked : revoked === 'invalid' ? errorMessage('UNAUTHENTICATED') : null;
@@ -131,10 +134,14 @@ export function RoomFrame({
 
         <div
           {...panel('room')}
-          data-player={isPlayer || undefined}
+          data-player={hasVideo || undefined}
           className={`room-stage min-w-0 space-y-5 ${tab === 'room' ? '' : 'hidden lg:block'}`}
         >
-          {isPlayer && <PlayerEngine caption frameClass={videoFrame && `room-video-frame ${videoFrame}`} />}
+          {isPlayer ? (
+            <PlayerEngine caption frameClass={videoFrame && `room-video-frame ${videoFrame}`} />
+          ) : (
+            <ListenAlong frameClass={videoFrame && `room-video-frame ${videoFrame}`} />
+          )}
           {hasSnapshot ? stage(() => setTab('add')) : <RoomSkeleton />}
         </div>
 
