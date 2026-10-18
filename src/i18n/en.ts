@@ -664,11 +664,21 @@ export const en: Dict = {
       queueEmpty: 'The queue is empty.',
       myCount: (who: string, n: number) => `${who === 'You' ? 'You have' : `${who} has`} ${n} ${n === 1 ? 'song' : 'songs'} in the queue.`,
     },
-    added: (title: string, who: string, pos: number, eta: string) => `Added "${title}" for ${who}, number ${pos} in the queue${eta}.`,
-    addedLatest: (title: string, who: string, pos: number, eta: string) =>
-      `Added the newest song I found: "${title}" for ${who}, number ${pos} in the queue${eta}.`,
-    addedPopular: (title: string, who: string, pos: number, eta: string) =>
-      `Added the trending song I found: "${title}" for ${who}, number ${pos} in the queue${eta}.`,
+    song: (title: string, fresh: 'latest' | 'popular' | null) =>
+      fresh === 'latest'
+        ? title
+          ? `the newest song I found ("${title}")`
+          : 'the newest song I found'
+        : fresh === 'popular'
+          ? title
+            ? `the trending song I found ("${title}")`
+            : 'the trending song I found'
+          : title
+            ? `"${title}"`
+            : 'a song',
+    added: (song: string, who: string, at: string) => `Added ${song} for ${who}${at}.`,
+    addedNow: (song: string, who: string) => `Playing ${song} for ${who} now.`,
+    queuePos: (pos: number, eta: string) => `, number ${pos} in the queue${eta}`,
     hello: 'Hi, I am the room DJ. Try: "play some chill songs for the afternoon", "the newest song by Taylor Swift", "how long until my song".',
     other: 'I cannot help with that yet. Try: "play some chill songs", "the newest song by Adele", "how long until my song".',
     busy: 'I am a bit busy right now, please try again in a few minutes.',

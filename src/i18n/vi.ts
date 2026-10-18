@@ -676,11 +676,23 @@ export const vi = {
       queueEmpty: 'Hàng chờ đang trống.',
       myCount: (who: string, n: number) => `${who} đang có ${n} bài trong hàng chờ.`,
     },
-    added: (title: string, who: string, pos: number, eta: string) => `Đã thêm "${title}" cho ${who}, đứng thứ ${pos}${eta}.`,
-    addedLatest: (title: string, who: string, pos: number, eta: string) =>
-      `Đã thêm bài mới nhất mình tìm được: "${title}" cho ${who}, đứng thứ ${pos}${eta}.`,
-    addedPopular: (title: string, who: string, pos: number, eta: string) =>
-      `Đã thêm bài đang hot mình tìm được: "${title}" cho ${who}, đứng thứ ${pos}${eta}.`,
+    /** The song the DJ added: its title when known, and how it was found. */
+    song: (title: string, fresh: 'latest' | 'popular' | null) =>
+      fresh === 'latest'
+        ? title
+          ? `bài mới nhất mình tìm được: "${title}"`
+          : 'bài mới nhất mình tìm được'
+        : fresh === 'popular'
+          ? title
+            ? `bài đang hot mình tìm được: "${title}"`
+            : 'bài đang hot mình tìm được'
+          : title
+            ? `"${title}"`
+            : 'bài',
+    added: (song: string, who: string, at: string) => `Đã thêm ${song} cho ${who}${at}.`,
+    /** The room was idle: the song started at once. */
+    addedNow: (song: string, who: string) => `Đã bật ${song} cho ${who}, đang phát ngay.`,
+    queuePos: (pos: number, eta: string) => `, đứng thứ ${pos}${eta}`,
     hello: 'Chào bạn, mình là DJ của phòng. Bạn thử hỏi: "bật vài bài chill cho buổi chiều", "bài mới của Sơn Tùng", "còn bao lâu tới bài của tôi".',
     other: 'Mình chưa giúp được việc này. Bạn thử: "bật vài bài chill", "bài mới của Đen Vâu", "còn bao lâu tới bài của tôi".',
     busy: 'Mình đang hơi quá tải, bạn thử lại sau ít phút nhé.',
