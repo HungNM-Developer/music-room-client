@@ -4,6 +4,7 @@ import { Radio } from 'lucide-react';
 import Link from 'next/link';
 import { AccountPanel } from '@/components/account/AccountPanel';
 import { HomeForm } from '@/components/home/HomeForm';
+import { HomeScenery } from '@/components/home/scenery/HomeScenery';
 import { HeroDial } from '@/components/room/TuningDial';
 import { LangSwitch } from '@/components/ui/LangSwitch';
 import { useT } from '@/i18n';
@@ -12,7 +13,9 @@ export default function HomePage() {
   const t = useT();
   return (
     <main className="flex min-h-dvh items-center px-4 py-10 sm:py-14">
-      {/* Phones: headline → form → how it works. Desktop: copy on the left, form on the right. */}
+      <HomeScenery />
+      {/* Phones: headline → form → how it works. Desktop: copy on the left, form on the right.
+          HomeScenery puts the tree and the moon in the free space beside `data-scenery`. */}
       <div className="mx-auto grid w-full max-w-6xl gap-10 lg:grid-cols-[minmax(0,1fr)_420px] lg:grid-rows-[auto_1fr] lg:gap-x-16 lg:gap-y-0">
         <div className="min-w-0 lg:self-end">
           <p className="flex items-center gap-2 text-[15px] font-semibold text-amber">
@@ -24,12 +27,15 @@ export default function HomePage() {
           <p className="mt-5 max-w-md text-[17px] text-sage">{t.appTagline}</p>
         </div>
 
-        <div className="min-w-0 space-y-4 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center">
+        <div
+          data-scenery="panel"
+          className="min-w-0 space-y-4 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-center"
+        >
           <HomeForm />
           <AccountPanel />
         </div>
 
-        <div className="min-w-0 lg:pt-10">
+        <div data-scenery="text" className="min-w-0 lg:pt-10">
           <div className="max-w-xl">
             <HeroDial />
           </div>
