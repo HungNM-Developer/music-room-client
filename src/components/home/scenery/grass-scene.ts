@@ -1148,7 +1148,15 @@ export function createGrassScene(canvas: HTMLCanvasElement, opts: { onSlow?: () 
     g.scale.setScalar(TRAIN_SCALE);
     scene.add(g);
   }
-  const trainVoice = new TrainVoice(audio);
+  const trainVoice = new TrainVoice(audio, voice);
+  /**
+   * The duet: the first time the engine comes over the guitar, the guitar answers (a soft roll of
+   * the train's chord) and then plays along; passing over it again while it still plays changes
+   * nothing, the tune just goes on. It stops DUET_HOLD_S after the train last left it.
+   */
+  const GUITAR_REACH = 0.38;
+  const DUET_HOLD_S = 4;
+  const duet = { inside: false, lastInside: -100 };
   /** Track laid every TRACK_STEP of travel; a note every NOTE_STRIDE. */
   const TRACK_STEP = 0.05 * TRAIN_SCALE;
   const NOTE_STRIDE = 0.15;
@@ -1713,10 +1721,27 @@ export function createGrassScene(canvas: HTMLCanvasElement, opts: { onSlow?: () 
         }
         if (!railLast || Math.hypot(fx - railLast.x, fz - railLast.z) >= RAIL_STEP) railSample(fx, fz, run.yaw);
         trackStamps[trackCount++].set((fx - X0) / XS, (fz - Z0) / ZS, 1);
+        // Over the guitar: the first time it answers, then the duet just goes on.
+        const near =
+          Math.hypot(run.x - guitar.position.x, run.z - guitar.position.z) < GUITAR_REACH * guitar.scale.x;
+        const playing = time - duet.lastInside < DUET_HOLD_S;
+        if (near && !duet.inside && !playing) {
+          // A slow, soft roll of the train's chord.
+          voice.strum(trainVoice.chord().slice(1, 4), 0.22, 0.12, true);
+          shared.uPulse.value = 1;
+          for (let i = 0; i < 8; i++) spark(guitar.position.x, guitar.position.z, time + i * 0.04);
+        }
+        duet.inside = near;
+        if (near) duet.lastInside = time;
+        const together = time - duet.lastInside < DUET_HOLD_S;
         run.sinceNote += step;
         if (run.sinceNote >= NOTE_STRIDE) {
           run.sinceNote = 0;
-          if (trainVoice.step()) puff();
+          if (trainVoice.step(together)) {
+            puff();
+            // The guitar glows along while it plays.
+            if (together) shared.uPulse.value = Math.max(shared.uPulse.value, 0.6);
+          }
         }
       }
       trainPulse.value = 1;

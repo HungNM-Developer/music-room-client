@@ -8,6 +8,11 @@
  * - The toy train: while it runs, every stretch of track plays the next note of a cheerful
  *   original tune on a music box, with a soft chuff; a click without a drag blows its whistle.
  * Both tunes start over when they end.
+ * - Together: when the train runs over the guitar, the guitar answers with the train's chord and
+ *   then plays along (TrainVoice.step's `together`), always the same gentle way: a warm
+ *   counter-line of chord tones under the tune (each the smallest step from the last), a low
+ *   root and a quiet third below once a bar. The tune slows a little and the chuff almost goes
+ *   while they play together.
  */
 
 interface Step {
@@ -52,6 +57,29 @@ const TRAIN_TUNE: Step[] = [
   { note: N.E5, bass: N.G2 }, { note: N.D5 }, { note: N.C5 }, { note: N.D5 },
   { note: N.E5, bass: N.C3 }, { note: N.D5 }, { note: N.C5, chord: [N.C3, N.G3, N.C4, N.E4, N.G4] },
 ];
+
+/** The train tune's chord per bar (4 steps): C – F – Dm – G – C – F – G – C, low to high. */
+const TRAIN_CHORDS: number[][] = [
+  [N.C3, 52, 55, 60, 64],
+  [N.F2, 48, 53, 57, 60],
+  [N.D3, 53, 57, 62, 65],
+  [N.G2, 50, 55, 59, 62],
+  [N.C3, 52, 55, 60, 64],
+  [N.F2, 48, 53, 57, 60],
+  [N.G2, 50, 55, 59, 62],
+  [N.C3, 52, 55, 60, 64],
+];
+const C_MAJOR = [0, 2, 4, 5, 7, 9, 11];
+/** The note `steps` scale degrees below `midi` in C major (the tune never leaves it). */
+function scaleBelow(midi: number, steps: number): number {
+  let m = midi;
+  let left = steps;
+  while (left > 0) {
+    m--;
+    if (C_MAJOR.includes(((m % 12) + 12) % 12)) left--;
+  }
+  return m;
+}
 
 /** The shared room every sound goes through. */
 export class SceneAudio {
@@ -136,24 +164,38 @@ export class GuitarVoice {
     this.at = (this.at + 1) % GUITAR_TUNE.length;
   }
 
+  /** One string, now or a little later (the train's duet uses it). */
+  /** `warm`: plucked with the flesh of the finger, darker and longer (the duet's voice). */
+  pluck(midi: number, level: number, delay = 0, warm = false): void {
+    const a = this.audio.ready();
+    if (a) play(a, this.string(a.ctx, midi, warm), a.ctx.currentTime + 0.01 + delay, level);
+  }
+
+  /** A strum, low to high. */
+  strum(notes: number[], level: number, spread = 0.045, warm = false): void {
+    notes.forEach((n, i) => this.pluck(n, level, i * spread, warm));
+  }
+
   /** Karplus–Strong: a burst of soft noise circulating in a delay line the length of one period. */
-  private string(ctx: AudioContext, midi: number): AudioBuffer {
-    const cached = this.buffers.get(midi);
+  private string(ctx: AudioContext, midi: number, warm = false): AudioBuffer {
+    const key = warm ? midi + 1000 : midi;
+    const cached = this.buffers.get(key);
     if (cached) return cached;
     const sr = ctx.sampleRate;
-    const len = Math.floor(sr * 3);
+    const len = Math.floor(sr * (warm ? 3.6 : 3));
     const buf = ctx.createBuffer(1, len, sr);
     const out = buf.getChannelData(0);
     const period = Math.max(2, Math.round(sr / freq(midi)));
     const ring = new Float32Array(period);
-    // Softened noise: a finger, not a pick.
+    // Softened noise: a finger, not a pick (warmer still for the duet).
+    const soft = warm ? 0.82 : 0.5;
     let prev = 0;
     for (let i = 0; i < period; i++) {
-      prev = prev * 0.5 + (Math.random() * 2 - 1) * 0.5;
+      prev = prev * soft + (Math.random() * 2 - 1) * (1 - soft);
       ring[i] = prev;
     }
-    // High strings ring a little shorter.
-    const decay = 0.9985 - Math.min(0.004, (midi - 40) * 0.00006);
+    // High strings ring a little shorter; the warm voice sings longer.
+    const decay = Math.min(0.9993, 0.9985 - Math.min(0.004, (midi - 40) * 0.00006) + (warm ? 0.0006 : 0));
     let idx = 0;
     let peak = 0;
     for (let i = 0; i < len; i++) {
@@ -167,7 +209,7 @@ export class GuitarVoice {
     const norm = peak > 0 ? 0.8 / peak : 1;
     const fade = Math.floor(sr * 0.3);
     for (let i = 0; i < len; i++) out[i] *= norm * (i > len - fade ? (len - i) / fade : 1);
-    this.buffers.set(midi, buf);
+    this.buffers.set(key, buf);
     return buf;
   }
 }
@@ -177,22 +219,66 @@ export class TrainVoice {
   private chuffBuf: AudioBuffer | null = null;
   private at = 0;
   private lastNote = 0;
+  /** The duet's last guitar note: the next one moves from it by the smallest step. */
+  private lastGuitar: number = N.E4;
 
-  constructor(private readonly audio: SceneAudio) {}
+  constructor(
+    private readonly audio: SceneAudio,
+    private readonly guitar: GuitarVoice,
+  ) {}
 
-  /** The train ran another stretch: the next note (never two closer than 90 ms) and a chuff. */
-  step(): boolean {
+  /** The chord tone (in the guitar's middle range) nearest to `from`; `move`: not `from` itself. */
+  private nearest(chord: number[], from: number, move: boolean): number {
+    let best = from;
+    let dist = Infinity;
+    for (const tone of chord.slice(1))
+      for (const n of [tone - 12, tone, tone + 12]) {
+        if (n < 55 || n > 74 || (move && n === from)) continue;
+        const d = Math.abs(n - from);
+        if (d < dist) {
+          dist = d;
+          best = n;
+        }
+      }
+    return best;
+  }
+
+  /** The chord the tune is on right now. */
+  chord(): number[] {
+    return TRAIN_CHORDS[Math.floor(this.at / 4) % TRAIN_CHORDS.length];
+  }
+
+  /**
+   * The train ran another stretch: the next note (never two closer than 90 ms) and a chuff.
+   * `together`: the guitar plays along.
+   */
+  step(together = false): boolean {
     const a = this.audio.ready();
     if (!a) return false;
     const now = a.ctx.currentTime;
-    if (now - this.lastNote < 0.09) return false;
+    // Together they take their time: never two notes closer than 170 ms.
+    if (now - this.lastNote < (together ? 0.17 : 0.09)) return false;
     this.lastNote = now;
     const s = TRAIN_TUNE[this.at];
+    const beat = this.at % 4;
+    const chord = this.chord();
     const t = now + 0.01;
-    play(a, this.bell(a.ctx, s.note), t, 0.42);
-    if (s.bass !== undefined) play(a, this.bell(a.ctx, s.bass + 12), t, 0.22);
-    s.chord?.forEach((n, i) => play(a, this.bell(a.ctx, n + 12), t + 0.05 + i * 0.05, 0.2));
-    play(a, this.chuff(a.ctx), t, 0.1);
+    const duet = together;
+    play(a, this.bell(a.ctx, s.note), t, duet ? 0.34 : 0.42);
+    if (s.bass !== undefined) play(a, this.bell(a.ctx, s.bass + 12), t, duet ? 0.14 : 0.22);
+    s.chord?.forEach((n, i) => play(a, this.bell(a.ctx, n + 12), t + 0.08 + i * 0.09, duet ? 0.12 : 0.2));
+    play(a, this.chuff(a.ctx), t, duet ? 0.03 : 0.1);
+    // The guitar under the tune: a warm counter-line of chord tones, each one the smallest step
+    // from the last, a touch behind the beat.
+    if (together) {
+      if (beat === 0 || beat === 2) {
+        const n = this.nearest(chord, this.lastGuitar, beat === 2);
+        this.guitar.pluck(n, beat === 0 ? 0.28 : 0.24, 0.04, true);
+        this.lastGuitar = n;
+      }
+      if (beat === 0) this.guitar.pluck(chord[0], 0.2, 0, true);
+      if (beat === 3) this.guitar.pluck(scaleBelow(s.note, 2) - 12, 0.14, 0.07, true);
+    }
     this.at = (this.at + 1) % TRAIN_TUNE.length;
     return true;
   }
