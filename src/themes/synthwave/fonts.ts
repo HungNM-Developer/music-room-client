@@ -1,3 +1,4 @@
-import { Exo_2 } from 'next/font/google';
+import '@/fonts/exo-2.css';
 
-export const exo2 = Exo_2({ subsets: ['latin', 'vietnamese'], style: ['normal', 'italic'], variable: '--font-exo2', display: 'swap', preload: false });
+/** Self-hosted (src/fonts): builds never fetch Google Fonts. `variable` sets the font's CSS variable. */
+export const exo2 = { variable: 'fontvar-exo-2' };

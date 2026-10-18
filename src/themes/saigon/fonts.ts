@@ -1,4 +1,6 @@
-import { Bungee, Patrick_Hand } from 'next/font/google';
+import '@/fonts/bungee.css';
+import '@/fonts/patrick-hand.css';
 
-export const bungee = Bungee({ subsets: ['latin', 'vietnamese'], weight: '400', variable: '--font-bungee', display: 'swap', preload: false });
-export const patrickHand = Patrick_Hand({ subsets: ['latin', 'vietnamese'], weight: '400', variable: '--font-patrick-hand', display: 'swap', preload: false });
+/** Self-hosted (src/fonts): builds never fetch Google Fonts. `variable` sets the font's CSS variable. */
+export const bungee = { variable: 'fontvar-bungee' };
+export const patrickHand = { variable: 'fontvar-patrick-hand' };

@@ -1,4 +1,5 @@
-import { VT323 } from 'next/font/google';
+import '@/fonts/vt323.css';
 
 // Pixelify Sans (the mockup's title face) has no Vietnamese glyphs; VT323 does.
-export const vt323 = VT323({ subsets: ['latin', 'vietnamese'], weight: '400', variable: '--font-vt323', display: 'swap', preload: false });
+/** Self-hosted (src/fonts): builds never fetch Google Fonts. `variable` sets the font's CSS variable. */
+export const vt323 = { variable: 'fontvar-vt323' };
