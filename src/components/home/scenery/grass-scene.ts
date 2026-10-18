@@ -1157,9 +1157,8 @@ export function createGrassScene(canvas: HTMLCanvasElement, opts: { onSlow?: () 
   const GUITAR_REACH = 0.38;
   const DUET_HOLD_S = 4;
   const duet = { inside: false, lastInside: -100 };
-  /** Track laid every TRACK_STEP of travel; a note every NOTE_STRIDE. */
+  /** Track laid every TRACK_STEP of travel (the song plays on its own beat while it runs). */
   const TRACK_STEP = 0.05 * TRAIN_SCALE;
-  const NOTE_STRIDE = 0.15;
   const WAGON_GAP = 0.2 * TRAIN_SCALE;
   const TRACK_PIECES = 500;
   const pieceGeo = add(sleeperPiece());
@@ -1315,7 +1314,7 @@ export function createGrassScene(canvas: HTMLCanvasElement, opts: { onSlow?: () 
   };
 
   /** Where the engine is, where it faces, and the path it ran (newest last) for the wagon. */
-  const run = { x: 0, z: 0, yaw: 0, moved: false, sincePiece: 0, sinceNote: 0 };
+  const run = { x: 0, z: 0, yaw: 0, moved: false, sincePiece: 0, lastMove: -100, speed: 0 };
   const path: { x: number; z: number }[] = [];
   const poseTrain = () => {
     train.engine.position.set(run.x, hill(run.x, run.z), run.z);
@@ -1586,7 +1585,10 @@ export function createGrassScene(canvas: HTMLCanvasElement, opts: { onSlow?: () 
     }
     if (onGuitar()) playGuitar();
   };
+  // iOS web views start the sound only at the end of a gesture (see SceneAudio.unlock).
+  const onGestureEnd = () => audio.unlock();
   const onUp = () => {
+    audio.unlock();
     if (!dragging) return;
     dragging = false;
     // Taken and let go without running: "toot toot".
@@ -1635,6 +1637,8 @@ export function createGrassScene(canvas: HTMLCanvasElement, opts: { onSlow?: () 
   window.addEventListener('pointerup', onUp);
   window.addEventListener('pointercancel', onUp);
   window.addEventListener('touchmove', onTouchMove, { passive: false });
+  window.addEventListener('touchend', onGestureEnd, { passive: true });
+  window.addEventListener('click', onGestureEnd, { passive: true });
   window.addEventListener('wheel', onWheel, { passive: false });
   document.addEventListener('pointerleave', onLeave);
   const touch = () => {
@@ -1733,19 +1737,22 @@ export function createGrassScene(canvas: HTMLCanvasElement, opts: { onSlow?: () 
         }
         duet.inside = near;
         if (near) duet.lastInside = time;
-        const together = time - duet.lastInside < DUET_HOLD_S;
-        run.sinceNote += step;
-        if (run.sinceNote >= NOTE_STRIDE) {
-          run.sinceNote = 0;
-          if (trainVoice.step(together)) {
-            puff();
-            // The guitar glows along while it plays.
-            if (together) shared.uPulse.value = Math.max(shared.uPulse.value, 0.6);
-          }
-        }
+        run.lastMove = time;
+        run.speed += (step / Math.max(dt, 1e-3) - run.speed) * Math.min(1, dt * 4);
       }
       trainPulse.value = 1;
     } else trainPulse.value = Math.max(0, trainPulse.value - dt / 1.4);
+    // The song plays while the train runs (a short grace for a hand pausing mid-drag); the
+    // guitar's part joins while it is together with the train. The chimney puffs on the beats.
+    const together = time - duet.lastInside < DUET_HOLD_S;
+    // The tempo follows the train: 0.6× when it crawls, up to 1.6× when it races (1× ≈ 1.2/s).
+    if (time - run.lastMove > 0.2) run.speed *= Math.max(0, 1 - dt * 3);
+    const rate = Math.min(1.6, Math.max(0.6, run.speed / 1.2));
+    if (trainVoice.drive(dt, time - run.lastMove < 0.35, together, rate)) {
+      puff();
+      // The guitar glows along while it plays.
+      if (together) shared.uPulse.value = Math.max(shared.uPulse.value, 0.6);
+    }
     trailMat.uniforms.uTrackCount.value = trackCount;
     trailMat.uniforms.uDecayTrack.value = Math.exp(-dt / (TRACK_LIFE_S * 0.55));
     trailMat.uniforms.uCount.value = count;
@@ -1798,6 +1805,8 @@ export function createGrassScene(canvas: HTMLCanvasElement, opts: { onSlow?: () 
       window.removeEventListener('pointerup', onUp);
       window.removeEventListener('pointercancel', onUp);
       window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onGestureEnd);
+      window.removeEventListener('click', onGestureEnd);
       window.removeEventListener('wheel', onWheel);
       if (cursor) document.body.style.cursor = '';
       audio.dispose();

@@ -3,88 +3,89 @@
  * shared room: a warm low-pass and a soft reverb. The AudioContext starts on the first click
  * or drag (browsers allow sound after a gesture).
  *
- * - The guitar: each click plays the next note of a short, original chill tune (Am7 – Fmaj7 –
- *   Cmaj7 – G6, home to A minor); plucked strings by Karplus–Strong.
- * - The toy train: while it runs, every stretch of track plays the next note of a cheerful
- *   original tune on a music box, with a soft chuff; a click without a drag blows its whistle.
- * Both tunes start over when they end.
- * - Together: when the train runs over the guitar, the guitar answers with the train's chord and
- *   then plays along (TrainVoice.step's `together`), always the same gentle way: a warm
- *   counter-line of chord tones under the tune (each the smallest step from the last), a low
- *   root and a quiet third below once a bar. The tune slows a little and the chuff almost goes
- *   while they play together.
+ * One song arranged for two instruments: a slow, original night lullaby in C (SONG) with a
+ * music-box melody in a real rhythm and a fingerpicked guitar part, one note a beat, on the
+ * same chords and the same beat (BEAT_S).
+ * - The toy train plays it: while it runs the song goes on (TrainVoice.drive), faster when it
+ *   runs faster, slower when it slows (`rate`), the chuff on every beat; when it stops the song
+ *   waits, and goes on when it runs again. Both parts follow the same clock, so they stay
+ *   together at any speed.
+ *   A click without a drag blows its whistle.
+ * - The guitar joins the train: once the train has run over it, its part plays along on the
+ *   same beat (warm notes that ring on, with a gentle vibrato); it drops out a while after the
+ *   train leaves it.
+ * - The guitar alone: each click plays the next melody note on the guitar, a bass on each bar.
+ * The song starts over when it ends.
  */
-
-interface Step {
-  /** MIDI note of the melody (60 = middle C). */
-  note: number;
-  /** A low root under the first note of a bar. */
-  bass?: number;
-  /** The last step: a slow strum of the whole chord. */
-  chord?: number[];
-}
 
 const freq = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
 
-// Notes by name (MIDI).
+// Notes by name (MIDI, 60 = middle C).
 const N = {
-  F2: 41, G2: 43, A2: 45, C3: 48, D3: 50, E3: 52, F3: 53, G3: 55, A3: 57, C4: 60,
-  E4: 64, G4: 67, A4: 69, B4: 71, C5: 72, D5: 74, E5: 76, F5: 77, G5: 79, A5: 81, C6: 84,
+  D2: 38, E2: 40, F2: 41, G2: 43, A2: 45, B2: 47, C3: 48, D3: 50, E3: 52, F3: 53, G3: 55,
+  A3: 57, B3: 59, C4: 60, E4: 64, G4: 67, A4: 69, B4: 71, C5: 72, D5: 74, E5: 76, F5: 77,
+  G5: 79, A5: 81, B5: 83, C6: 84,
 } as const;
 
-const GUITAR_TUNE: Step[] = [
-  // Am7
-  { note: N.A4, bass: N.A2 }, { note: N.C5 }, { note: N.E5 }, { note: N.G5 }, { note: N.E5 }, { note: N.C5 }, { note: N.D5 }, { note: N.E5 },
-  // Fmaj7
-  { note: N.C5, bass: N.F2 }, { note: N.A4 }, { note: N.C5 }, { note: N.E5 }, { note: N.F5 }, { note: N.E5 }, { note: N.C5 }, { note: N.A4 },
-  // Cmaj7
-  { note: N.G4, bass: N.C3 }, { note: N.B4 }, { note: N.C5 }, { note: N.E5 }, { note: N.G5 }, { note: N.E5 }, { note: N.D5 }, { note: N.C5 },
-  // G6
-  { note: N.B4, bass: N.G2 }, { note: N.D5 }, { note: N.E5 }, { note: N.G5 }, { note: N.A5 }, { note: N.G5 }, { note: N.E5 }, { note: N.D5 },
-  // Home
-  { note: N.E5, bass: N.A2 }, { note: N.C5 }, { note: N.A4 }, { note: N.G4 }, { note: N.E4 }, { note: N.G4 },
-  { note: N.A4, chord: [N.A2, N.E3, N.A3, N.C4, N.E4] },
-];
+/** The song's tempo at the train's usual pace: 72 beats a minute (TrainVoice.drive scales it). */
+const BEAT_S = 60 / 72;
 
-/** A cheerful little railway tune in C (I – IV – ii – V, twice, home). */
-const TRAIN_TUNE: Step[] = [
-  { note: N.G4, bass: N.C3 }, { note: N.C5 }, { note: N.E5 }, { note: N.G5 },
-  { note: N.F5, bass: N.F3 }, { note: N.E5 }, { note: N.D5 }, { note: N.C5 },
-  { note: N.A4, bass: N.D3 }, { note: N.D5 }, { note: N.F5 }, { note: N.A5 },
-  { note: N.G5, bass: N.G2 }, { note: N.F5 }, { note: N.E5 }, { note: N.D5 },
-  { note: N.E5, bass: N.C3 }, { note: N.G5 }, { note: N.C6 }, { note: N.G5 },
-  { note: N.F5, bass: N.F3 }, { note: N.A5 }, { note: N.G5 }, { note: N.F5 },
-  { note: N.E5, bass: N.G2 }, { note: N.D5 }, { note: N.C5 }, { note: N.D5 },
-  { note: N.E5, bass: N.C3 }, { note: N.D5 }, { note: N.C5, chord: [N.C3, N.G3, N.C4, N.E4, N.G4] },
-];
-
-/** The train tune's chord per bar (4 steps): C – F – Dm – G – C – F – G – C, low to high. */
-const TRAIN_CHORDS: number[][] = [
-  [N.C3, 52, 55, 60, 64],
-  [N.F2, 48, 53, 57, 60],
-  [N.D3, 53, 57, 62, 65],
-  [N.G2, 50, 55, 59, 62],
-  [N.C3, 52, 55, 60, 64],
-  [N.F2, 48, 53, 57, 60],
-  [N.G2, 50, 55, 59, 62],
-  [N.C3, 52, 55, 60, 64],
-];
-const C_MAJOR = [0, 2, 4, 5, 7, 9, 11];
-/** The note `steps` scale degrees below `midi` in C major (the tune never leaves it). */
-function scaleBelow(midi: number, steps: number): number {
-  let m = midi;
-  let left = steps;
-  while (left > 0) {
-    m--;
-    if (C_MAJOR.includes(((m % 12) + 12) % 12)) left--;
-  }
-  return m;
+interface Bar {
+  /** The guitar part, one note a beat: root, fifth, a tenth, a colour note. */
+  picking: [number, number, number, number];
+  /** The melody: [note, length in beats], filling the bar's 4 beats. */
+  melody: [number, number][];
 }
+
+/**
+ * "Đom đóm" (fireflies), original. Cmaj7 – Am7 – Fmaj7 – G6 – Em7 – Am7 – Dm7 – G7, then home
+ * to C. Every melody note is a chord tone or a step between two.
+ */
+const SONG: Bar[] = [
+  { picking: [N.C3, N.G3, N.E4, N.B3], melody: [[N.E5, 1], [N.D5, 0.5], [N.E5, 0.5], [N.G5, 2]] }, // Cmaj7
+  { picking: [N.A2, N.E3, N.C4, N.G3], melody: [[N.C5, 1], [N.B4, 0.5], [N.C5, 0.5], [N.E5, 2]] }, // Am7
+  { picking: [N.F2, N.C3, N.A3, N.E3], melody: [[N.A4, 1], [N.C5, 1], [N.F5, 1], [N.E5, 1]] }, // Fmaj7
+  { picking: [N.G2, N.D3, N.B3, N.E3], melody: [[N.D5, 1], [N.B4, 1], [N.G4, 2]] }, // G6
+  { picking: [N.E2, N.B2, N.G3, N.D3], melody: [[N.G4, 1], [N.B4, 0.5], [N.E5, 0.5], [N.D5, 2]] }, // Em7
+  { picking: [N.A2, N.E3, N.C4, N.G3], melody: [[N.C5, 1], [N.E5, 1], [N.A5, 1], [N.G5, 1]] }, // Am7
+  { picking: [N.D2, N.A2, N.F3, N.C3], melody: [[N.F5, 1], [N.E5, 0.5], [N.D5, 0.5], [N.C5, 2]] }, // Dm7
+  { picking: [N.G2, N.D3, N.B3, N.F3], melody: [[N.B4, 1], [N.D5, 1], [N.G5, 1], [N.F5, 1]] }, // G7
+];
+/** Home: the last note held a whole bar, with the C chord rolled. */
+const ENDING = { note: N.E5, chord: [N.C3, N.G3, N.C4, N.E4, N.G4] };
+const SONG_BEATS = (SONG.length + 1) * 4;
+
+type SongEvent =
+  | { beat: number; kind: 'melody'; note: number; bass?: number }
+  | { beat: number; kind: 'guitar'; note: number; root: boolean }
+  | { beat: number; kind: 'chuff' }
+  | { beat: number; kind: 'end' };
+
+/** The whole arrangement on one time line (beats), in order. */
+const EVENTS: SongEvent[] = (() => {
+  const out: SongEvent[] = [];
+  SONG.forEach((bar, i) => {
+    let beat = i * 4;
+    bar.melody.forEach(([note, len], j) => {
+      out.push({ beat, kind: 'melody', note, ...(j === 0 ? { bass: bar.picking[0] } : {}) });
+      beat += len;
+    });
+    bar.picking.forEach((note, b) => out.push({ beat: i * 4 + b, kind: 'guitar', note, root: b === 0 }));
+  });
+  const home = SONG.length * 4;
+  out.push({ beat: home, kind: 'melody', note: ENDING.note, bass: ENDING.chord[0] }, { beat: home, kind: 'end' });
+  for (let b = 0; b < SONG_BEATS; b++) out.push({ beat: b, kind: 'chuff' });
+  return out.sort((x, y) => x.beat - y.beat);
+})();
+
+/** The guitar alone plays the melody, click by click. */
+const MELODY = EVENTS.filter((e): e is Extract<SongEvent, { kind: 'melody' }> => e.kind === 'melody');
 
 /** The shared room every sound goes through. */
 export class SceneAudio {
   private ctx: AudioContext | null = null;
   private input: GainNode | null = null;
+  private unlocked = false;
 
   /** The context and the room's input, started on demand (after a gesture). */
   ready(): { ctx: AudioContext; input: GainNode } | null {
@@ -112,9 +113,32 @@ export class SceneAudio {
       master.connect(ctx.destination);
       this.ctx = ctx;
       this.input = input;
+      // The visitor chose to play: music, not ambience (on iPhone, the silent switch would mute
+      // ambience). Only where the browser offers it.
+      const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+      if (session) session.type = 'playback';
     }
-    if (this.ctx.state === 'suspended') void this.ctx.resume();
+    // 'suspended', or iOS's 'interrupted'.
+    if (this.ctx.state !== 'running') void this.ctx.resume();
     return { ctx: this.ctx, input: this.input! };
+  }
+
+  /**
+   * At the end of a gesture (touchend, pointerup, click), once a toy has been played: iOS web
+   * views (Chrome on iPhone) only let the sound out from there, not from the touch's start.
+   * Resumes the context and plays one silent sample inside the gesture, which opens the output;
+   * notes already scheduled then sound.
+   */
+  unlock(): void {
+    const ctx = this.ctx;
+    if (!ctx) return;
+    if (ctx.state !== 'running') void ctx.resume();
+    if (this.unlocked && ctx.state === 'running') return;
+    this.unlocked = true;
+    const tick = ctx.createBufferSource();
+    tick.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+    tick.connect(ctx.destination);
+    tick.start(0);
   }
 
   dispose() {
@@ -135,7 +159,12 @@ function room(ctx: AudioContext, seconds: number): AudioBuffer {
   return buf;
 }
 
-function play(audio: { ctx: AudioContext; input: GainNode }, buffer: AudioBuffer, when: number, level: number) {
+function play(
+  audio: { ctx: AudioContext; input: GainNode },
+  buffer: AudioBuffer,
+  when: number,
+  level: number,
+): AudioBufferSourceNode {
   const src = audio.ctx.createBufferSource();
   src.buffer = buffer;
   const gain = audio.ctx.createGain();
@@ -143,6 +172,22 @@ function play(audio: { ctx: AudioContext; input: GainNode }, buffer: AudioBuffer
   src.connect(gain);
   gain.connect(audio.input);
   src.start(when);
+  return src;
+}
+
+/** A singer's vibrato on a ringing note: straight at first, then a gentle waver (in cents). */
+function vibrato(audio: { ctx: AudioContext }, src: AudioBufferSourceNode, when: number) {
+  const lfo = audio.ctx.createOscillator();
+  lfo.frequency.value = 5;
+  const depth = audio.ctx.createGain();
+  depth.gain.setValueAtTime(0, when);
+  depth.gain.linearRampToValueAtTime(0, when + 0.45);
+  depth.gain.linearRampToValueAtTime(14, when + 1.4);
+  lfo.connect(depth);
+  depth.connect(src.detune);
+  lfo.start(when);
+  const end = when + (src.buffer?.duration ?? 5);
+  lfo.stop(end);
 }
 
 export class GuitarVoice {
@@ -151,24 +196,30 @@ export class GuitarVoice {
 
   constructor(private readonly audio: SceneAudio) {}
 
-  /** Plays the next note of the tune. */
+  /** Plays the next melody note of the song, a bass on the first note of a bar. */
   playNext(): void {
     const a = this.audio.ready();
     if (!a) return;
-    const step = GUITAR_TUNE[this.at];
+    const step = MELODY[this.at];
     const t = a.ctx.currentTime + 0.01;
-    play(a, this.string(a.ctx, step.note), t, 0.55);
-    if (step.bass !== undefined) play(a, this.string(a.ctx, step.bass), t, 0.32);
-    // A slow strum, low to high.
-    step.chord?.forEach((n, i) => play(a, this.string(a.ctx, n), t + 0.06 + i * 0.07, 0.3));
-    this.at = (this.at + 1) % GUITAR_TUNE.length;
+    play(a, this.string(a.ctx, step.note), t, 0.5);
+    if (step.bass !== undefined) play(a, this.string(a.ctx, step.bass), t, 0.3);
+    // Home: a slow roll, low to high.
+    if (this.at === MELODY.length - 1)
+      ENDING.chord.forEach((n, i) => play(a, this.string(a.ctx, n), t + 0.06 + i * 0.08, 0.28));
+    this.at = (this.at + 1) % MELODY.length;
   }
 
-  /** One string, now or a little later (the train's duet uses it). */
-  /** `warm`: plucked with the flesh of the finger, darker and longer (the duet's voice). */
-  pluck(midi: number, level: number, delay = 0, warm = false): void {
+  /**
+   * One string, now or a little later (the train's duet uses it). `warm`: plucked with the flesh
+   * of the finger, darker and longer. `sing`: warmer still, ringing on with a gentle vibrato.
+   */
+  pluck(midi: number, level: number, delay = 0, warm = false, sing = false): void {
     const a = this.audio.ready();
-    if (a) play(a, this.string(a.ctx, midi, warm), a.ctx.currentTime + 0.01 + delay, level);
+    if (!a) return;
+    const when = a.ctx.currentTime + 0.01 + delay;
+    const src = play(a, this.string(a.ctx, midi, warm || sing, sing), when, level);
+    if (sing) vibrato(a, src, when);
   }
 
   /** A strum, low to high. */
@@ -177,12 +228,12 @@ export class GuitarVoice {
   }
 
   /** Karplus–Strong: a burst of soft noise circulating in a delay line the length of one period. */
-  private string(ctx: AudioContext, midi: number, warm = false): AudioBuffer {
-    const key = warm ? midi + 1000 : midi;
+  private string(ctx: AudioContext, midi: number, warm = false, long = false): AudioBuffer {
+    const key = midi + (long ? 2000 : warm ? 1000 : 0);
     const cached = this.buffers.get(key);
     if (cached) return cached;
     const sr = ctx.sampleRate;
-    const len = Math.floor(sr * (warm ? 3.6 : 3));
+    const len = Math.floor(sr * (long ? 5.5 : warm ? 3.6 : 3));
     const buf = ctx.createBuffer(1, len, sr);
     const out = buf.getChannelData(0);
     const period = Math.max(2, Math.round(sr / freq(midi)));
@@ -195,7 +246,10 @@ export class GuitarVoice {
       ring[i] = prev;
     }
     // High strings ring a little shorter; the warm voice sings longer.
-    const decay = Math.min(0.9993, 0.9985 - Math.min(0.004, (midi - 40) * 0.00006) + (warm ? 0.0006 : 0));
+    const decay = Math.min(
+      long ? 0.99965 : 0.9993,
+      0.9985 - Math.min(0.004, (midi - 40) * 0.00006) + (long ? 0.001 : warm ? 0.0006 : 0),
+    );
     let idx = 0;
     let peak = 0;
     for (let i = 0; i < len; i++) {
@@ -217,70 +271,69 @@ export class GuitarVoice {
 export class TrainVoice {
   private readonly bells = new Map<number, AudioBuffer>();
   private chuffBuf: AudioBuffer | null = null;
-  private at = 0;
-  private lastNote = 0;
-  /** The duet's last guitar note: the next one moves from it by the smallest step. */
-  private lastGuitar: number = N.E4;
+  /** Where the song is (beats) and the next event to play. */
+  private beat = -0.001;
+  private next = 0;
 
   constructor(
     private readonly audio: SceneAudio,
     private readonly guitar: GuitarVoice,
   ) {}
 
-  /** The chord tone (in the guitar's middle range) nearest to `from`; `move`: not `from` itself. */
-  private nearest(chord: number[], from: number, move: boolean): number {
-    let best = from;
-    let dist = Infinity;
-    for (const tone of chord.slice(1))
-      for (const n of [tone - 12, tone, tone + 12]) {
-        if (n < 55 || n > 74 || (move && n === from)) continue;
-        const d = Math.abs(n - from);
-        if (d < dist) {
-          dist = d;
-          best = n;
-        }
-      }
-    return best;
-  }
-
-  /** The chord the tune is on right now. */
+  /** The chord the song is on right now (the guitar part's notes), low to high. */
   chord(): number[] {
-    return TRAIN_CHORDS[Math.floor(this.at / 4) % TRAIN_CHORDS.length];
+    const bar = Math.floor(Math.max(0, this.beat) / 4);
+    return [...(SONG[bar]?.picking ?? ENDING.chord)].sort((x, y) => x - y);
   }
 
   /**
-   * The train ran another stretch: the next note (never two closer than 90 ms) and a chuff.
-   * `together`: the guitar plays along.
+   * Called every frame. While the train `runs`, the song moves on, `rate` times its tempo (the
+   * train's speed), and every event it passes is scheduled at its exact time; when the train
+   * stands, the song waits. `together`: the guitar's part plays too. Returns the beats passed
+   * (the chimney puffs on them).
    */
-  step(together = false): boolean {
+  drive(dt: number, runs: boolean, together: boolean, rate = 1): number {
+    if (!runs) return 0;
     const a = this.audio.ready();
-    if (!a) return false;
-    const now = a.ctx.currentTime;
-    // Together they take their time: never two notes closer than 170 ms.
-    if (now - this.lastNote < (together ? 0.17 : 0.09)) return false;
-    this.lastNote = now;
-    const s = TRAIN_TUNE[this.at];
-    const beat = this.at % 4;
-    const chord = this.chord();
-    const t = now + 0.01;
-    const duet = together;
-    play(a, this.bell(a.ctx, s.note), t, duet ? 0.34 : 0.42);
-    if (s.bass !== undefined) play(a, this.bell(a.ctx, s.bass + 12), t, duet ? 0.14 : 0.22);
-    s.chord?.forEach((n, i) => play(a, this.bell(a.ctx, n + 12), t + 0.08 + i * 0.09, duet ? 0.12 : 0.2));
-    play(a, this.chuff(a.ctx), t, duet ? 0.03 : 0.1);
-    // The guitar under the tune: a warm counter-line of chord tones, each one the smallest step
-    // from the last, a touch behind the beat.
-    if (together) {
-      if (beat === 0 || beat === 2) {
-        const n = this.nearest(chord, this.lastGuitar, beat === 2);
-        this.guitar.pluck(n, beat === 0 ? 0.28 : 0.24, 0.04, true);
-        this.lastGuitar = n;
+    if (!a) return 0;
+    const now = a.ctx.currentTime + 0.02;
+    const beatS = BEAT_S / rate;
+    let from = this.beat;
+    let left = dt / beatS;
+    let offset = 0;
+    let beats = 0;
+    // At most a wrap or two a frame; a tiny float remainder must not loop forever.
+    for (let rounds = 0; left > 1e-6 && rounds < 4; rounds++) {
+      const to = Math.min(SONG_BEATS, from + left);
+      for (let e = EVENTS[this.next]; e && e.beat <= to; e = EVENTS[++this.next]) {
+        if (e.beat <= from && from >= 0) continue;
+        const at = now + offset + Math.max(0, e.beat - from) * beatS;
+        if (e.kind === 'chuff') {
+          play(a, this.chuff(a.ctx), at, together ? 0.035 : 0.07);
+          beats++;
+        } else if (e.kind === 'melody') {
+          play(a, this.bell(a.ctx, e.note), at, together ? 0.36 : 0.42);
+          // Alone, the music box keeps a soft root an octave up on each bar.
+          if (!together && e.bass !== undefined) play(a, this.bell(a.ctx, e.bass + 24), at, 0.14);
+        } else if (e.kind === 'guitar') {
+          if (together) this.guitar.pluck(e.note, e.root ? 0.28 : 0.22, at - a.ctx.currentTime, true, true);
+        } else if (together) {
+          ENDING.chord.forEach((n, i) => this.guitar.pluck(n, 0.2, at - a.ctx.currentTime + i * 0.14, true, true));
+        } else {
+          ENDING.chord.forEach((n, i) => play(a, this.bell(a.ctx, n + 12), at + 0.08 + i * 0.1, 0.14));
+        }
       }
-      if (beat === 0) this.guitar.pluck(chord[0], 0.2, 0, true);
-      if (beat === 3) this.guitar.pluck(scaleBelow(s.note, 2) - 12, 0.14, 0.07, true);
+      left -= to - from;
+      offset += (to - from) * beatS;
+      from = to;
+      // The end of the song: round again.
+      if (to >= SONG_BEATS) {
+        from = -0.001;
+        this.next = 0;
+      }
     }
-    this.at = (this.at + 1) % TRAIN_TUNE.length;
-    return true;
+    this.beat = from;
+    return beats;
   }
 
   /** "Toot toot". */
