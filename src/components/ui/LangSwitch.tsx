@@ -21,6 +21,7 @@ export function LangSwitch({ compact = false, className = '' }: { compact?: bool
       <button
         type="button"
         onClick={() => setLang(next.lang)}
+        data-guide="lang"
         aria-label={`${cur.name} → ${next.name}`}
         title={`${cur.name} → ${next.name}`}
         className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-row text-sage transition-colors hover:bg-panel-hi hover:text-paper ${className}`}
@@ -30,7 +31,7 @@ export function LangSwitch({ compact = false, className = '' }: { compact?: bool
     );
   }
   return (
-    <div role="group" aria-label="Ngôn ngữ / Language" className={`inline-flex shrink-0 items-center rounded-full border border-line p-0.5 ${className}`}>
+    <div role="group" aria-label="Ngôn ngữ / Language" data-guide="lang" className={`inline-flex shrink-0 items-center rounded-full border border-line p-0.5 ${className}`}>
       {OPTIONS.map((o) => (
         <button
           key={o.lang}

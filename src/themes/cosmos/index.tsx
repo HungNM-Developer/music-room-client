@@ -109,6 +109,7 @@ function Orbits({ openAdd }: { openAdd: () => void }) {
               <button
                 type="button"
                 className="inline-flex min-h-11 items-center gap-2 rounded-row border border-line px-3 text-[14px] hover:bg-panel-hi"
+                data-guide="itemMenu"
                 onClick={() => {
                   setOpen(null);
                   openMenu(shown);

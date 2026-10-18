@@ -80,7 +80,7 @@ export function StageQueue({
                   <SaveButton track={item.track} />
                   <HeartButton item={item} me={me} />
                   {hasItemMenu(item, me) && (
-                    <IconButton label={t.queue.actions(item.track.title)} onClick={() => openMenu(item)}>
+                    <IconButton label={t.queue.actions(item.track.title)} data-guide="itemMenu" onClick={() => openMenu(item)}>
                       <MoreHorizontal className="h-5 w-5" aria-hidden />
                     </IconButton>
                   )}

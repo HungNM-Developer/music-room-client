@@ -19,7 +19,7 @@ export function NowPlayingCard() {
 
   if (!a) {
     return (
-      <section aria-label={t.nowPlaying.title} className="rounded-panel bg-panel p-5">
+      <section aria-label={t.nowPlaying.title} data-guide="nowPlaying" className="rounded-panel bg-panel p-5">
         <OnAirLamp live={false}>{t.nowPlaying.paused}</OnAirLamp>
         <h2 className="type-display mt-3 text-[24px] font-bold leading-tight">{t.nowPlaying.idleTitle}</h2>
         <p className="mt-1 text-sage">{t.nowPlaying.idle}</p>
@@ -30,7 +30,7 @@ export function NowPlayingCard() {
   const { np, track: item, playing, picker, canVote, canControl } = a;
 
   return (
-    <section aria-label={t.nowPlaying.title} className="np-card rounded-panel border border-paper/10 bg-panel/80 p-4 sm:p-5">
+    <section aria-label={t.nowPlaying.title} data-guide="nowPlaying" className="np-card rounded-panel border border-paper/10 bg-panel/80 p-4 sm:p-5">
       <OnAirLamp live={playing}>{playing ? t.nowPlaying.live : t.nowPlaying.paused}</OnAirLamp>
 
       <div className="mt-3 flex gap-3.5">

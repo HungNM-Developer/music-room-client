@@ -95,7 +95,7 @@ function Stage({ openAdd }: { openAdd: () => void }) {
   const { track, playing } = a;
   return (
     <div className="stage cassette">
-      <section aria-label={t.nowPlaying.title} className="cs-tape">
+      <section aria-label={t.nowPlaying.title} data-guide="nowPlaying" className="cs-tape">
         <div className="cs-label">
           <h2 className="stage-title" title={track.title}>
             {track.title}

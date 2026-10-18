@@ -81,7 +81,7 @@ export function PeoplePanel() {
   );
 
   return (
-    <section aria-labelledby="people-title">
+    <section aria-labelledby="people-title" data-guide="people">
       <div className="mb-2 px-1">
         <h2 id="people-title" className="type-display text-[20px] font-bold">
           {t.people.title}

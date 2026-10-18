@@ -123,7 +123,7 @@ function ReactionRow() {
   const t = useT();
   const act = useAct();
   return (
-    <div role="group" aria-label={t.chat.reactions} className="flex min-w-0 flex-1 justify-between">
+    <div role="group" aria-label={t.chat.reactions} data-guide="reactions" className="flex min-w-0 flex-1 justify-between">
       {REACTIONS.map((emoji) => (
         <button
           key={emoji}
@@ -182,6 +182,7 @@ function ChatComposer({ inputRef, placeholder }: { inputRef: React.RefObject<HTM
       <input
         ref={inputRef}
         id={id}
+        data-guide="djMention"
         value={text}
         maxLength={LIMITS.chat}
         onChange={(e) => {
@@ -364,6 +365,7 @@ export function ChatOverlay({ title, placeholder, variant }: InlineChatSkin = {}
                 <button
                   type="button"
                   aria-pressed={djOpen}
+                  data-guide="djPads"
                   aria-label={t.chat.djToggle}
                   title={t.chat.djToggle}
                   onClick={() => setDjOpen((v) => !v)}
@@ -423,6 +425,7 @@ export function ChatOverlay({ title, placeholder, variant }: InlineChatSkin = {}
         <button
           ref={headRef}
           type="button"
+          data-guide="chat"
           onClick={() => (open ? minimize() : setOpen(true))}
           aria-expanded={open}
           aria-controls={windowId}
@@ -467,7 +470,7 @@ export function InlineChat({ title, placeholder, variant }: InlineChatSkin = {})
   }, [visible, chatLength]);
 
   return (
-    <section ref={boxRef} aria-labelledby="inline-chat-title" data-variant={variant} className="chat-inline flex flex-col rounded-panel border border-line bg-panel/70">
+    <section ref={boxRef} aria-labelledby="inline-chat-title" data-guide="chat" data-variant={variant} className="chat-inline flex flex-col rounded-panel border border-line bg-panel/70">
       <h2 id="inline-chat-title" aria-label={t.chat.title} className="type-display px-4 pt-3 text-[22px] font-bold">
         {title?.(t) ?? t.chat.title}
       </h2>
@@ -479,6 +482,7 @@ export function InlineChat({ title, placeholder, variant }: InlineChatSkin = {})
             <button
               type="button"
               aria-pressed={djOpen}
+              data-guide="djPads"
               aria-label={t.chat.djToggle}
               title={t.chat.djToggle}
               onClick={() => setDjOpen((v) => !v)}

@@ -90,7 +90,7 @@ function Crate({ openAdd }: { openAdd: () => void }) {
               <HeartButton item={q} me={me} />
               <SaveButton track={q.track} />
               {hasItemMenu(q, me) && (
-                <IconButton label={t.queue.actions(q.track.title)} onClick={() => openMenu(q)}>
+                <IconButton label={t.queue.actions(q.track.title)} data-guide="itemMenu" onClick={() => openMenu(q)}>
                   <MoreHorizontal className="h-5 w-5" aria-hidden />
                 </IconButton>
               )}
@@ -146,7 +146,7 @@ function Stage({ openAdd }: { openAdd: () => void }) {
   const { track, playing } = a;
   return (
     <div className="stage walnut">
-      <section aria-label={t.nowPlaying.title} className="wal-deck">
+      <section aria-label={t.nowPlaying.title} data-guide="nowPlaying" className="wal-deck">
         <div className="wal-tt">
           <div className="wal-turntable" aria-hidden>
             <span className="platter" data-playing={playing}>

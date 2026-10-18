@@ -61,7 +61,7 @@ export function StageLayout(p: StageProps) {
   const { track, playing } = a;
   return (
     <div className="stage">
-      <section aria-label={t.nowPlaying.title} className="stage-now">
+      <section aria-label={t.nowPlaying.title} data-guide="nowPlaying" className="stage-now">
         <div className="stage-hero">
           <div className="stage-cover">{p.cover}</div>
           <div className="stage-info">

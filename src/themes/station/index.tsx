@@ -167,7 +167,7 @@ function Board({ openAdd }: { openAdd: () => void }) {
                   <HeartButton item={q} me={me} />
                   <SaveButton track={q.track} />
                   {hasItemMenu(q, me) && (
-                    <IconButton label={t.queue.actions(q.track.title)} onClick={() => openMenu(q)}>
+                    <IconButton label={t.queue.actions(q.track.title)} data-guide="itemMenu" onClick={() => openMenu(q)}>
                       <MoreHorizontal className="h-5 w-5" aria-hidden />
                     </IconButton>
                   )}
@@ -244,7 +244,7 @@ function Stage({ openAdd }: { openAdd: () => void }) {
   const { track, playing } = a;
   return (
     <div className="stage station">
-      <section aria-label={t.nowPlaying.title}>
+      <section aria-label={t.nowPlaying.title} data-guide="nowPlaying">
         <div className="st-now">
           <NowCover className="art" />
           <div className="min-w-0">
