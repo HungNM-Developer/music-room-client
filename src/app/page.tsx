@@ -57,6 +57,10 @@ export default function HomePage() {
             <LangSwitch className="ml-auto" />
           </div>
         </div>
+
+        {/* Phones and tablets: an empty stretch of meadow at the very bottom, so the toys hidden
+            in the grass (guitar, train) can be reached there. */}
+        <div aria-hidden className="h-[40vh] lg:hidden" />
       </div>
     </main>
   );

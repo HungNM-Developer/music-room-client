@@ -20,9 +20,19 @@ function layoutOf(): SceneLayout {
   const H = window.innerHeight;
   const text = document.querySelector('[data-scenery="text"]')?.getBoundingClientRect();
   const panel = document.querySelector('[data-scenery="panel"]')?.getBoundingClientRect();
-  // One column (phones, tablets): the right side, above the form.
+  // One column (phones, tablets): the tree on the right, above the form; the toys in the empty
+  // meadow at the bottom of the page (the lowest 40% of the screen once scrolled to the end).
   if (!text || !panel || panel.left < text.right - 1)
-    return { focusX: W * 0.78, focusWidth: W * 0.4, moonX: W * 0.82, moonY: H * 0.07, guitarX: W * 0.5, guitarY: H * 0.9, trainX: W * 0.25, trainY: H * 0.94 };
+    return {
+      focusX: W * 0.78,
+      focusWidth: W * 0.4,
+      moonX: W * 0.82,
+      moonY: H * 0.07,
+      guitarX: W * 0.3,
+      guitarY: H * 0.76,
+      trainX: W * 0.7,
+      trainY: H * 0.88,
+    };
   const textRight = text.left + Math.min(text.width, TEXT_WIDTH);
   const free = [
     [0, text.left],
