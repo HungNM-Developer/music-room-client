@@ -585,7 +585,7 @@ export const vi = {
       djPads: { title: 'Bàn DJ', body: 'Phát hiệu ứng âm thanh trên loa của phòng.' },
       djMention: {
         title: 'Hỏi @DJ',
-        body: 'Gõ @DJ rồi nói điều bạn muốn: "vài bài chill", "bài mới của Sơn Tùng", "còn bao lâu tới bài của tôi". DJ trả lời ngay trong trò chuyện.',
+        body: 'Gõ @DJ rồi nói điều bạn muốn, một hay nhiều việc cùng lúc: "chọn 3 bài của Sơn Tùng", "skip đến bài cuối", "xoá hết bài của tôi trừ Lạc Trôi", "còn bao lâu tới bài của tôi". DJ trả lời ngay trong trò chuyện.',
       },
       members: { title: 'Mọi người trong phòng', body: 'Ai đang ở trong phòng và ai đã rời đi.' },
       permissions: {
@@ -734,6 +734,7 @@ export const vi = {
       nothingPlaying: 'Phòng chưa phát bài nào',
       notMine: 'Chỉ gỡ được bài của chính mình',
       ownSong: (song: string) => `Không thả tim được ${song}: đó là bài của chính người hỏi`,
+      tooMany: (max: number, wanted: number) => `Mỗi lần DJ thêm tối đa ${max} bài (đã xin ${wanted} bài)`,
       needControl: 'cần quyền điều khiển',
       failed: (verb: string, what: string, why: string) => `Không ${verb} được${what}: ${why}`,
       verbs: {
@@ -745,6 +746,8 @@ export const vi = {
         vote: 'bỏ phiếu bỏ qua',
         pause: 'tạm dừng',
         resume: 'phát tiếp',
+        /** pin "now": "skip đến bài cuối", "chuyển sang …". */
+        skipTo: 'chuyển tới bài',
       },
     },
     hello: 'Chào bạn, mình là DJ của phòng. Bạn thử hỏi: "bật vài bài chill cho buổi chiều", "bài mới của Sơn Tùng", "còn bao lâu tới bài của tôi".',

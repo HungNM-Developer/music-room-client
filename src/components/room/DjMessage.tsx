@@ -57,6 +57,8 @@ export function stepLine(t: Dict, s: DjStep): string {
       return st.notMine;
     case 'ownSong':
       return st.ownSong(song);
+    case 'tooMany':
+      return st.tooMany(s.got ?? 0, s.wanted ?? 0);
   }
   const why =
     s.errorCode === 'FORBIDDEN'
@@ -68,7 +70,7 @@ export function stepLine(t: Dict, s: DjStep): string {
         : t.djBot.failed;
   // Pause / resume are about the room, not a song.
   const what = s.action === 'pause' || s.action === 'resume' ? '' : s.track ? ` "${s.track.title}"` : s.query ? ` "${s.query}"` : '';
-  return st.failed(st.verbs[s.action], what, why);
+  return st.failed(s.action === 'pin' && s.now ? st.verbs.skipTo : st.verbs[s.action], what, why);
 }
 
 /** The DJ's answer in the viewer's language: "bạn" for the asker, their name for others. */

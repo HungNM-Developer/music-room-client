@@ -578,7 +578,7 @@ export const en: Dict = {
       djPads: { title: 'DJ pads', body: "Play sound effects on the room's speaker." },
       djMention: {
         title: 'Ask @DJ',
-        body: 'Type @DJ and say what you want: "some chill songs", "the newest song by Adele", "how long until my song". The DJ answers right in the chat.',
+        body: 'Type @DJ and say what you want, one task or several: "pick 3 songs by Adele", "skip to the last song", "remove all my songs except Hello", "how long until my song". The DJ answers right in the chat.',
       },
       members: { title: 'People in the room', body: 'Who is in the room and who has left.' },
       permissions: { title: 'Rights', body: 'Press a person to let them control playback, use the DJ pads, be the speaker, or remove them.' },
@@ -716,6 +716,7 @@ export const en: Dict = {
       nothingPlaying: 'Nothing is playing',
       notMine: 'Only your own songs can be removed',
       ownSong: (song: string) => `Could not heart ${song}: it is the asker's own song`,
+      tooMany: (max: number, wanted: number) => `The DJ adds at most ${max} songs at a time (${wanted} asked)`,
       needControl: 'needs playback control',
       failed: (verb: string, what: string, why: string) => `Could not ${verb}${what}: ${why}`,
       verbs: {
@@ -727,6 +728,7 @@ export const en: Dict = {
         vote: 'vote to skip',
         pause: 'pause',
         resume: 'resume',
+        skipTo: 'jump to',
       },
     },
     hello: 'Hi, I am the room DJ. Try: "play some chill songs for the afternoon", "the newest song by Taylor Swift", "how long until my song".',
