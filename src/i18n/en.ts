@@ -609,6 +609,7 @@ export const en: Dict = {
 
   djBot: {
     name: 'DJ',
+    thinking: (who: string) => `The DJ is answering ${who}`,
     hintTitle: 'DJ – the room assistant',
     hintTry: 'Try asking',
     examples: ['play some chill songs for the afternoon', 'the newest song by Taylor Swift', 'how long until my song'],
@@ -725,6 +726,9 @@ export const en: Dict = {
       kept: (n: number, by: string) => `Kept ${n} ${n === 1 ? 'song' : 'songs'}${by}`,
       keptUnsure: (n: number) => ` (${n} kept because the artist is not certain)`,
       saved: (song: string) => `Saved ${song} to your saved songs`,
+      savedMany: (n: number) => `Saved ${n} ${n === 1 ? 'song' : 'songs'} to your saved songs`,
+      playlistSavedMany: (n: number, name: string, created: boolean) =>
+        `Saved ${n} ${n === 1 ? 'song' : 'songs'} to the playlist "${name}"${created ? ' (new playlist)' : ''}`,
       playlistSaved: (song: string, name: string, created: boolean) =>
         `Saved ${song} to the playlist "${name}"${created ? ' (new playlist)' : ''}`,
       playlistCreated: (name: string, created: boolean, added: number, by: string) =>

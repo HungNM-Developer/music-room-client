@@ -8,6 +8,7 @@ import { type Dict, useT } from '@/i18n';
 import { findSongs } from '@/lib/find-songs';
 import { type GuideRequest, type GuideStep, type GuideTab, onGuide } from '@/lib/guide';
 import { room } from '@/state/room-store';
+import { helpStep } from './HelpButton';
 
 interface Run {
   steps: GuideStep[];
@@ -47,6 +48,11 @@ function find(step: GuideStep): HTMLElement | null {
 
 /** The DJ's "Chỉ cho tôi" as a one-step guide; "skip" depends on the viewer's own rights. */
 function djStep(t: Dict, g: GuideRequest): GuideStep {
+  // How-to topics beyond the DJ's own buttons: the matching "Hướng dẫn" item.
+  if (!(g.target in t.djBot.guideTitle)) {
+    const help = helpStep(t, g.target);
+    if (help) return help;
+  }
   const text = (key: keyof Dict['djBot']['guideTitle']) => ({
     title: t.djBot.guideTitle[key],
     body: key === 'add' && g.query ? t.djBot.addQueryBody : t.djBot.guideBody[key],
@@ -63,7 +69,8 @@ function djStep(t: Dict, g: GuideRequest): GuideStep {
     return { ...text('myItem'), selectors: g.queueItemId ? [`[data-guide-item="${CSS.escape(g.queueItemId)}"]`] : [], tab: 'room', row: true };
   if (g.target === 'add') return { ...text('add'), selectors: ['[data-guide="add"]'], tab: 'add', findQuery: g.query ?? '' };
   // The header (share) is on every tab.
-  return { ...text(g.target), selectors: [`[data-guide="${g.target}"]`], tab: g.target === 'share' ? undefined : 'room' };
+  const key = g.target as keyof Dict['djBot']['guideTitle'];
+  return { ...text(key), selectors: [`[data-guide="${g.target}"]`], tab: g.target === 'share' ? undefined : 'room' };
 }
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select, textarea, summary, [tabindex]:not([tabindex="-1"])';
