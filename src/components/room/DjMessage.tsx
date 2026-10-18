@@ -1,8 +1,8 @@
 'use client';
 
-import { Check, Disc3, Pointer, Undo2, X } from 'lucide-react';
+import { Check, Disc3, Plus, Pointer, Undo2, X } from 'lucide-react';
 import { Thumb } from '@/components/ui/Thumb';
-import type { ChatMessageView, DjReply, DjStep, MemberView } from '@/contracts';
+import type { ChatMessageView, DjReply, DjStep, MemberView, TrackSummary } from '@/contracts';
 import { useAct } from '@/hooks/useAct';
 import { type Dict, errorMessage, useT } from '@/i18n';
 import { showGuide } from '@/lib/guide';
@@ -22,17 +22,34 @@ function eta(t: Dict, sec: number | null | undefined): string {
 export function stepLine(t: Dict, s: DjStep): string {
   const st = t.djBot.steps;
   const song = t.djBot.song(s.track?.title ?? '', s.action === 'add' ? (s.fresh ?? null) : null);
+  const by = s.artist ? st.by(s.artist) : '';
+  const titles = (s.tracks ?? []).map((x) => `"${x.title}"`);
   if (s.ok)
     switch (s.action) {
       case 'add': {
         const wish = s.wish ? st.wish(s.wish) : '';
-        if (s.position === 0) return st.addedNow(song) + wish;
-        return st.added(song, s.position ? t.djBot.queuePos(s.position, eta(t, s.etaSec)) : '') + wish;
+        if (s.position === 0) return st.addedNow(song + by) + wish;
+        return st.added(song + by, s.position ? t.djBot.queuePos(s.position, eta(t, s.etaSec)) : '') + wish;
       }
+      case 'suggest':
+        return `${st.suggested(by)} ${titles.join(', ')}`;
+      case 'save':
+        return st.saved(song);
+      case 'playlistSave':
+        return st.playlistSaved(song, s.playlist?.name ?? '', Boolean(s.playlist?.created));
+      case 'playlistCreate':
+        return st.playlistCreated(s.playlist?.name ?? '', Boolean(s.playlist?.created), s.added ?? 0, by);
+      case 'playlistPlay':
+        return st.playlistPlayed(s.added ?? 0, s.total ?? 0, s.playlist?.name ?? '');
       case 'heart':
         if (s.reason === 'alreadyHearted') return st.alreadyHearted(song);
         return st.hearted(song) + (s.reason === 'oneHeart' ? st.oneHeart : '');
       case 'remove':
+        if (s.reason === 'kept')
+          return (
+            `${st.kept(titles.length, by)}: ${titles.slice(0, 5).join(', ')}${titles.length > 5 ? ` +${titles.length - 5}` : ''}` +
+            (s.unsure ? st.keptUnsure(s.unsure) : '')
+          );
         return st.removed(song);
       case 'pin':
         return s.now ? st.pinnedNow(song) : st.pinned(song);
@@ -47,6 +64,7 @@ export function stepLine(t: Dict, s: DjStep): string {
     }
   switch (s.reason) {
     case 'notFound':
+      if (s.action === 'playlistPlay') return st.playlistEmpty(s.playlist?.name ?? '');
       if (s.got !== undefined) return st.short(s.got, s.wanted ?? s.got);
       return s.query ? st.notFound(s.query) : st.noneFound;
     case 'busy':
@@ -59,6 +77,10 @@ export function stepLine(t: Dict, s: DjStep): string {
       return st.ownSong(song);
     case 'tooMany':
       return st.tooMany(s.got ?? 0, s.wanted ?? 0);
+    case 'needSignIn':
+      return st.needSignIn;
+    case 'noPlaylist':
+      return st.noPlaylist(s.query ?? '');
   }
   const why =
     s.errorCode === 'FORBIDDEN'
@@ -125,6 +147,13 @@ export function djReplyText(t: Dict, r: DjReply, meId: string | null, me: Member
     case 'denied':
       if (r.errorCode && r.errorCode !== 'FORBIDDEN') return errorMessage(r.errorCode, r.errorParams);
       return mine ? t.djBot.denied : t.djBot.deniedFor(r.forName);
+    case 'chat':
+      return r.chatReply ?? t.djBot.other;
+    case 'clarify': {
+      const q = t.djBot.clarify[r.clarify?.about ?? 'whichSong'];
+      const options = r.clarify?.options ?? [];
+      return options.length ? `${q} ${options.map((o) => `"${o}"`).join(', ')}` : q;
+    }
     case 'error':
       if (r.errorCode === 'TRACK_NOT_FOUND') return t.djBot.notFound;
       return r.errorCode && r.errorCode !== 'INTERNAL' ? errorMessage(r.errorCode, r.errorParams) : t.djBot.failed;
@@ -228,8 +257,20 @@ function DoneStep({ step, mine }: { step: DjStep; mine: boolean }) {
     <li className="text-[14px] leading-snug">
       <p className="flex gap-1.5 [overflow-wrap:anywhere]">
         <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${step.ok ? 'text-amber' : 'text-sage'}`} aria-hidden />
-        <span className="min-w-0">{stepLine(t, step)}</span>
+        <span className="min-w-0">
+          {/* Suggestions: the cards below carry the titles. */}
+          {step.ok && step.action === 'suggest'
+            ? t.djBot.steps.suggested(step.artist ? t.djBot.steps.by(step.artist) : '')
+            : stepLine(t, step)}
+        </span>
       </p>
+      {step.ok && step.action === 'suggest' && step.tracks?.length ? (
+        <ul className="mt-1.5 space-y-1.5 pl-5">
+          {step.tracks.map((tr) => (
+            <SuggestCard key={tr.id} track={tr} />
+          ))}
+        </ul>
+      ) : null}
       {itemId && step.track && (
         <div className="mt-1.5 flex items-center gap-2 pl-5">
           <Thumb url={step.track.thumbnailUrl} size={48} ratio="wide" />
@@ -249,6 +290,38 @@ function DoneStep({ step, mine }: { step: DjStep; mine: boolean }) {
           )}
         </div>
       )}
+    </li>
+  );
+}
+
+/** A suggested song: anyone can add it, with their own rights. */
+function SuggestCard({ track }: { track: TrackSummary }) {
+  const t = useT();
+  const act = useAct();
+  const inRoom = useRoom((s) =>
+    Boolean(
+      s.snapshot &&
+        (s.snapshot.nowPlaying?.item.track.externalId === track.externalId ||
+          s.snapshot.queue.some((q) => q.track.externalId === track.externalId)),
+    ),
+  );
+  return (
+    <li className="flex items-center gap-2">
+      <Thumb url={track.thumbnailUrl} size={48} ratio="wide" />
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[13px] font-semibold leading-snug">{track.title}</p>
+        {track.channel && <p className="truncate text-[12px] text-sage">{track.channel}</p>}
+      </div>
+      <button
+        type="button"
+        disabled={inRoom}
+        onClick={() => void act('queue:add', { input: `https://www.youtube.com/watch?v=${track.externalId}` })}
+        aria-label={`${inRoom ? t.djBot.steps.alreadyIn : t.djBot.steps.addOne}: ${track.title}`}
+        className="inline-flex min-h-9 shrink-0 items-center gap-1 rounded-full border border-amber/70 px-2.5 text-[13px] font-semibold text-amber transition-colors hover:bg-amber hover:text-amber-ink disabled:border-line disabled:text-sage disabled:hover:bg-transparent"
+      >
+        {inRoom ? <Check className="h-3.5 w-3.5" aria-hidden /> : <Plus className="h-3.5 w-3.5" aria-hidden />}
+        {inRoom ? t.djBot.steps.alreadyIn : t.djBot.steps.addOne}
+      </button>
     </li>
   );
 }
