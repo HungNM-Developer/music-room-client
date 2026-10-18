@@ -118,6 +118,7 @@ export const en: Dict = {
     heart: 'Heart',
     unheart: 'Remove heart',
     hearts: (n: number) => n_(n, 'heart'),
+    ownHearts: (n: number) => (n ? `Your song, ${n_(n, 'heart')}` : 'Your song, no hearts yet'),
     hasWish: 'Has a message',
     actions: (title: string) => `Options for ${title}`,
     pin: 'Play next',
@@ -179,6 +180,10 @@ export const en: Dict = {
     online: (n: number) => `${n} online`,
     playing: (title: string) => `Playing: ${title}`,
     open: (name: string) => `Open ${name}`,
+    onDevice: 'Saved on this device. Sign in to see your rooms on every device.',
+    onDeviceNoSignIn: 'Saved on this device.',
+    admin: 'Admin',
+    forget: (name: string) => `Remove ${name} from the list`,
     joining: (name: string) => `Joining as ${name}…`,
     orGuest: 'Or join with a name as a guest',
   },
@@ -701,6 +706,7 @@ export const en: Dict = {
       busy: 'The DJ is busy and could not pick songs',
       nothingPlaying: 'Nothing is playing',
       notMine: 'Only your own songs can be removed',
+      ownSong: (song: string) => `Could not heart ${song}: it is the asker's own song`,
       needControl: 'needs playback control',
       failed: (verb: string, what: string, why: string) => `Could not ${verb}${what}: ${why}`,
       verbs: {
@@ -965,6 +971,7 @@ export const en: Dict = {
     PIN_LOCKED: (p) => `Too many wrong PINs. Try again in ${n_(Number(p.minutes), 'minute')}.`,
     PIN_NOT_SET: () => "This room has no admin PIN yet. Ask an admin to set one in Room settings.",
     ALREADY_QUEUED: () => 'This song is already in the queue or playing.',
+    OWN_SONG: () => 'You cannot heart your own song.',
     PLAYED_RECENTLY: (p) =>
       `This song played ${n_(Number(p.minutes), 'minute')} ago. The room allows it again after ${n_(Number(p.gap), 'minute')}.`,
     PLAYLIST_UNAVAILABLE: () =>

@@ -84,6 +84,20 @@ export function HeartButton({ item, me, className = '' }: { item: QueueItemView;
   const act = useAct();
   const hearted = Boolean(me && item.heartedBy.includes(me.id));
   if (!me || me.isDevice) return item.hearts > 0 ? <span data-guide-item={item.id} className={`px-2 text-[13px] text-sage ${className}`}>{t.queue.hearts(item.hearts)}</span> : null;
+  // My own song: hearts are for other people's songs (the server refuses OWN_SONG), so only the count.
+  if (item.addedBy?.id === me.id)
+    return (
+      <span
+        role="img"
+        data-guide-item={item.id}
+        aria-label={t.queue.ownHearts(item.hearts)}
+        title={t.queue.ownHearts(item.hearts)}
+        className={`flex h-11 min-w-11 items-center justify-center gap-1 px-2 text-[13px] tabular-nums text-sage ${className}`}
+      >
+        <Heart className="h-[18px] w-[18px] opacity-60" aria-hidden />
+        {item.hearts > 0 && <span aria-hidden>{item.hearts}</span>}
+      </span>
+    );
   return (
     <button
       type="button"

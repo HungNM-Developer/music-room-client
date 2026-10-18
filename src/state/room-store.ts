@@ -19,6 +19,7 @@ import type {
 } from '@/contracts';
 import type { ClientErrorCode } from '@/i18n';
 import { applySnapshot } from '@/lib/room-store';
+import { forgetRoom, rememberRoom } from '@/lib/local-rooms';
 import type { Pending, PendingOp } from './optimistic';
 import { readAccount, writeAccount } from '@/lib/account-store';
 import { readLocalFavorites, writeLocalFavorite } from '@/lib/local-favorites';
@@ -179,16 +180,18 @@ class RoomStore {
     );
     s.on('session:revoked', (d: { reason: RevokeReason }) => {
       if (this.state.code) clearToken(this.state.code, this.state.kind);
+      if (this.state.code && d.reason === 'room_deleted') forgetRoom(this.state.code);
       setSocketAuth(s, null);
       // The room view behind the join dialog must not show stale data.
       this.set({ ...ROOM_RESET, revoked: d.reason, playerRevoked: this.state.playerRevoked });
     });
-    s.on('room:update', (snap: RoomSnapshot) =>
+    s.on('room:update', (snap: RoomSnapshot) => {
       this.set((st) => ({
         offset: clockOffset(snap.serverTime, Date.now()),
         snapshot: applySnapshot(st.snapshot, snap),
-      })),
-    );
+      }));
+      this.remember();
+    });
     s.on('chat:history', (chat: ChatMessageView[]) => this.set({ chat }));
     s.on('chat:receive', (m: ChatMessageView) =>
       this.set((st) => ({
@@ -279,11 +282,23 @@ class RoomStore {
     this.set({ ...ROOM_RESET, code: null });
   };
 
+  /** "Phòng của tôi" on this device (home page, not signed in): rooms opened as a member. */
+  private remember(): void {
+    const { kind, memberId, snapshot } = this.state;
+    if (kind !== 'member' || !memberId || !snapshot) return;
+    const me = snapshot.members.find((m) => m.id === memberId);
+    if (!me || me.isDevice) return;
+    rememberRoom({ code: snapshot.room.code, name: snapshot.room.name, admin: me.role === 'ADMIN' });
+  }
+
   /** This browser deleted the room: forget its session (the server already detached it). */
   forgetDeletedRoom = (): void => {
     const s = this.socket;
     const { code, kind } = this.state;
-    if (code) clearToken(code, kind);
+    if (code) {
+      clearToken(code, kind);
+      forgetRoom(code);
+    }
     if (s) setSocketAuth(s, null);
     this.set({ ...ROOM_RESET, code: null });
   };
