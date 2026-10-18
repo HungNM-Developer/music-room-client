@@ -79,7 +79,11 @@ export function useVideoFullscreen(target: React.RefObject<HTMLElement | null>, 
   return { expanded: (native && active) || covers, covers, toggle };
 }
 
-/** Below the video (never over it: YouTube's own buttons and links stay reachable). */
+/**
+ * Over the video's top right corner, small and faint: the video keeps its whole frame (no bar
+ * under it, in full screen either). Always shown: the YouTube iframe swallows the pointer, so
+ * "show on hover" would never show it to a mouse.
+ */
 export function FullscreenButton({ expanded, onToggle }: { expanded: boolean; onToggle: () => void }) {
   const t = useT();
   const label = expanded ? t.host.exitFullscreen : t.host.fullscreen;
@@ -88,11 +92,11 @@ export function FullscreenButton({ expanded, onToggle }: { expanded: boolean; on
       type="button"
       onClick={onToggle}
       aria-pressed={expanded}
+      aria-label={label}
       title={label}
-      className="video-fullscreen inline-flex min-h-9 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium text-sage transition-colors hover:bg-panel-hi hover:text-paper"
+      className="video-fullscreen absolute right-2 top-2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-black/60 text-white opacity-70 transition-opacity duration-200 hover:bg-black/75 hover:opacity-100 focus-visible:opacity-100 motion-reduce:transition-none"
     >
-      {expanded ? <Minimize className="h-4 w-4" aria-hidden /> : <Maximize className="h-4 w-4" aria-hidden />}
-      {label}
+      {expanded ? <Minimize className="h-5 w-5" aria-hidden /> : <Maximize className="h-5 w-5" aria-hidden />}
     </button>
   );
 }

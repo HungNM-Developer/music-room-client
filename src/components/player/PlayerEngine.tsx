@@ -484,6 +484,8 @@ export function PlayerEngine({ volume = 100, caption = false, frameClass }: { vo
           </Button>
         </PlayerCover>
       )}
+      {/* YouTube's own full screen is off with its controls: a small key in the corner. */}
+      {watching && <FullscreenButton expanded={full.expanded} onToggle={() => void full.toggle()} />}
     </div>
   );
 
@@ -497,12 +499,6 @@ export function PlayerEngine({ volume = 100, caption = false, frameClass }: { vo
         className={full.expanded ? `player-full flex flex-col bg-black ${full.covers ? 'fixed inset-0 z-[80] h-dvh' : 'h-full w-full'}` : ''}
       >
         <div className={full.expanded ? 'flex min-h-0 flex-1' : frameClass}>{screen}</div>
-        {/* YouTube's own full screen is off with its controls. */}
-        {watching && (
-          <div className={`flex justify-end ${full.expanded ? 'px-2 py-1' : '-mb-1'}`}>
-            <FullscreenButton expanded={full.expanded} onToggle={() => void full.toggle()} />
-          </div>
-        )}
       </div>
       {!started
         ? !waitingForOther && preview && (!previewPlaying || needsTap) && <TapVideoHint text={waitingHint} />
