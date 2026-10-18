@@ -55,6 +55,8 @@ export function stepLine(t: Dict, s: DjStep): string {
       return st.nothingPlaying;
     case 'notMine':
       return st.notMine;
+    case 'ownSong':
+      return st.ownSong(song);
   }
   const why =
     s.errorCode === 'FORBIDDEN'

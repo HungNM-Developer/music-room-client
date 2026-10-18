@@ -119,6 +119,8 @@ export const vi = {
     heart: 'Thả tim',
     unheart: 'Bỏ tim',
     hearts: (n: number) => `${n} tim`,
+    /** Your own song: hearts are for other people's songs. */
+    ownHearts: (n: number) => (n ? `Bài của bạn, ${n} tim` : 'Bài của bạn, chưa có tim'),
     hasWish: 'Có lời chúc',
     actions: (title: string) => `Tùy chọn cho ${title}`,
     pin: 'Phát tiếp theo',
@@ -178,6 +180,11 @@ export const vi = {
     online: (n: number) => `${n} đang online`,
     playing: (title: string) => `Đang phát: ${title}`,
     open: (name: string) => `Vào phòng ${name}`,
+    /** Not signed in: rooms this device created or joined. */
+    onDevice: 'Lưu trên máy này. Đăng nhập để thấy phòng ở mọi thiết bị.',
+    onDeviceNoSignIn: 'Lưu trên máy này.',
+    admin: 'Quản trị viên',
+    forget: (name: string) => `Bỏ ${name} khỏi danh sách`,
     joining: (name: string) => `Đang vào phòng với tài khoản ${name}…`,
     orGuest: 'Hoặc vào bằng tên như khách',
   },
@@ -716,6 +723,7 @@ export const vi = {
       busy: 'DJ đang bận, chưa chọn được bài',
       nothingPlaying: 'Phòng chưa phát bài nào',
       notMine: 'Chỉ gỡ được bài của chính mình',
+      ownSong: (song: string) => `Không thả tim được ${song}: đó là bài của chính người hỏi`,
       needControl: 'cần quyền điều khiển',
       failed: (verb: string, what: string, why: string) => `Không ${verb} được${what}: ${why}`,
       verbs: {
@@ -983,6 +991,7 @@ export const vi = {
     PIN_NOT_SET: () =>
       'Phòng này chưa đặt mã PIN quản trị. Hãy nhờ một quản trị viên đặt mã trong Cài đặt phòng.',
     ALREADY_QUEUED: () => 'Bài này đã có trong hàng chờ hoặc đang phát.',
+    OWN_SONG: () => 'Không thả tim được bài của chính mình.',
     PLAYED_RECENTLY: (p) =>
       `Bài này vừa phát ${p.minutes} phút trước. Phòng chỉ cho thêm lại sau ${p.gap} phút.`,
     PLAYLIST_UNAVAILABLE: () =>
