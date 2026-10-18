@@ -32,6 +32,7 @@ import {
   Scene,
   ShaderMaterial,
   Shape,
+  SphereGeometry,
   ExtrudeGeometry,
   Vector2,
   Vector3,
@@ -39,7 +40,7 @@ import {
   WebGLRenderer,
 } from 'three';
 import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
-import { GuitarVoice } from './guitar-sound';
+import { GuitarVoice, SceneAudio, TrainVoice } from './scene-sound';
 
 /**
  * The home page's night hill (WebGL, three.js without React): a long meadow of grass that
@@ -60,6 +61,9 @@ export interface SceneLayout {
   /** CSS px: where the hidden guitar lies in the grass (a free spot under the page's text). */
   guitarX?: number;
   guitarY?: number;
+  /** CSS px: where the toy train waits in the grass until someone moves it. */
+  trainX?: number;
+  trainY?: number;
 }
 
 export interface GrassScene {
@@ -154,21 +158,29 @@ const COMMON = /* glsl */ `
     if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) return 0.0;
     return texture2D(uTrailTex, uv).r;
   }
+  // What pushes the grass aside: the pointer's light (R) or a track the toy train laid (G).
+  float pushAt(vec2 xz) {
+    vec2 uv = (xz - uTrailBox.xy) / uTrailBox.zw;
+    if (uv.x < 0.0 || uv.y < 0.0 || uv.x > 1.0 || uv.y > 1.0) return 0.0;
+    vec2 t = texture2D(uTrailTex, uv).rg;
+    // The track lays the grass down harder than the light does.
+    return max(t.r, min(1.0, t.g * 1.5));
+  }
   // Pushes a point at xz (height share t, 0 at the root) by the wind and the trail.
   vec3 sway(vec3 w, vec2 xz, float bend, float phase, out float glow) {
     float gust = sin(uTime * 1.4 + xz.x * 0.55 + xz.y * 0.35 + phase) * 0.6
       + sin(uTime * 0.6 + xz.x * 0.18) * 0.4;
     w.x += gust * 0.22 * bend;
     w.z += gust * 0.08 * bend;
-    float f = trailAt(xz);
-    glow = f;
+    glow = trailAt(xz);
+    float f = pushAt(xz);
     if (f > 0.002) {
       float e = 0.18;
-      vec2 grad = vec2(trailAt(xz + vec2(e, 0.0)) - trailAt(xz - vec2(e, 0.0)),
-                       trailAt(xz + vec2(0.0, e)) - trailAt(xz - vec2(0.0, e)));
+      vec2 grad = vec2(pushAt(xz + vec2(e, 0.0)) - pushAt(xz - vec2(e, 0.0)),
+                       pushAt(xz + vec2(0.0, e)) - pushAt(xz - vec2(0.0, e)));
       vec2 dir = length(grad) > 0.0001 ? -normalize(grad) : vec2(0.0, 1.0);
       w.xz += dir * f * 0.75 * bend;
-      w.y -= f * 0.5 * bend;
+      w.y -= f * 0.65 * bend;
     }
     return w;
   }
@@ -186,6 +198,7 @@ const GRASS_VERT = /* glsl */ `
   attribute float aShade;
   uniform vec3 uClear; // a clearing around the camp: x, z, radius
   uniform vec3 uClearG; // thinner grass over the guitar
+  uniform vec3 uClearT; // and around the toy train
   ${COMMON}
   varying float vT;
   varying float vGlow;
@@ -196,7 +209,8 @@ const GRASS_VERT = /* glsl */ `
     vec3 p = position;
     float t = p.y;
     float h = aHeight * mix(0.25, 1.0, smoothstep(uClear.z * 0.6, uClear.z, distance(aOffset.xz, uClear.xy)))
-      * mix(0.45, 1.0, smoothstep(uClearG.z * 0.5, uClearG.z, distance(aOffset.xz, uClearG.xy)));
+      * mix(0.45, 1.0, smoothstep(uClearG.z * 0.5, uClearG.z, distance(aOffset.xz, uClearG.xy)))
+      * mix(0.4, 1.0, smoothstep(uClearT.z * 0.5, uClearT.z, distance(aOffset.xz, uClearT.xy)));
     p.y *= h;
     // Smaller blades far away are thinner too.
     p.x *= clamp(aHeight / 0.13, 0.45, 1.15);
@@ -439,6 +453,111 @@ const REVEAL_FRAG = /* glsl */ `
   }
 `;
 
+/** The toy train's track: pieces laid under it as it runs, sinking and fading a few seconds later. */
+const TRACK_LIFE_S = 5;
+const TRACK_VERT = /* glsl */ `
+  attribute float aBorn;
+  attribute float aMetal;
+  uniform float uTime;
+  varying float vFade;
+  varying float vMetal;
+  varying vec3 vWorld;
+  varying vec3 vNormal;
+  void main() {
+    float age = uTime - aBorn;
+    vFade = aBorn < 0.0 ? 0.0 : smoothstep(0.0, 0.12, age) * (1.0 - smoothstep(${(TRACK_LIFE_S * 0.5).toFixed(1)}, ${TRACK_LIFE_S.toFixed(1)}, age));
+    vMetal = aMetal;
+    vec4 w = modelMatrix * instanceMatrix * vec4(position, 1.0);
+    // Into the ground as it goes.
+    w.y -= (1.0 - vFade) * 0.03;
+    vWorld = w.xyz;
+    vNormal = normalize(mat3(modelMatrix) * mat3(instanceMatrix) * normal);
+    gl_Position = projectionMatrix * viewMatrix * w;
+  }
+`;
+const TRACK_FRAG = /* glsl */ `
+  ${COMMON}
+  varying float vFade;
+  varying float vMetal;
+  varying vec3 vWorld;
+  varying vec3 vNormal;
+  void main() {
+    if (vFade <= 0.01) discard;
+    float lit = clamp(trailAt(vWorld.xz) * 1.6, 0.0, 1.0);
+    float light = 0.45 + 0.55 * max(0.0, dot(normalize(vNormal), normalize(vec3(0.3, 1.0, 0.4))));
+    vec3 base = mix(vec3(0.34, 0.21, 0.11), vec3(0.8, 0.82, 0.86), vMetal);
+    // Moonlit on its own, bright where the pointer's light is.
+    gl_FragColor = vec4(base * light * (0.4 + 0.8 * lit), vFade);
+  }
+`;
+
+/**
+ * The rails: two continuous strips along the path the train ran, one segment per sample; each
+ * segment fades with its own age (aBorn). aShade: the top catches the light, the sides less.
+ */
+const RAIL_VERT = /* glsl */ `
+  attribute float aBorn;
+  attribute float aShade;
+  uniform float uTime;
+  varying float vFade;
+  varying float vShade;
+  varying vec3 vWorld;
+  void main() {
+    float age = uTime - aBorn;
+    vFade = aBorn < 0.0 ? 0.0 : smoothstep(0.0, 0.12, age) * (1.0 - smoothstep(${(TRACK_LIFE_S * 0.5).toFixed(1)}, ${TRACK_LIFE_S.toFixed(1)}, age));
+    vShade = aShade;
+    vec3 p = position;
+    p.y -= (1.0 - vFade) * 0.03;
+    vWorld = p;
+    gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
+  }
+`;
+const RAIL_FRAG = /* glsl */ `
+  ${COMMON}
+  varying float vFade;
+  varying float vShade;
+  varying vec3 vWorld;
+  void main() {
+    if (vFade <= 0.01) discard;
+    float lit = clamp(trailAt(vWorld.xz) * 1.6, 0.0, 1.0);
+    // Steel catches the moon: clear even outside the pointer's light.
+    gl_FragColor = vec4(vec3(0.86, 0.88, 0.92) * vShade * (0.7 + 0.7 * lit), vFade);
+  }
+`;
+
+/** Steam puffs from the train's chimney: born at a point and time, rising, growing, fading. */
+const PUFF_VERT = /* glsl */ `
+  attribute vec3 aStart;
+  attribute float aBorn;
+  attribute float aSeed;
+  uniform float uTime;
+  uniform float uSize;
+  varying float vAlpha;
+  void main() {
+    float life = 1.8;
+    float age = uTime - aBorn;
+    if (age < 0.0 || age > life) {
+      gl_PointSize = 0.0;
+      gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+      vAlpha = 0.0;
+      return;
+    }
+    vec3 p = aStart + vec3(sin(aSeed * 7.0 + age * 2.0) * 0.03, age * 0.22, cos(aSeed * 5.0) * 0.02 * age);
+    vAlpha = smoothstep(0.0, 0.15, age) * (1.0 - age / life) * 0.45;
+    vec4 mv = modelViewMatrix * vec4(p, 1.0);
+    gl_PointSize = uSize * (0.5 + age * 0.9) / -mv.z;
+    gl_Position = projectionMatrix * mv;
+  }
+`;
+const PUFF_FRAG = /* glsl */ `
+  varying float vAlpha;
+  void main() {
+    float d = length(gl_PointCoord - 0.5);
+    float a = smoothstep(0.5, 0.15, d) * vAlpha;
+    gl_FragColor = vec4(vec3(0.78, 0.8, 0.84), a);
+  }
+`;
+
 const STAR_VERT = /* glsl */ `
   attribute float aPhase;
   uniform float uTime;
@@ -472,16 +591,26 @@ const TRAIL_FRAG = /* glsl */ `
   uniform float uDecay;
   uniform vec3 uStamps[STAMPS];
   uniform int uCount;
+  uniform vec3 uTrack[STAMPS];
+  uniform int uTrackCount;
+  uniform float uDecayTrack;
   uniform vec2 uWorld;
   varying vec2 vUv;
   void main() {
-    float v = texture2D(uPrev, vUv).r * uDecay;
+    vec4 prev = texture2D(uPrev, vUv);
+    float v = prev.r * uDecay;
+    float g = prev.g * uDecayTrack;
     for (int i = 0; i < STAMPS; i++) {
       if (i >= uCount) break;
       float d = length((vUv - uStamps[i].xy) * uWorld);
       v = max(v, smoothstep(${BRUSH.toFixed(2)}, 0.0, d) * uStamps[i].z);
     }
-    gl_FragColor = vec4(v, 0.0, 0.0, 1.0);
+    for (int i = 0; i < STAMPS; i++) {
+      if (i >= uTrackCount) break;
+      float d = length((vUv - uTrack[i].xy) * uWorld);
+      g = max(g, smoothstep(0.26, 0.0, d) * uTrack[i].z);
+    }
+    gl_FragColor = vec4(v, g, 0.0, 1.0);
   }
 `;
 
@@ -729,6 +858,123 @@ function makeGuitar(
   return { guitar, hitbox };
 }
 
+/**
+ * A toy steam train lying in the grass: a red engine with a blue cab and one yellow wagon.
+ * Built facing +z on the ground (y = 0); every part only shows in the light (REVEAL_*).
+ * `wheels` turn as it runs; `hitboxes` are what a grab has to hit.
+ */
+function makeTrain(
+  uniforms: Record<string, { value: unknown }>,
+  disposables: { dispose(): void }[],
+): { engine: Group; wagon: Group; wheels: Mesh[]; hitboxes: Mesh[]; chimney: Vector3 } {
+  const mats = new Map<string, ShaderMaterial>();
+  const mat = (color: string) => {
+    let m = mats.get(color);
+    if (!m) {
+      m = new ShaderMaterial({
+        vertexShader: REVEAL_VERT,
+        fragmentShader: REVEAL_FRAG,
+        uniforms: { ...uniforms, uColor: { value: new Color(color) } },
+      });
+      mats.set(color, m);
+      disposables.push(m);
+    }
+    return m;
+  };
+  const geos = new Map<string, BufferGeometry>();
+  const geo = (key: string, make: () => BufferGeometry) => {
+    let g = geos.get(key);
+    if (!g) {
+      g = make();
+      geos.set(key, g);
+      disposables.push(g);
+    }
+    return g;
+  };
+  const box = (w: number, h: number, d: number) => geo(`b${w},${h},${d}`, () => new BoxGeometry(w, h, d));
+  const cyl = (r0: number, r1: number, h: number, seg = 14) =>
+    geo(`c${r0},${r1},${h},${seg}`, () => new CylinderGeometry(r0, r1, h, seg));
+  const at = (g: BufferGeometry, color: string, x: number, y: number, z: number) => {
+    const m = new Mesh(g, mat(color));
+    m.position.set(x, y, z);
+    return m;
+  };
+  const RED = '#c8382e';
+  const BLUE = '#2f6fb3';
+  const YELLOW = '#e2b23a';
+  const BRASS = '#d9b44a';
+  const DARK = '#24242c';
+
+  const wheels: Mesh[] = [];
+  const wheelPair = (parent: Group, z: number) => {
+    for (const x of [-0.05, 0.05]) {
+      const w = at(cyl(0.022, 0.022, 0.012, 16), DARK, x, 0.022, z);
+      w.rotation.z = Math.PI / 2;
+      const hub = at(cyl(0.008, 0.008, 0.014, 8), RED, 0, 0, 0);
+      w.add(hub);
+      parent.add(w);
+      wheels.push(w);
+    }
+  };
+
+  // The engine.
+  const engine = new Group();
+  const boiler = at(cyl(0.036, 0.036, 0.12), RED, 0, 0.078, 0.035);
+  boiler.rotation.x = Math.PI / 2;
+  const front = at(cyl(0.038, 0.038, 0.01), BRASS, 0, 0.078, 0.098);
+  front.rotation.x = Math.PI / 2;
+  engine.add(
+    at(box(0.09, 0.025, 0.21), DARK, 0, 0.038, 0),
+    boiler,
+    front,
+    at(cyl(0.013, 0.01, 0.05), DARK, 0, 0.13, 0.07),
+    at(cyl(0.02, 0.013, 0.014), DARK, 0, 0.158, 0.07),
+    at(geo('dome', () => new SphereGeometry(0.017, 12, 8)), BRASS, 0, 0.113, 0.01),
+    at(box(0.088, 0.072, 0.06), BLUE, 0, 0.087, -0.062),
+    at(box(0.1, 0.012, 0.078), RED, 0, 0.128, -0.062),
+    at(box(0.09, 0.03, 0.02), '#0d0d12', 0, 0.098, -0.034),
+    at(box(0.084, 0.018, 0.022), YELLOW, 0, 0.022, 0.112),
+  );
+  wheelPair(engine, 0.065);
+  wheelPair(engine, 0.0);
+  wheelPair(engine, -0.065);
+
+  // The wagon.
+  const wagon = new Group();
+  wagon.add(
+    at(box(0.085, 0.02, 0.15), DARK, 0, 0.034, 0),
+    at(box(0.08, 0.052, 0.13), YELLOW, 0, 0.07, 0),
+    at(box(0.086, 0.01, 0.136), RED, 0, 0.1, 0),
+    at(box(0.016, 0.01, 0.03), DARK, 0, 0.03, 0.085),
+  );
+  wheelPair(wagon, 0.045);
+  wheelPair(wagon, -0.045);
+
+  // Generous boxes to grab.
+  const hitboxes = [
+    [engine, 0.26, 0.2, 0.3],
+    [wagon, 0.24, 0.16, 0.22],
+  ].map(([g, w, h, d]) => {
+    const hg = new BoxGeometry(w as number, h as number, d as number);
+    hg.translate(0, (h as number) / 2, 0);
+    disposables.push(hg);
+    const m = new Mesh(hg);
+    m.visible = false;
+    (g as Group).add(m);
+    return m;
+  });
+  return { engine, wagon, wheels, hitboxes, chimney: new Vector3(0, 0.17, 0.07) };
+}
+
+/** One piece of track (along +z): a sleeper and two rails; aMetal tells wood from steel. */
+/** A sleeper (across +z); aMetal 0: wood. The rails are continuous strips (RAIL_*). */
+function sleeperPiece(): BufferGeometry {
+  const sleeper = new BoxGeometry(0.13, 0.012, 0.026);
+  sleeper.translate(0, 0.006, 0);
+  sleeper.setAttribute('aMetal', new Float32BufferAttribute(new Float32Array(sleeper.attributes.position.count), 1));
+  return sleeper;
+}
+
 export function createGrassScene(canvas: HTMLCanvasElement, opts: { onSlow?: () => void }): GrassScene {
   const renderer = new WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'low-power' });
   renderer.setClearColor(0x000000, 0);
@@ -754,6 +1000,7 @@ export function createGrassScene(canvas: HTMLCanvasElement, opts: { onSlow?: () 
   let rtA = add(new WebGLRenderTarget(TW, TH, rtOpts));
   let rtB = add(new WebGLRenderTarget(TW, TH, rtOpts));
   const stamps = Array.from({ length: MAX_STAMPS }, () => new Vector3());
+  const trackStamps = Array.from({ length: MAX_STAMPS }, () => new Vector3());
   const trailMat = add(
     new ShaderMaterial({
       vertexShader: TRAIL_VERT,
@@ -763,6 +1010,9 @@ export function createGrassScene(canvas: HTMLCanvasElement, opts: { onSlow?: () 
         uDecay: { value: 1 },
         uStamps: { value: stamps },
         uCount: { value: 0 },
+        uTrack: { value: trackStamps },
+        uTrackCount: { value: 0 },
+        uDecayTrack: { value: 1 },
         uWorld: { value: new Vector2(XS, ZS) },
       },
       depthTest: false,
@@ -782,6 +1032,7 @@ export function createGrassScene(canvas: HTMLCanvasElement, opts: { onSlow?: () 
     uFire: { value: 1 },
     uClear: { value: new Vector3(0, 0, 0.6) },
     uClearG: { value: new Vector3(0, 0, 0.0001) },
+    uClearT: { value: new Vector3(0, 0, 0.0001) },
     /** The guitar's glow after a click, 1 → 0. */
     uPulse: { value: 0 },
   };
@@ -885,7 +1136,203 @@ export function createGrassScene(canvas: HTMLCanvasElement, opts: { onSlow?: () 
   scene.add(camp);
   const { guitar, hitbox } = makeGuitar(shared, disposables);
   scene.add(guitar);
-  const voice = new GuitarVoice();
+  const audio = new SceneAudio();
+  const voice = new GuitarVoice(audio);
+
+  // ------------------------------------------------------------------ the toy train
+  const TRAIN_SCALE = 1.5;
+  /** The train's own glow (it shows while held, then fades like the guitar's). */
+  const trainPulse = { value: 0 };
+  const train = makeTrain({ ...shared, uPulse: trainPulse }, disposables);
+  for (const g of [train.engine, train.wagon]) {
+    g.scale.setScalar(TRAIN_SCALE);
+    scene.add(g);
+  }
+  const trainVoice = new TrainVoice(audio);
+  /** Track laid every TRACK_STEP of travel; a note every NOTE_STRIDE. */
+  const TRACK_STEP = 0.05 * TRAIN_SCALE;
+  const NOTE_STRIDE = 0.15;
+  const WAGON_GAP = 0.2 * TRAIN_SCALE;
+  const TRACK_PIECES = 500;
+  const pieceGeo = add(sleeperPiece());
+  const trackBorn = new InstancedBufferAttribute(new Float32Array(TRACK_PIECES).fill(-1), 1);
+  pieceGeo.setAttribute('aBorn', trackBorn);
+  const trackMat = add(
+    new ShaderMaterial({
+      vertexShader: TRACK_VERT,
+      fragmentShader: TRACK_FRAG,
+      uniforms: shared,
+      transparent: true,
+      depthWrite: false,
+    }),
+  );
+  const track = new InstancedMesh(pieceGeo, trackMat, TRACK_PIECES);
+  track.frustumCulled = false;
+  scene.add(track);
+  let trackNext = 0;
+  const pieceMatrix = new Matrix4();
+  const pieceQuat = new Quaternion();
+  const UP = new Vector3(0, 1, 0);
+  const SCALE = new Vector3(TRAIN_SCALE, TRAIN_SCALE, TRAIN_SCALE);
+  const layPiece = (x: number, z: number, yaw: number) => {
+    pieceMatrix.compose(new Vector3(x, hill(x, z) + 0.002, z), pieceQuat.setFromAxisAngle(UP, yaw), SCALE);
+    track.setMatrixAt(trackNext, pieceMatrix);
+    trackBorn.setX(trackNext, time);
+    trackNext = (trackNext + 1) % TRACK_PIECES;
+    track.instanceMatrix.needsUpdate = true;
+    trackBorn.needsUpdate = true;
+  };
+
+  // The rails: a ring of segments, each joining two samples of the path exactly (shared ends:
+  // no gaps, no overlaps), so they bend smoothly with the train.
+  const RAIL_STEP = 0.02;
+  const RAIL_SEGS = 900;
+  /** Per rail and per end: 6 vertices (inner side, top, outer side; 2 each). */
+  const SEG_VERTS = 2 * 2 * 6;
+  const railPos = new Float32Array(RAIL_SEGS * SEG_VERTS * 3);
+  const railBorn = new Float32Array(RAIL_SEGS * SEG_VERTS).fill(-1);
+  const railShade = new Float32Array(RAIL_SEGS * SEG_VERTS);
+  const railIdx: number[] = [];
+  for (let sgm = 0; sgm < RAIL_SEGS; sgm++) {
+    for (let rail = 0; rail < 2; rail++) {
+      // start end: v0..v5, finish end: v6..v11; faces: (0,1) side, (2,3) top, (4,5) side
+      const b = sgm * SEG_VERTS + rail * 12;
+      for (const f of [0, 2, 4]) {
+        const a0 = b + f;
+        const a1 = b + f + 1;
+        const c0 = b + 6 + f;
+        const c1 = b + 6 + f + 1;
+        railIdx.push(a0, a1, c1, a0, c1, c0);
+      }
+      for (let end = 0; end < 2; end++)
+        for (let v = 0; v < 6; v++) railShade[b + end * 6 + v] = v === 2 || v === 3 ? 1 : 0.55;
+    }
+  }
+  const railGeo = add(new BufferGeometry());
+  // BufferAttribute keeps these arrays (Float32BufferAttribute would copy them).
+  const railPosAttr = new BufferAttribute(railPos, 3);
+  const railBornAttr = new BufferAttribute(railBorn, 1);
+  railGeo.setAttribute('position', railPosAttr);
+  railGeo.setAttribute('aBorn', railBornAttr);
+  railGeo.setAttribute('aShade', new Float32BufferAttribute(railShade, 1));
+  railGeo.setIndex(railIdx);
+  const railMat = add(
+    new ShaderMaterial({
+      vertexShader: RAIL_VERT,
+      fragmentShader: RAIL_FRAG,
+      uniforms: shared,
+      transparent: true,
+      depthWrite: false,
+      side: DoubleSide,
+    }),
+  );
+  const rails = new Mesh(railGeo, railMat);
+  rails.frustumCulled = false;
+  scene.add(rails);
+  let railNext = 0;
+  let railLast: { x: number; z: number; yaw: number } | null = null;
+  /** The rail cross-section at a sample: per rail, the 6 vertices of its three faces. */
+  const section = (x: number, z: number, yaw: number, out: number[]) => {
+    const rx = Math.cos(yaw);
+    const rz = -Math.sin(yaw);
+    const half = 0.0065 * TRAIN_SCALE;
+    const low = 0.012 * TRAIN_SCALE;
+    const high = 0.024 * TRAIN_SCALE;
+    out.length = 0;
+    for (const side of [-1, 1]) {
+      const o = side * 0.04 * TRAIN_SCALE;
+      const ix = x + rx * (o - half);
+      const iz = z + rz * (o - half);
+      const ox = x + rx * (o + half);
+      const oz = z + rz * (o + half);
+      const hi = hill(ix, iz);
+      const ho = hill(ox, oz);
+      // inner side (bottom, top), top (inner, outer), outer side (top, bottom)
+      out.push(ix, hi + low, iz, ix, hi + high, iz, ix, hi + high, iz, ox, ho + high, oz, ox, ho + high, oz, ox, ho + low, oz);
+    }
+  };
+  const fromSection: number[] = [];
+  const toSection: number[] = [];
+  const railSample = (x: number, z: number, yaw: number) => {
+    if (railLast) {
+      section(railLast.x, railLast.z, railLast.yaw, fromSection);
+      section(x, z, yaw, toSection);
+      const base = railNext * SEG_VERTS;
+      for (let rail = 0; rail < 2; rail++)
+        for (let v = 0; v < 6; v++) {
+          const s0 = (rail * 6 + v) * 3;
+          const d0 = (base + rail * 12 + v) * 3;
+          const d1 = (base + rail * 12 + 6 + v) * 3;
+          railPos.set(fromSection.slice(s0, s0 + 3), d0);
+          railPos.set(toSection.slice(s0, s0 + 3), d1);
+        }
+      railBorn.fill(time, base, base + SEG_VERTS);
+      railPosAttr.addUpdateRange(base * 3, SEG_VERTS * 3);
+      railBornAttr.addUpdateRange(base, SEG_VERTS);
+      railPosAttr.needsUpdate = true;
+      railBornAttr.needsUpdate = true;
+      railNext = (railNext + 1) % RAIL_SEGS;
+    }
+    railLast = { x, z, yaw };
+  };
+
+  const PUFFS = 50;
+  const puffGeo = add(new BufferGeometry());
+  const puffStart = new Float32BufferAttribute(new Float32Array(PUFFS * 3), 3);
+  const puffBorn = new Float32BufferAttribute(new Float32Array(PUFFS).fill(-100), 1);
+  puffGeo.setAttribute('position', new Float32BufferAttribute(new Float32Array(PUFFS * 3), 3));
+  puffGeo.setAttribute('aStart', puffStart);
+  puffGeo.setAttribute('aBorn', puffBorn);
+  puffGeo.setAttribute('aSeed', new Float32BufferAttribute(Float32Array.from({ length: PUFFS }, () => Math.random() * 10), 1));
+  const puffMat = add(
+    new ShaderMaterial({
+      vertexShader: PUFF_VERT,
+      fragmentShader: PUFF_FRAG,
+      transparent: true,
+      depthWrite: false,
+      uniforms: { uTime: shared.uTime, uSize: { value: 0 } },
+    }),
+  );
+  const puffs = new Points(puffGeo, puffMat);
+  puffs.frustumCulled = false;
+  scene.add(puffs);
+  let puffNext = 0;
+  const puff = () => {
+    const p = train.engine.localToWorld(train.chimney.clone());
+    puffStart.setXYZ(puffNext, p.x, p.y, p.z);
+    puffBorn.setX(puffNext, time);
+    puffNext = (puffNext + 1) % PUFFS;
+    puffStart.needsUpdate = true;
+    puffBorn.needsUpdate = true;
+  };
+
+  /** Where the engine is, where it faces, and the path it ran (newest last) for the wagon. */
+  const run = { x: 0, z: 0, yaw: 0, moved: false, sincePiece: 0, sinceNote: 0 };
+  const path: { x: number; z: number }[] = [];
+  const poseTrain = () => {
+    train.engine.position.set(run.x, hill(run.x, run.z), run.z);
+    train.engine.rotation.y = run.yaw;
+    // The wagon: WAGON_GAP back along the path (straight behind before it has run).
+    let wx = run.x - Math.sin(run.yaw) * WAGON_GAP;
+    let wz = run.z - Math.cos(run.yaw) * WAGON_GAP;
+    let need = WAGON_GAP;
+    let px = run.x;
+    let pz = run.z;
+    for (let i = path.length - 1; i >= 0; i--) {
+      const d = Math.hypot(path[i].x - px, path[i].z - pz);
+      if (d >= need && d > 0) {
+        wx = px + ((path[i].x - px) * need) / d;
+        wz = pz + ((path[i].z - pz) * need) / d;
+        break;
+      }
+      need -= d;
+      px = path[i].x;
+      pz = path[i].z;
+    }
+    train.wagon.position.set(wx, hill(wx, wz), wz);
+    train.wagon.rotation.y = Math.atan2(run.x - wx, run.z - wz);
+    (shared.uClearT.value as Vector3).set((run.x + wx) / 2, (run.z + wz) / 2, 0.42);
+  };
 
   const EMBERS = 28;
   const emberGeo = add(new BufferGeometry());
@@ -1044,6 +1491,21 @@ export function createGrassScene(canvas: HTMLCanvasElement, opts: { onSlow?: () 
       guitar.scale.setScalar(1.3);
       (shared.uClearG.value as Vector3).set(spot.x, spot.z, 0.42);
     }
+    // The toy train waits where the page says, until someone moves it.
+    if (!run.moved) {
+      ndc.set(((l.trainX ?? w * 0.6) / w) * 2 - 1, -((l.trainY ?? h * 0.9) / h) * 2 + 1);
+      ray.setFromCamera(ndc, camera);
+      const at = ray.intersectObject(ground, false)[0]?.point;
+      if (at) {
+        run.x = at.x;
+        run.z = at.z;
+        // Nose away from the viewer, a little turned: compact, in the free corner.
+        run.yaw = 0.45 + Math.PI;
+        path.length = 0;
+        railLast = null;
+        poseTrain();
+      }
+    }
   };
 
   // ------------------------------------------------------------------ size
@@ -1066,6 +1528,7 @@ export function createGrassScene(canvas: HTMLCanvasElement, opts: { onSlow?: () 
     sparkMat.uniforms.uSize.value = 95 * k;
     emberMat.uniforms.uSize.value = 26 * k;
     flowerMat.uniforms.uSize.value = 28 * k;
+    puffMat.uniforms.uSize.value = 90 * k;
     starMat.uniforms.uSize.value = 2.2 * dpr;
     place();
   };
@@ -1094,10 +1557,40 @@ export function createGrassScene(canvas: HTMLCanvasElement, opts: { onSlow?: () 
     raycaster.setFromCamera(pndc, camera);
     return raycaster.intersectObject(hitbox, false).length > 0;
   };
-  // A click on the guitar: the next note of its tune, a glow, a few fireflies.
+  const onTrain = () => {
+    if (!pointer || overUi) return false;
+    pndc.set(pointer.x, pointer.y);
+    raycaster.setFromCamera(pndc, camera);
+    return raycaster.intersectObjects(train.hitboxes, false).length > 0;
+  };
+  /** The train held by the pointer, and how far it ran since it was taken (a click if ~0). */
+  let dragging = false;
+  let dragRun = 0;
+  // Grab the train (no text selection, no scrolling), or click the guitar: its next note.
   const onDown = (e: PointerEvent) => {
     onPointer(e);
+    if (onTrain()) {
+      e.preventDefault();
+      dragging = true;
+      dragRun = 0;
+      audio.ready();
+      return;
+    }
     if (onGuitar()) playGuitar();
+  };
+  const onUp = () => {
+    if (!dragging) return;
+    dragging = false;
+    // Taken and let go without running: "toot toot".
+    if (dragRun < 0.04) {
+      trainVoice.whistle();
+      puff();
+      trainPulse.value = 1;
+    }
+  };
+  // Phones: holding the train does not scroll the page.
+  const onTouchMove = (e: TouchEvent) => {
+    if (dragging) e.preventDefault();
   };
   function playGuitar() {
     voice.playNext();
@@ -1124,13 +1617,16 @@ export function createGrassScene(canvas: HTMLCanvasElement, opts: { onSlow?: () 
     lastNote = now;
     playGuitar();
   };
-  let hovering = false;
+  let cursor = '';
   const onLeave = () => {
     pointer = null;
     last = null;
   };
   window.addEventListener('pointermove', onPointer, { passive: true });
-  window.addEventListener('pointerdown', onDown, { passive: true });
+  window.addEventListener('pointerdown', onDown, { passive: false });
+  window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointercancel', onUp);
+  window.addEventListener('touchmove', onTouchMove, { passive: false });
   window.addEventListener('wheel', onWheel, { passive: false });
   document.addEventListener('pointerleave', onLeave);
   const touch = () => {
@@ -1184,6 +1680,49 @@ export function createGrassScene(canvas: HTMLCanvasElement, opts: { onSlow?: () 
       }
       last = at;
     }
+    // The train follows the pointer while held: it turns towards it and runs along its heading,
+    // laying track, parting the grass, puffing steam and playing its tune as it goes.
+    let trackCount = 0;
+    if (dragging && at) {
+      const tz = Math.min(4.6, Math.max(-6.5, at.z));
+      const reach = (8.5 - tz) * 0.55;
+      const tx = Math.min(reach, Math.max(-reach, at.x));
+      const dx = tx - run.x;
+      const dz = tz - run.z;
+      const dist = Math.hypot(dx, dz);
+      if (dist > 0.015) {
+        let turn = Math.atan2(dx, dz) - run.yaw;
+        turn = Math.atan2(Math.sin(turn), Math.cos(turn));
+        run.yaw += turn * Math.min(1, dt * 12);
+        const step = Math.min(dist * Math.min(1, dt * 9), 2.4 * dt) * Math.max(0.3, Math.cos(turn));
+        run.x += Math.sin(run.yaw) * step;
+        run.z += Math.cos(run.yaw) * step;
+        run.moved = true;
+        dragRun += step;
+        path.push({ x: run.x, z: run.z });
+        if (path.length > 120) path.splice(0, path.length - 120);
+        poseTrain();
+        for (const w of train.wheels) w.rotation.x += step / (0.022 * TRAIN_SCALE);
+        // Track under its wheels: pieces just ahead of the engine, and the grass parted there.
+        const fx = run.x + Math.sin(run.yaw) * 0.1 * TRAIN_SCALE;
+        const fz = run.z + Math.cos(run.yaw) * 0.1 * TRAIN_SCALE;
+        run.sincePiece += step;
+        while (run.sincePiece >= TRACK_STEP) {
+          run.sincePiece -= TRACK_STEP;
+          layPiece(fx, fz, run.yaw);
+        }
+        if (!railLast || Math.hypot(fx - railLast.x, fz - railLast.z) >= RAIL_STEP) railSample(fx, fz, run.yaw);
+        trackStamps[trackCount++].set((fx - X0) / XS, (fz - Z0) / ZS, 1);
+        run.sinceNote += step;
+        if (run.sinceNote >= NOTE_STRIDE) {
+          run.sinceNote = 0;
+          if (trainVoice.step()) puff();
+        }
+      }
+      trainPulse.value = 1;
+    } else trainPulse.value = Math.max(0, trainPulse.value - dt / 1.4);
+    trailMat.uniforms.uTrackCount.value = trackCount;
+    trailMat.uniforms.uDecayTrack.value = Math.exp(-dt / (TRACK_LIFE_S * 0.55));
     trailMat.uniforms.uCount.value = count;
     trailMat.uniforms.uDecay.value = Math.exp(-dt / TRAIL_LIFE_S);
     trailMat.uniforms.uPrev.value = rtA.texture;
@@ -1200,11 +1739,11 @@ export function createGrassScene(canvas: HTMLCanvasElement, opts: { onSlow?: () 
     shared.uFire.value = flick;
     shared.uTime.value = time;
     shared.uPulse.value = Math.max(0, shared.uPulse.value - dt / 1.4);
-    // A hand over the guitar (the pointer's light shows it there).
-    const over = onGuitar();
-    if (over !== hovering) {
-      hovering = over;
-      document.body.style.cursor = over ? 'pointer' : '';
+    // The hand: grabbing the train, over the train, over the guitar.
+    const want = dragging ? 'grabbing' : onTrain() ? 'grab' : onGuitar() ? 'pointer' : '';
+    if (want !== cursor) {
+      cursor = want;
+      document.body.style.cursor = want;
     }
     flameMat.uniforms.uTime.value = time;
     renderer.render(scene, camera);
@@ -1231,9 +1770,12 @@ export function createGrassScene(canvas: HTMLCanvasElement, opts: { onSlow?: () 
       observer.disconnect();
       window.removeEventListener('pointermove', onPointer);
       window.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+      window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('wheel', onWheel);
-      if (hovering) document.body.style.cursor = '';
-      voice.dispose();
+      if (cursor) document.body.style.cursor = '';
+      audio.dispose();
       document.removeEventListener('pointerleave', onLeave);
       document.removeEventListener('visibilitychange', onVisibility);
       for (const o of disposables) o.dispose();
