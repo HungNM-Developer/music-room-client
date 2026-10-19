@@ -514,6 +514,11 @@ export const en: Dict = {
   settings: {
     title: 'Room settings',
     skipThreshold: 'Votes needed to skip (%)',
+    minVotes: 'Fewest votes to skip',
+    minVotesHint: 'A skip needs at least this many ✅, even when the share works out lower. 1 = the share only.',
+    minVotesSlack:
+      "This room has Slack users: people listening from Slack don't open the room, so the share doesn't count them. Set this to fit how many usually listen, about half for example.",
+    errMinVotes: 'Enter a whole number from 1 to 50',
     voteWindow: 'Skip vote time (seconds)',
     maxQueued: 'Max queued songs per person',
     maxDuration: 'Max song length (minutes, 0 = no limit)',

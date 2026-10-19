@@ -3,6 +3,7 @@ import { parseYouTubePlaylist } from '@/contracts/youtube';
 
 export interface SettingsForm {
   thresholdPct: string;
+  minVotes: string;
   voteWindow: string;
   maxQueued: string;
   maxMinutes: string;
@@ -18,6 +19,7 @@ export type SettingsErrors = Partial<Record<keyof SettingsForm, true>>;
 export function toForm(s: RoomSettings): SettingsForm {
   return {
     thresholdPct: String(Math.round(s.skipThreshold * 100)),
+    minVotes: String(s.skipMinVotes),
     voteWindow: String(s.skipVoteWindowSec),
     maxQueued: String(s.maxQueuedPerMember),
     maxMinutes: String(s.maxTrackDurationSec / 60),
@@ -39,6 +41,8 @@ export function fromForm(f: SettingsForm): { settings?: FormSettings; errors: Se
   const errors: SettingsErrors = {};
   const pct = Number(f.thresholdPct.trim());
   if (!INT.test(f.thresholdPct.trim()) || pct < 10 || pct > 100) errors.thresholdPct = true;
+  const minVotes = Number(f.minVotes.trim());
+  if (!INT.test(f.minVotes.trim()) || minVotes < 1 || minVotes > 50) errors.minVotes = true;
   const win = Number(f.voteWindow.trim());
   if (!INT.test(f.voteWindow.trim()) || win < 10 || win > 60) errors.voteWindow = true;
   const q = Number(f.maxQueued.trim());
@@ -54,6 +58,7 @@ export function fromForm(f: SettingsForm): { settings?: FormSettings; errors: Se
     errors,
     settings: {
       skipThreshold: pct / 100,
+      skipMinVotes: minVotes,
       skipVoteWindowSec: win,
       maxQueuedPerMember: q,
       maxTrackDurationSec: min * 60,
