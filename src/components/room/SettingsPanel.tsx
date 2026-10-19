@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronDown, KeyRound, Settings2, Trash2 } from 'lucide-react';
+import { KeyRound, Settings2, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
@@ -46,54 +46,56 @@ export function SettingsPanel() {
   }
 
   return (
-    <details className="group rounded-panel bg-panel" data-guide="settings">
-      <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 px-4 [&::-webkit-details-marker]:hidden">
-        <Settings2 className="h-5 w-5 text-sage" aria-hidden />
-        <span className="flex-1 font-semibold">{t.settings.title}</span>
-        <ChevronDown className="h-5 w-5 text-sage transition-transform group-open:rotate-180" aria-hidden />
-      </summary>
-      <RoomTheme />
-      <form onSubmit={save} className="space-y-4 px-4 pb-4" noValidate>
-        <Field label={t.settings.skipThreshold} inputMode="numeric" value={form.thresholdPct} onChange={(e) => set({ thresholdPct: e.target.value })} hint={t.settings.errThreshold} invalid={errors.thresholdPct} />
-        <Field label={t.settings.voteWindow} inputMode="numeric" value={form.voteWindow} onChange={(e) => set({ voteWindow: e.target.value })} hint={t.settings.errVoteWindow} invalid={errors.voteWindow} />
-        <Field label={t.settings.maxQueued} inputMode="numeric" value={form.maxQueued} onChange={(e) => set({ maxQueued: e.target.value })} hint={t.settings.errQueued} invalid={errors.maxQueued} />
-        <Field label={t.settings.maxDuration} inputMode="numeric" value={form.maxMinutes} onChange={(e) => set({ maxMinutes: e.target.value })} hint={t.settings.errDuration} invalid={errors.maxMinutes} />
-        <div className="space-y-1.5">
-          <Field label={t.settings.repeatGap} inputMode="numeric" value={form.repeatGap} onChange={(e) => set({ repeatGap: e.target.value })} hint={t.settings.errRepeatGap} invalid={errors.repeatGap} />
-          <p className="text-[13px] text-sage">{t.settings.repeatGapHint}</p>
-        </div>
-        <div className="space-y-1.5">
-          <Field label={t.settings.fallback} value={form.fallbackUrl} placeholder="https://www.youtube.com/playlist?list=…" onChange={(e) => set({ fallbackUrl: e.target.value })} hint={t.settings.errFallback} invalid={errors.fallbackUrl} />
-          <p className="text-[13px] text-sage">{t.settings.fallbackHint}</p>
-        </div>
-        {aiEnabled && (
+    // The Settings tab (admins): keeping the room first while it has no owner, then one card.
+    <div className="space-y-4">
+      <KeepRoomSection />
+      <section aria-labelledby="room-settings-title" className="rounded-panel bg-panel" data-guide="settings">
+        <h2 id="room-settings-title" className="flex min-h-14 items-center gap-3 px-4 font-semibold">
+          <Settings2 className="h-5 w-5 text-sage" aria-hidden />
+          {t.settings.title}
+        </h2>
+        <form onSubmit={save} className="space-y-4 px-4 pb-4" noValidate>
+          <Field label={t.settings.skipThreshold} inputMode="numeric" value={form.thresholdPct} onChange={(e) => set({ thresholdPct: e.target.value })} hint={t.settings.errThreshold} invalid={errors.thresholdPct} />
+          <Field label={t.settings.voteWindow} inputMode="numeric" value={form.voteWindow} onChange={(e) => set({ voteWindow: e.target.value })} hint={t.settings.errVoteWindow} invalid={errors.voteWindow} />
+          <Field label={t.settings.maxQueued} inputMode="numeric" value={form.maxQueued} onChange={(e) => set({ maxQueued: e.target.value })} hint={t.settings.errQueued} invalid={errors.maxQueued} />
+          <Field label={t.settings.maxDuration} inputMode="numeric" value={form.maxMinutes} onChange={(e) => set({ maxMinutes: e.target.value })} hint={t.settings.errDuration} invalid={errors.maxMinutes} />
+          <div className="space-y-1.5">
+            <Field label={t.settings.repeatGap} inputMode="numeric" value={form.repeatGap} onChange={(e) => set({ repeatGap: e.target.value })} hint={t.settings.errRepeatGap} invalid={errors.repeatGap} />
+            <p className="text-[13px] text-sage">{t.settings.repeatGapHint}</p>
+          </div>
+          <div className="space-y-1.5">
+            <Field label={t.settings.fallback} value={form.fallbackUrl} placeholder="https://www.youtube.com/playlist?list=…" onChange={(e) => set({ fallbackUrl: e.target.value })} hint={t.settings.errFallback} invalid={errors.fallbackUrl} />
+            <p className="text-[13px] text-sage">{t.settings.fallbackHint}</p>
+          </div>
+          {aiEnabled && (
+            <div className="space-y-1">
+              <label className="flex min-h-11 items-center gap-3">
+                <input type="checkbox" checked={form.mcIntro} onChange={(e) => set({ mcIntro: e.target.checked })} className="h-5 w-5 accent-amber" />
+                {t.settings.mcIntro}
+              </label>
+              <p className="pl-8 text-[13px] text-sage">{t.settings.mcIntroHint}</p>
+            </div>
+          )}
           <div className="space-y-1">
             <label className="flex min-h-11 items-center gap-3">
-              <input type="checkbox" checked={form.mcIntro} onChange={(e) => set({ mcIntro: e.target.checked })} className="h-5 w-5 accent-amber" />
-              {t.settings.mcIntro}
+              <input type="checkbox" checked={form.autoRadio} onChange={(e) => set({ autoRadio: e.target.checked })} className="h-5 w-5 accent-amber" />
+              {t.settings.autoRadio}
             </label>
-            <p className="pl-8 text-[13px] text-sage">{t.settings.mcIntroHint}</p>
+            <p className="pl-8 text-[13px] text-sage">{t.settings.autoRadioHint}</p>
           </div>
-        )}
-        <div className="space-y-1">
           <label className="flex min-h-11 items-center gap-3">
-            <input type="checkbox" checked={form.autoRadio} onChange={(e) => set({ autoRadio: e.target.checked })} className="h-5 w-5 accent-amber" />
-            {t.settings.autoRadio}
+            <input type="checkbox" checked={form.allowGuestDj} onChange={(e) => set({ allowGuestDj: e.target.checked })} className="h-5 w-5 accent-amber" />
+            {t.settings.allowGuestDj}
           </label>
-          <p className="pl-8 text-[13px] text-sage">{t.settings.autoRadioHint}</p>
-        </div>
-        <label className="flex min-h-11 items-center gap-3">
-          <input type="checkbox" checked={form.allowGuestDj} onChange={(e) => set({ allowGuestDj: e.target.checked })} className="h-5 w-5 accent-amber" />
-          {t.settings.allowGuestDj}
-        </label>
-        <Button type="submit" variant="primary" disabled={busy} className="w-full">
-          {t.settings.save}
-        </Button>
-      </form>
-      <PinSettings />
-      <KeepRoomSection />
-      <DeleteRoom />
-    </details>
+          <Button type="submit" variant="primary" disabled={busy} className="w-full">
+            {t.settings.save}
+          </Button>
+        </form>
+        <RoomTheme />
+        <PinSettings />
+        <DeleteRoom />
+      </section>
+    </div>
   );
 }
 
@@ -104,7 +106,7 @@ function RoomTheme() {
   const act = useAct();
   const toast = useToast();
   return (
-    <section aria-labelledby="room-theme-title" className="space-y-2 border-b border-line px-4 pb-5">
+    <section aria-labelledby="room-theme-title" className="space-y-2 border-t border-line/70 px-4 py-4">
       <h3 id="room-theme-title" className="font-semibold">
         {t.theme.roomTitle}
       </h3>

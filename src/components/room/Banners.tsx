@@ -115,7 +115,7 @@ export function Banners() {
     items.push({
       key: 'orphan',
       icon: <Trash2 className="h-4 w-4" aria-hidden />,
-      text: invite ? t.banners.orphanCreator(code ?? '') : user ? t.banners.orphanKeep : t.banners.orphanNotice,
+      text: `${invite ? t.banners.orphanCreator(code ?? '') : user ? t.banners.orphanKeep : t.banners.orphanNotice} ${t.banners.keepLater}`,
       below: user ? (
         <Button size="sm" variant="primary" onClick={() => void keep()}>
           {t.keepRoom.keep}

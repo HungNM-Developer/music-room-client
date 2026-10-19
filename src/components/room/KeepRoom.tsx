@@ -39,7 +39,7 @@ export function useCanKeepRoom(): boolean {
   return orphan && me?.role === 'ADMIN' && !me.isDevice;
 }
 
-/** Room settings: "Giữ phòng" while the room has no owner. */
+/** Top of the Settings tab while the room has no owner: "Giữ phòng", in the notice's colours. */
 export function KeepRoomSection() {
   const t = useT();
   const user = useRoom((s) => s.user);
@@ -47,7 +47,7 @@ export function KeepRoomSection() {
   const keep = useKeepRoom();
   if (!canKeep) return null;
   return (
-    <div className="space-y-3 border-t border-line/70 px-4 py-4">
+    <section className="space-y-3 rounded-panel border border-amber/35 bg-amber/10 p-4">
       <h3 className="flex items-center gap-2 font-semibold">
         <ShieldCheck className="h-4 w-4 text-amber" aria-hidden /> {t.keepRoom.section}
       </h3>
@@ -62,6 +62,6 @@ export function KeepRoomSection() {
           <GoogleButton width={260} />
         </>
       )}
-    </div>
+    </section>
   );
 }

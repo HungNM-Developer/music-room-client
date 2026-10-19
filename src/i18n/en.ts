@@ -65,7 +65,7 @@ export const en: Dict = {
     backHome: 'Back to home',
   },
 
-  tabs: { label: 'Room navigation', room: 'Room', add: 'Add songs', people: 'People' },
+  tabs: { label: 'Room navigation', room: 'Room', add: 'Add songs', people: 'People', settings: 'Settings' },
 
   theme: {
     button: 'Theme',
@@ -911,6 +911,7 @@ export const en: Dict = {
     orphanCreator: (code: string) =>
       `This room isn't tied to an account, so it will be deleted after 30 days without use. Sign in with Google to keep it, or write down the room code ${code} and your PIN.`,
     later: 'Later',
+    keepLater: 'You can find this again in the Settings tab.',
     dismiss: 'Dismiss',
     reconnecting: 'Reconnecting…',
     waking: 'Connecting to the server… The free server can take about a minute to start.',

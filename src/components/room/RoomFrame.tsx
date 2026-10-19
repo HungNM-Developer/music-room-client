@@ -1,6 +1,6 @@
 'use client';
 
-import { ListPlus, Radio, Users } from 'lucide-react';
+import { ListPlus, Radio, Settings, Users } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import { ListenAlong, useListening, useListenSession } from '@/components/player/ListenAlong';
@@ -30,7 +30,7 @@ const SettingsPanel = dynamic(() => import('@/components/room/SettingsPanel').th
 const ActivityLog = dynamic(() => import('@/components/room/ActivityLog').then((m) => m.ActivityLog), { ssr: false });
 const JoinDialog = dynamic(() => import('@/components/room/JoinDialog').then((m) => m.JoinDialog), { ssr: false });
 
-type TabKey = 'room' | 'add' | 'people';
+type TabKey = 'room' | 'add' | 'people' | 'settings';
 
 /**
  * Everything around the room column, the same in every theme: header, banners, the side
@@ -100,15 +100,20 @@ export function RoomFrame({
   const hasVideo = isPlayer || listening;
   const needsJoin = connection === 'connected' && !memberId;
   const canChat = Boolean(memberId && me && !me.isDevice);
+  const isAdmin = Boolean(me && me.role === 'ADMIN' && !me.isDevice);
   const notice = revoked === 'kicked' ? t.banners.kicked : revoked === 'invalid' ? errorMessage('UNAUTHENTICATED') : null;
 
   const tabs: TabDef<TabKey>[] = [
     { key: 'room', label: t.tabs.room, icon: <Radio className="h-[22px] w-[22px]" aria-hidden />, badge: queueCount },
     { key: 'add', label: t.tabs.add, icon: <ListPlus className="h-[22px] w-[22px]" aria-hidden /> },
     { key: 'people', label: t.tabs.people, icon: <Users className="h-[22px] w-[22px]" aria-hidden /> },
+    // Admins only: nothing in it is for anyone else.
+    ...(isAdmin ? [{ key: 'settings' as const, label: t.tabs.settings, icon: <Settings className="h-[22px] w-[22px]" aria-hidden /> }] : []),
   ];
-  // ≥1024 px: the room column is always visible; the side column switches add / people.
-  const sideTab: TabKey = tab === 'people' ? 'people' : 'add';
+  // Admin rights taken away while on Settings: back to People.
+  const current: TabKey = tab === 'settings' && !isAdmin ? 'people' : tab;
+  // ≥1024 px: the room column is always visible; the side column switches add / people / settings.
+  const sideTab: TabKey = current === 'room' ? 'add' : current;
   const panel = (key: TabKey) => ({
     id: panelId('room', key),
     role: 'tabpanel' as const,
@@ -136,7 +141,7 @@ export function RoomFrame({
         <div
           {...panel('room')}
           data-player={hasVideo || undefined}
-          className={`room-stage min-w-0 space-y-5 ${tab === 'room' ? '' : 'hidden lg:block'}`}
+          className={`room-stage min-w-0 space-y-5 ${current === 'room' ? '' : 'hidden lg:block'}`}
         >
           {isPlayer ? (
             <PlayerEngine caption frameClass={videoFrame && `room-video-frame ${videoFrame}`} />
@@ -164,15 +169,19 @@ export function RoomFrame({
             onChange={setTab}
             className="hidden lg:flex"
           />
-          <div {...panel('add')} className={tab === 'add' ? '' : tab === 'room' ? 'hidden lg:block' : 'hidden'}>
+          <div {...panel('add')} className={current === 'add' ? '' : current === 'room' ? 'hidden lg:block' : 'hidden'}>
             <AddTrackPanel />
           </div>
-          <div {...panel('people')} className={`space-y-6 ${tab === 'people' ? '' : 'hidden'}`}>
+          <div {...panel('people')} className={`space-y-6 ${current === 'people' ? '' : 'hidden'}`}>
             <PeoplePanel />
             <RecapCard />
-            <SettingsPanel />
             <LangSwitch className="sm:hidden" />
           </div>
+          {isAdmin && (
+            <div {...panel('settings')} className={current === 'settings' ? '' : 'hidden'}>
+              <SettingsPanel />
+            </div>
+          )}
         </div>
       </main>
 
@@ -184,7 +193,7 @@ export function RoomFrame({
       )}
 
       <nav aria-label={t.tabs.label} className="room-tabbar fixed inset-x-0 bottom-0 z-40 border-t border-line bg-dial pb-[env(safe-area-inset-bottom)] lg:hidden">
-        <TabList variant="bar" idPrefix="room" label={t.tabs.label} tabs={tabs} value={tab} onChange={setTab} />
+        <TabList variant="bar" idPrefix="room" label={t.tabs.label} tabs={tabs} value={current} onChange={setTab} />
       </nav>
 
       {logOpen && <ActivityLog onClose={() => setLogOpen(false)} />}
