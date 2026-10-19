@@ -23,7 +23,8 @@ export function Avatar({
   const [broken, setBroken] = useState<string | null>(null);
   const picture = src && broken !== src ? src : null;
   return (
-    <span className="relative shrink-0" style={{ width: size, height: size }} aria-hidden>
+    // inline-block: inside an inline wrapper the size would be ignored and a picture would grow.
+    <span className="relative inline-block shrink-0 align-middle" style={{ width: size, height: size }} aria-hidden>
       {picture ? (
         // eslint-disable-next-line @next/next/no-img-element -- remote Google account picture
         <img

@@ -227,6 +227,15 @@ function ListenPlayer({ frameClass }: { frameClass?: string }) {
     userPausedRef.current = false;
     catchUp();
   }, [catchUp]);
+  // "Video unavailable" here: tell the server once per song. It asks YouTube again and skips
+  // the song only when it really does not play (the room may have no player to notice).
+  const reportedRef = useRef<string | null>(null);
+  const onError = useCallback((code: number) => {
+    const id = itemRef.current;
+    if (!id || reportedRef.current === id || ![100, 101, 150].includes(code)) return;
+    reportedRef.current = id;
+    void room.send('listen:unplayable', { queueItemId: id, errorCode: code });
+  }, []);
   const onPaused = useCallback(() => {
     const cur = npRef.current;
     // Our own pause (the room paused) never counts: by then the room already says PAUSED.
@@ -281,7 +290,7 @@ function ListenPlayer({ frameClass }: { frameClass?: string }) {
           onPaused={onPaused}
           onAutoplayBlocked={() => setNeedsTap(true)}
           onEnded={() => {}}
-          onError={() => {}}
+          onError={onError}
         />
           {!np && <IdleCover />}
         </div>
