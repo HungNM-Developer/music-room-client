@@ -511,6 +511,11 @@ export const vi = {
   settings: {
     title: 'Cài đặt phòng',
     skipThreshold: 'Tỉ lệ phiếu để bỏ qua (%)',
+    minVotes: 'Số phiếu tối thiểu để bỏ qua',
+    minVotesHint: 'Bỏ bài cần ít nhất chừng này phiếu ✅, kể cả khi tỉ lệ tính ra thấp hơn. 1 = chỉ theo tỉ lệ.',
+    minVotesSlack:
+      'Phòng có người dùng Slack: người nghe qua Slack không mở phòng nên không được đếm vào tỉ lệ. Hãy đặt số này theo số người thường nghe, ví dụ khoảng một nửa.',
+    errMinVotes: 'Nhập số nguyên từ 1 đến 50',
     voteWindow: 'Thời gian bỏ phiếu qua bài (giây)',
     maxQueued: 'Số bài chờ tối đa mỗi người',
     maxDuration: 'Độ dài tối đa mỗi bài (phút, 0 = không giới hạn)',

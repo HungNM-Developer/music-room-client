@@ -22,6 +22,8 @@ export function SettingsPanel() {
   const t = useT();
   const settings = useRoom((s) => s.snapshot?.room.settings);
   const aiEnabled = useRoom((s) => s.snapshot?.aiEnabled ?? false);
+  // Someone here acts from a linked Slack channel: the minimum matters for this room.
+  const hasSlack = useRoom((s) => Boolean(s.snapshot?.members.some((m) => m.viaSlack)));
   const me = useMe();
   const act = useAct();
   const toast = useToast();
@@ -56,6 +58,11 @@ export function SettingsPanel() {
         </h2>
         <form onSubmit={save} className="space-y-4 px-4 pb-4" noValidate>
           <Field label={t.settings.skipThreshold} inputMode="numeric" value={form.thresholdPct} onChange={(e) => set({ thresholdPct: e.target.value })} hint={t.settings.errThreshold} invalid={errors.thresholdPct} />
+          <div className="space-y-1.5">
+            <Field label={t.settings.minVotes} inputMode="numeric" value={form.minVotes} onChange={(e) => set({ minVotes: e.target.value })} hint={t.settings.errMinVotes} invalid={errors.minVotes} />
+            <p className="text-[13px] text-sage">{t.settings.minVotesHint}</p>
+            {hasSlack && <p className="rounded-box border border-amber/35 bg-amber/10 p-3 text-[13px] text-paper">{t.settings.minVotesSlack}</p>}
+          </div>
           <Field label={t.settings.voteWindow} inputMode="numeric" value={form.voteWindow} onChange={(e) => set({ voteWindow: e.target.value })} hint={t.settings.errVoteWindow} invalid={errors.voteWindow} />
           <Field label={t.settings.maxQueued} inputMode="numeric" value={form.maxQueued} onChange={(e) => set({ maxQueued: e.target.value })} hint={t.settings.errQueued} invalid={errors.maxQueued} />
           <Field label={t.settings.maxDuration} inputMode="numeric" value={form.maxMinutes} onChange={(e) => set({ maxMinutes: e.target.value })} hint={t.settings.errDuration} invalid={errors.maxMinutes} />
