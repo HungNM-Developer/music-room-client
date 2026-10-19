@@ -65,6 +65,41 @@ html[data-theme] {
   html {
     color-scheme: dark;
     -webkit-tap-highlight-color: transparent;
+    /* Scrollbars in the theme's colours: a quiet thumb, the accent under the pointer. A theme
+       may change the shape (--scroll-radius) or the colours. */
+    --scroll-thumb: color-mix(in srgb, var(--color-sage) 60%, transparent);
+    --scroll-thumb-hover: var(--color-amber);
+    --scroll-radius: 999px;
+  }
+
+  /* Chrome, Edge, Safari: a slim pill floating on a clear track. */
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    min-height: 36px;
+    min-width: 36px;
+    border: 3px solid transparent;
+    border-radius: var(--scroll-radius);
+    background: var(--scroll-thumb) padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover,
+  ::-webkit-scrollbar-thumb:active {
+    background: var(--scroll-thumb-hover) padding-box;
+  }
+
+  /* Firefox (no ::-webkit-scrollbar): the standard properties. Not given to the others, which
+     would then drop the pill above for the system's own bar. */
+  @supports not selector(::-webkit-scrollbar) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--scroll-thumb) transparent;
+    }
   }
 
   body {

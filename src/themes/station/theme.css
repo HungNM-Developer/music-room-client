@@ -2,6 +2,8 @@
    departures board with expected times, chat lines running like station announcements.
    Clear, readable from across the room. */
 html[data-theme='station'] {
+  /* Scrollbar thumb: square, like the board's flaps. */
+  --scroll-radius: 0;
   --color-dial: #0f1d17;
   --color-dial-deep: #0a1410;
   --color-panel: #15241d;
