@@ -110,7 +110,8 @@ html[data-theme='hifi82'] {
     height: 8px;
     background: repeating-linear-gradient(90deg, #ffb547 0 4px, #0000 4px 7px);
     clip-path: inset(0 calc((1 - var(--p, 0)) * 100%) 0 0);
-    transition: clip-path 250ms linear;
+    /* Painted: steps once a second. */
+    transition: clip-path 0s linear;
   }
 
   /* Keys: equal square keys, icon over the label; the key in effect glows orange. */

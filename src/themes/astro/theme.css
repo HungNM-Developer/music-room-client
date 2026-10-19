@@ -67,13 +67,15 @@ html[data-theme='astro'] {
     stroke-width: 3;
     stroke-linecap: round;
     stroke-dasharray: calc(var(--p, 0) * 100) 100;
-    transition: stroke-dasharray 250ms linear;
+    /* Painted: steps once a second (only the new-song sweep glides). */
+    transition: stroke-dasharray 0s linear;
   }
   .astro-wheel .star {
     fill: #d6b25e;
     transform-origin: 130px 130px;
     transform: rotate(calc(var(--p, 0) * 360deg));
-    transition: transform 250ms linear;
+    /* An SVG shape: its transform is not composited, so it steps once a second too. */
+    transition: transform 0s linear;
   }
   .astro-wheel[data-mode='sweep'] :is(.arc, .star) {
     transition-duration: 900ms;

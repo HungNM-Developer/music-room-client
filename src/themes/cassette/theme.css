@@ -146,9 +146,10 @@ html[data-theme='cassette'] {
       radial-gradient(circle, #eee 0 10px, #2a211a 10px 14px, #5a3f2a 14px);
     animation: cs-spin 3s linear infinite;
     animation-play-state: paused;
+    /* Laid out and painted: the reels grow once a second. */
     transition:
-      width 250ms linear,
-      height 250ms linear;
+      width 0s linear,
+      height 0s linear;
   }
   .cs-window[data-playing='true'] .reel {
     animation-play-state: running;
@@ -196,7 +197,7 @@ html[data-theme='cassette'] {
     margin-left: -5px;
     border-radius: 50%;
     background: #e9dccb;
-    transition: left 250ms linear;
+    transition: left 0s linear;
   }
   /* Mechanical keys with printed names; the one in effect is lit in amber. */
   html[data-theme='cassette'] .stage-controls[data-variant='tape'] {

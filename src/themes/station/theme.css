@@ -150,7 +150,8 @@ html[data-theme='station'] {
     inset: 0 auto 0 0;
     width: calc(var(--p, 0) * 100%);
     background: #ffb23f;
-    transition: width 250ms linear;
+    /* Laid out and painted: steps once a second (only the new-song sweep glides). */
+    transition: width 0s linear;
   }
   .st-track b {
     position: absolute;
@@ -159,7 +160,7 @@ html[data-theme='station'] {
     width: 4px;
     height: 22px;
     background: #f2efe6;
-    transition: left 250ms linear;
+    transition: left 0s linear;
   }
   .st-track-wrap[data-mode='sweep'] :is(.st-track i, .st-track b) {
     transition-duration: 900ms;

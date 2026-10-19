@@ -86,13 +86,14 @@ html[data-theme='cosmos'] {
     stroke-width: 2;
     stroke-linecap: round;
     stroke-dasharray: calc(var(--p, 0) * 100) 100;
-    transition: stroke-dasharray 250ms linear;
+    /* Painted: steps once a second. */
+    transition: stroke-dasharray 0s linear;
   }
   .cosmos-planet .moon {
     fill: #ffb86b;
     offset-rotate: 0deg;
     offset-distance: calc(var(--p, 0) * 100%);
-    transition: offset-distance 250ms linear;
+    transition: offset-distance 0s linear;
   }
   .cosmos-stars {
     display: flex;
