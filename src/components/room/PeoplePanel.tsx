@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, ChevronDown, KeyRound, MoreHorizontal } from 'lucide-react';
+import { Check, ChevronDown, Crown, KeyRound, MoreHorizontal } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
 import { SlackLogo } from '@/components/ui/SlackLogo';
@@ -42,6 +42,15 @@ function VerifiedMark({ label }: { label: string }) {
       style={{ backgroundColor: '#1d9bf0' }}
     >
       <Check className="h-2.5 w-2.5 text-white" strokeWidth={4.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden />
+    </span>
+  );
+}
+
+/** The room's owner (keeps the room): a crown after the name, as in "Phòng của tôi". */
+function OwnerMark({ label }: { label: string }) {
+  return (
+    <span role="img" aria-label={label} title={label} className="inline-flex shrink-0">
+      <Crown className="h-4 w-4 text-amber" aria-hidden />
     </span>
   );
 }
@@ -91,6 +100,7 @@ export function PeoplePanel() {
       <div className="min-w-0 flex-1">
         <p className={`flex min-w-0 items-center gap-1.5 font-medium ${m.online ? '' : 'text-sage'}`}>
           <span className="truncate">{shownName(m, memberName(m, t))}</span>
+          {m.owner && <OwnerMark label={t.people.owner} />}
           {m.verified && <VerifiedMark label={t.people.verified} />}
           {m.viaSlack && <SlackMark label={t.people.viaSlack} />}
           {m.id === me?.id && <span className="shrink-0 font-normal text-sage">{t.people.you}</span>}

@@ -3,10 +3,12 @@
 import { Hourglass, RefreshCw, Speaker, Trash2, WifiOff } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { GoogleButton } from '@/components/account/GoogleButton';
+import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { useOrigin } from '@/hooks/useOrigin';
 import { useSlow } from '@/hooks/useSlow';
 import { useT } from '@/i18n';
+import { useKeepRoom } from './KeepRoom';
 import { useMe, useRoom, useVersionSkew } from '@/state/hooks';
 
 /** Connection / version / player banners (TC-123, TC-192, TC-200). */
@@ -24,10 +26,11 @@ export function Banners() {
   });
   const skew = useVersionSkew();
   const toast = useToast();
-  // A room nobody signed in for is deleted after 30 days unused: tell its admins how to keep it.
+  // A room nobody signed in for is deleted after 30 days unused: its admins can keep it.
   const me = useMe();
   const orphan = useRoom((s) => Boolean(s.snapshot && s.snapshot.room.ownerUserId === null));
   const user = useRoom((s) => s.user);
+  const keep = useKeepRoom();
   const [orphanSeen, setOrphanSeen] = useState(true);
   // This tab created the room without an account: the notice speaks to them and offers sign-in.
   const [creator, setCreator] = useState(false);
@@ -105,14 +108,21 @@ export function Banners() {
         ) : undefined,
     });
   }
-  if (orphan && me?.role === 'ADMIN' && kind === 'member' && !orphanSeen) {
-    // Signing in here ties this member to the account; the server makes the creator the owner.
+  if (orphan && me?.role === 'ADMIN' && !me.isDevice && kind === 'member' && !orphanSeen) {
+    // Signed out: Google's button (for the creator that is enough, the server makes them the
+    // owner). Signed in: one click keeps the room.
     const invite = creator && !user;
     items.push({
       key: 'orphan',
       icon: <Trash2 className="h-4 w-4" aria-hidden />,
-      text: invite ? t.banners.orphanCreator(code ?? '') : t.banners.orphanNotice,
-      below: invite ? <GoogleButton width={240} /> : undefined,
+      text: invite ? t.banners.orphanCreator(code ?? '') : user ? t.banners.orphanKeep : t.banners.orphanNotice,
+      below: user ? (
+        <Button size="sm" variant="primary" onClick={() => void keep()}>
+          {t.keepRoom.keep}
+        </Button>
+      ) : (
+        <GoogleButton width={240} />
+      ),
       action: (
         <button
           type="button"
@@ -126,7 +136,7 @@ export function Banners() {
             }
           }}
         >
-          {invite ? t.banners.later : t.banners.dismiss}
+          {t.banners.later}
         </button>
       ),
     });

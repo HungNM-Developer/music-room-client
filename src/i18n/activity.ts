@@ -47,6 +47,8 @@ export function logLine(row: ActivityLogView, t: Dict): { actor: string | null; 
         return target === undefined ? undefined : e.kick(target);
       case 'admin_claim':
         return e.adminClaim;
+      case 'owner_claim':
+        return e.ownerClaim;
       case 'pin_change':
         return e.pinChange;
       case 'player_change':
