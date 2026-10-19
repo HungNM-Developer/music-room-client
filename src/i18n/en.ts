@@ -440,6 +440,7 @@ export const en: Dict = {
     offline: (n: number) => `Offline (${n})`,
     you: '(you)',
     verified: 'Signed in with Google',
+    owner: 'Room owner',
     viaSlack: 'Using it from Slack',
     badges: {
       admin: 'Admin',
@@ -489,6 +490,13 @@ export const en: Dict = {
     empty: 'No blocked songs. Block one from the ⋯ menu of the current song or a song in the queue.',
     label: 'Blocked',
     blockedTrack: (title: string) => `Blocked: ${title}`,
+  },
+  keepRoom: {
+    section: 'Keep this room',
+    hint: 'This room has no owner, so it will be deleted after 30 days without use. Keep it to tie it to your Google account so it is never deleted.',
+    signInHint: 'Sign in with Google to keep the room.',
+    keep: 'Keep this room',
+    kept: 'The room is now tied to your account.',
   },
   deleteRoom: {
     section: 'Delete room',
@@ -826,6 +834,7 @@ export const en: Dict = {
       leave: 'left the room',
       kick: (name: string) => `removed ${name} from the room`,
       adminClaim: 'became admin with the PIN',
+      ownerClaim: 'is now keeping the room',
       pinChange: 'changed the admin PIN',
       playerChange: 'became the player',
       permission: {
@@ -897,8 +906,8 @@ export const en: Dict = {
   banners: {
     roomDeleted: (name?: string | null) =>
       name ? `The room "${name}" was deleted by its owner.` : 'The room was deleted by its owner.',
-    orphanNotice:
-      "This room has no owner, so it will be deleted after 30 days without use. The room's creator can sign in with Google to keep it.",
+    orphanNotice: 'This room has no owner, so it will be deleted after 30 days without use. Sign in with Google to keep it.',
+    orphanKeep: 'This room has no owner, so it will be deleted after 30 days without use. Keep it to tie it to your account so it is never deleted.',
     orphanCreator: (code: string) =>
       `This room isn't tied to an account, so it will be deleted after 30 days without use. Sign in with Google to keep it, or write down the room code ${code} and your PIN.`,
     later: 'Later',

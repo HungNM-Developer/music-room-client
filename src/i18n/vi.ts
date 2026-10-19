@@ -437,6 +437,7 @@ export const vi = {
     offline: (n: number) => `Offline (${n})`,
     you: '(bạn)',
     verified: 'Đã đăng nhập bằng Google',
+    owner: 'Chủ phòng',
     viaSlack: 'Đang dùng từ Slack',
     badges: {
       admin: 'Quản trị',
@@ -486,6 +487,13 @@ export const vi = {
     empty: 'Chưa chặn bài nào. Chặn từ menu ⋯ của bài đang phát hoặc trong hàng chờ.',
     label: 'Đã chặn',
     blockedTrack: (title: string) => `Đã chặn: ${title}`,
+  },
+  keepRoom: {
+    section: 'Giữ phòng',
+    hint: 'Phòng chưa có chủ nên sẽ tự xoá sau 30 ngày không ai dùng. Nhận giữ phòng để phòng thuộc tài khoản Google của bạn và không bao giờ bị xoá.',
+    signInHint: 'Đăng nhập Google để nhận giữ phòng.',
+    keep: 'Giữ phòng này',
+    kept: 'Phòng giờ thuộc tài khoản của bạn.',
   },
   deleteRoom: {
     section: 'Xoá phòng',
@@ -850,6 +858,7 @@ export const vi = {
       leave: 'đã rời phòng',
       kick: (name: string) => `đã mời ${name} ra khỏi phòng`,
       adminClaim: 'đã nhận quyền quản trị bằng mã PIN',
+      ownerClaim: 'đã nhận giữ phòng',
       pinChange: 'đã đổi mã PIN quản trị',
       playerChange: 'đã trở thành máy phát',
       permission: {
@@ -922,7 +931,8 @@ export const vi = {
 
   banners: {
     roomDeleted: (name?: string | null) => (name ? `Phòng "${name}" đã bị chủ phòng xoá.` : 'Phòng đã bị chủ phòng xoá.'),
-    orphanNotice: 'Phòng chưa có chủ nên sẽ tự xoá sau 30 ngày không ai dùng. Người tạo phòng đăng nhập Google để giữ phòng.',
+    orphanNotice: 'Phòng chưa có chủ nên sẽ tự xoá sau 30 ngày không ai dùng. Đăng nhập Google để nhận giữ phòng.',
+    orphanKeep: 'Phòng chưa có chủ nên sẽ tự xoá sau 30 ngày không ai dùng. Nhận giữ phòng để phòng thuộc tài khoản của bạn và không bao giờ bị xoá.',
     orphanCreator: (code: string) =>
       `Phòng này chưa thuộc tài khoản nào nên sẽ tự xoá sau 30 ngày không ai dùng. Đăng nhập Google để giữ phòng, hoặc ghi lại mã phòng ${code} và mã PIN.`,
     later: 'Để sau',

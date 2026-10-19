@@ -12,6 +12,7 @@ import { useT } from '@/i18n';
 import { fromForm, type SettingsErrors, type SettingsForm, toForm } from '@/lib/settings-form';
 import { isPin } from '@/lib/validate';
 import { DeleteRoomDialog } from './DeleteRoomDialog';
+import { KeepRoomSection } from './KeepRoom';
 import { useMe, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 import { ThemeGrid } from '@/themes/ThemePicker';
@@ -90,6 +91,7 @@ export function SettingsPanel() {
         </Button>
       </form>
       <PinSettings />
+      <KeepRoomSection />
       <DeleteRoom />
     </details>
   );
