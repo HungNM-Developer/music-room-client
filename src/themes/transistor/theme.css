@@ -366,3 +366,20 @@ html[data-theme='transistor'] {
     }
   }
 }
+
+/* "Đang online" under the chat. */
+@layer components {
+  /* The radio's pilot lamp and its condensed dial lettering. */
+  html[data-theme='transistor'] .room-online {
+    --online-ring: var(--color-panel);
+  }
+  html[data-theme='transistor'] .room-online-count {
+    font: 700 14px var(--font-display);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  html[data-theme='transistor'] .room-online-dot {
+    background: var(--color-amber);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--color-amber) 70%, transparent);
+  }
+}

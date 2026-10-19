@@ -102,3 +102,13 @@ html[data-theme='astro'] {
     background: var(--color-panel);
   }
 }
+
+/* "Đang online" under the chat. */
+@layer components {
+  html[data-theme='astro'] .room-online-count {
+    font: italic 500 16px var(--font-display);
+  }
+  html[data-theme='astro'] .room-online-dot {
+    background: var(--color-amber);
+  }
+}

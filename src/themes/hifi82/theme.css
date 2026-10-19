@@ -188,3 +188,16 @@ html[data-theme='hifi82'] {
     background: var(--color-panel);
   }
 }
+
+/* "Đang online" under the chat. */
+@layer components {
+  /* A Braun-style status lamp and a printed panel label. */
+  html[data-theme='hifi82'] .room-online-count {
+    font: 600 12px var(--font-display);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  html[data-theme='hifi82'] .room-online-dot {
+    box-shadow: 0 0 0 1.5px var(--color-panel), 0 0 0 2.5px var(--color-line);
+  }
+}

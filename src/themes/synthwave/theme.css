@@ -123,3 +123,17 @@ html[data-theme='synthwave'] {
     background: color-mix(in oklab, var(--color-panel) 85%, transparent);
   }
 }
+
+/* "Đang online" under the chat. */
+@layer components {
+  /* A neon dot in the accent, still (no animation). */
+  html[data-theme='synthwave'] .room-online-count {
+    font: italic 600 13px var(--font-display);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  html[data-theme='synthwave'] .room-online-dot {
+    background: var(--color-amber);
+    box-shadow: 0 0 6px var(--color-amber);
+  }
+}

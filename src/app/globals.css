@@ -146,6 +146,27 @@ html[data-theme] {
 }
 
 @layer components {
+  /* "Đang online" under the chat (OnlineStrip). Pictures overlap with a ring the colour of
+     the page behind them; themes change the ring, the dot and the count's lettering. */
+  .room-online {
+    --online-ring: var(--color-dial);
+  }
+  .room-online-face {
+    border-radius: 999px;
+    box-shadow: 0 0 0 2px var(--online-ring);
+  }
+  .room-online-dot {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: var(--color-online);
+  }
+  .room-online-count {
+    font-weight: 500;
+  }
+
   .field {
     @apply w-full rounded-row border border-line bg-dial-deep px-3.5 text-paper outline-none transition-colors placeholder:text-sage/60 focus:border-amber;
     min-height: 48px;

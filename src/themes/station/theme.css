@@ -353,3 +353,21 @@ html[data-theme='station'] {
     }
   }
 }
+
+/* "Đang online" under the chat. */
+@layer components {
+  /* Square LEDs and stencilled labels of the station's desk. */
+  html[data-theme='station'] .room-online-face,
+  html[data-theme='station'] .room-online-dot {
+    border-radius: 2px;
+  }
+  /* The picture inside rounds itself with a utility. */
+  html[data-theme='station'] .room-online-face * {
+    border-radius: 2px !important;
+  }
+  html[data-theme='station'] .room-online-count {
+    font: 600 13px var(--font-display);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+}

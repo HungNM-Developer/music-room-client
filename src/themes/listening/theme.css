@@ -71,3 +71,10 @@ html[data-theme='listening'] {
     background: var(--color-panel);
   }
 }
+
+/* "Đang online" under the chat. */
+@layer components {
+  html[data-theme='listening'] .room-online-count {
+    font: italic 400 15px var(--font-display);
+  }
+}

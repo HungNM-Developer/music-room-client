@@ -141,3 +141,11 @@ html[data-theme='midcentury'] {
     }
   }
 }
+
+/* "Đang online" under the chat. */
+@layer components {
+  html[data-theme='midcentury'] .room-online-count {
+    font: 600 13px var(--font-display);
+    letter-spacing: 0.02em;
+  }
+}

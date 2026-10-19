@@ -156,3 +156,10 @@ html[data-theme='saigon'] {
     background: var(--color-panel);
   }
 }
+
+/* "Đang online" under the chat. */
+@layer components {
+  html[data-theme='saigon'] .room-online-count {
+    color: var(--color-paper);
+  }
+}

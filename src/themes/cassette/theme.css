@@ -368,3 +368,17 @@ html[data-theme='cassette'] {
     }
   }
 }
+
+/* "Đang online" under the chat. */
+@layer components {
+  /* The count is an embossed Dymo label, like the tabs below it. */
+  html[data-theme='cassette'] .room-online-count {
+    border-radius: 3px;
+    background: #111;
+    padding: 2px 7px;
+    color: #fff;
+    font: 700 13px var(--font-barlow-condensed);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}
