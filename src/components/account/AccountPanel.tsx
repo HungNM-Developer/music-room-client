@@ -11,7 +11,6 @@ import { useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
 import { DeleteRoomDialog } from '@/components/room/DeleteRoomDialog';
 import { errorMessage, useT } from '@/i18n';
-import { GoogleButton } from './GoogleButton';
 
 /** L1 / L6 on the home page: sign in, or the account with "Phòng của tôi". */
 export function AccountPanel() {
@@ -119,7 +118,7 @@ export function AccountPanel() {
 const NO_ROOMS: LocalRoom[] = [];
 
 /**
- * Not signed in: sign-in (when the server offers it) and "Phòng của tôi" from this device —
+ * Not signed in: "Phòng của tôi" from this device (sign-in itself sits in the home form) —
  * rooms created or joined here, with who is online and the song on air from the server.
  * Kept apart from the account's list.
  */
@@ -145,15 +144,9 @@ function GuestPanel({ signIn }: { signIn: boolean }) {
     };
   }, [codes]);
 
-  if (!signIn && !rooms.length) return null;
+  if (!rooms.length) return null;
   return (
     <div className="space-y-4 rounded-panel bg-panel/70 p-5">
-      {signIn && (
-        <div className="space-y-3">
-          <p className="text-[14px] text-sage">{t.account.signInNote}</p>
-          <GoogleButton />
-        </div>
-      )}
       {rooms.length > 0 && (
         <section aria-labelledby="my-rooms">
           <h2 id="my-rooms" className="type-display text-[18px] font-bold">
