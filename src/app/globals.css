@@ -72,6 +72,13 @@ html[data-theme] {
     --scroll-radius: 999px;
   }
 
+  /* The page's scrollbar takes room (not an overlay): keep its gutter even when the page is
+     short, so switching to a longer tab never shifts the layout sideways. Not on the speaker
+     screen, whose 16:9 frame is sized on 100vw and never scrolls. */
+  html:not(:has(.host-root)) {
+    scrollbar-gutter: stable;
+  }
+
   /* Chrome, Edge, Safari: a slim pill floating on a clear track. */
   ::-webkit-scrollbar {
     width: 12px;
