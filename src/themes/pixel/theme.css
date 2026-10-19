@@ -2,6 +2,8 @@
    health bar; voting to skip is "fighting the boss"; buttons are game buttons. Chat and
    long text stay in the normal face so they read easily. */
 html[data-theme='pixel'] {
+  /* Scrollbar thumb: square, like the pixels. */
+  --scroll-radius: 0;
   --color-dial: #1d1b33;
   --color-dial-deep: #14132a;
   --color-panel: #26244a;
