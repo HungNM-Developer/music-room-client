@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowLeft, ChevronRight, Copy, ListMusic, Loader2, MessageSquareHeart, MoreHorizontal, Pencil, Plus, Share2, Trash2 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, IconButton } from '@/components/ui/Button';
 import { Dialog, SheetAction } from '@/components/ui/Dialog';
 import { Thumb } from '@/components/ui/Thumb';
@@ -25,6 +25,8 @@ export function MyPlaylists({ add, added, addWithWish }: Lists) {
   const [lists, setLists] = useState<PlaylistSummaryView[] | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
   const [version, setVersion] = useState(0);
+  // A playlist changed anywhere (Lưu vào…, the DJ, another device): the list follows.
+  const changed = useRoom((s) => s.playlistsChanged.n);
 
   const load = useCallback(async () => {
     const r = await room.send('playlist:mine', {});
@@ -33,7 +35,7 @@ export function MyPlaylists({ add, added, addWithWish }: Lists) {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- async load, state is set after the reply
     void load();
-  }, [load, openId, version]);
+  }, [load, openId, version, changed]);
 
   if (openId)
     return <PlaylistDetail id={openId} add={add} added={added} addWithWish={addWithWish} onBack={() => setOpenId(null)} />;
@@ -95,18 +97,31 @@ function PlaylistDetail({ id, add, added, addWithWish, onBack }: Lists & { id: s
     return (np ? [...ids, np] : ids).join('|');
   });
 
-  const load = useCallback(async () => {
-    const r = await room.send('playlist:get', { id });
-    if (r.ok) setPl(r.data);
-    else {
-      toast(errorMessage(r.error.code, r.error.params), 'error');
-      onBack();
-    }
-  }, [id, onBack, toast]);
+  // `quiet`: reloaded because it changed elsewhere; gone (deleted) means back to the list, no error.
+  const load = useCallback(
+    async (quiet = false) => {
+      const r = await room.send('playlist:get', { id });
+      if (r.ok) setPl(r.data);
+      else {
+        if (!quiet) toast(errorMessage(r.error.code, r.error.params), 'error');
+        onBack();
+      }
+    },
+    [id, onBack, toast],
+  );
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- async load, state is set after the reply
     void load();
   }, [load]);
+  // This playlist changed elsewhere (a song saved into it from the queue, the DJ…).
+  const changed = useRoom((s) => s.playlistsChanged);
+  const seen = useRef(changed.n);
+  useEffect(() => {
+    if (changed.n === seen.current) return;
+    seen.current = changed.n;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- async load, state is set after the reply
+    if (changed.id === id || changed.id === null) void load(true);
+  }, [changed, id, load]);
 
   const call = async (r: Promise<{ ok: boolean; error?: { code: Parameters<typeof errorMessage>[0]; params?: Parameters<typeof errorMessage>[1] } }>) => {
     const res = await r;

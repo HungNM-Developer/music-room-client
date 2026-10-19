@@ -1,7 +1,7 @@
 'use client';
 
 import { Loader2 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import type { LibraryItemView, LibrarySort, TrackSummary } from '@/contracts';
 import { LIBRARY_SORTS, LOOKUP_MAX_IDS } from '@/contracts/constants';
@@ -118,8 +118,9 @@ export function PlayedList({ add, added, addWithWish }: Props) {
 /**
  * A2: songs saved on this device (any room, newest first) plus this member's saves from
  * other devices. The device keeps only video ids, so names come from tracks:lookup.
- * Loaded once per visit: an unsaved row stays (with an empty Lưu) until the next visit,
- * so a mis-tap can be undone in place.
+ * Loaded on open and again whenever a song is saved anywhere (the now-playing heart, the DJ,
+ * another device): an unsaved row stays (with an empty Lưu) until the next visit, so a
+ * mis-tap can be undone in place.
  */
 export function SavedList({ add, added, addWithWish }: Props) {
   const t = useT();
@@ -152,6 +153,18 @@ export function SavedList({ add, added, addWithWish }: Props) {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- async load, state is set after awaits
     void load();
   }, [load]);
+  // A new save (server ids or this device's), not an unsave: load again. Unsaves keep their
+  // row, as above. Compared with the ids last seen, never with the rows shown (a saved song
+  // the server hides would reload for ever).
+  const savedKey = useRoom((s) => [...s.favoriteIds, ...s.localFavorites].join('|'));
+  const lastKey = useRef(savedKey);
+  useEffect(() => {
+    if (savedKey === lastKey.current) return;
+    const before = new Set(lastKey.current.split('|'));
+    lastKey.current = savedKey;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- async load, state is set after awaits
+    if (savedKey.split('|').some((id) => id && !before.has(id))) void load();
+  }, [savedKey, load]);
 
   return (
     <div className="space-y-3">
