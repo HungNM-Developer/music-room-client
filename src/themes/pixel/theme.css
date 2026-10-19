@@ -175,3 +175,20 @@ html[data-theme='pixel'] {
     border-width: 3px;
   }
 }
+
+/* "Đang online" under the chat. */
+@layer components {
+  /* 8-bit: square sprites, a square lamp, the pixel font. */
+  html[data-theme='pixel'] .room-online-face,
+  html[data-theme='pixel'] .room-online-dot {
+    border-radius: 0;
+  }
+  /* The picture inside rounds itself with a utility. */
+  html[data-theme='pixel'] .room-online-face * {
+    border-radius: 0 !important;
+  }
+  html[data-theme='pixel'] .room-online-count,
+  html[data-theme='pixel'] .room-online-more {
+    font: 400 19px var(--font-display);
+  }
+}

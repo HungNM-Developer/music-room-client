@@ -310,3 +310,18 @@ html[data-theme='walnut'] {
     }
   }
 }
+
+/* "Đang online" under the chat. */
+@layer components {
+  /* A warm pilot lamp on the wooden cabinet. */
+  html[data-theme='walnut'] .room-online {
+    --online-ring: var(--color-panel);
+  }
+  html[data-theme='walnut'] .room-online-count {
+    font: italic 400 15px var(--font-display);
+  }
+  html[data-theme='walnut'] .room-online-dot {
+    background: var(--color-amber);
+    box-shadow: 0 0 6px color-mix(in srgb, var(--color-amber) 70%, transparent);
+  }
+}

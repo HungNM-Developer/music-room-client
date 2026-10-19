@@ -136,3 +136,16 @@ html[data-theme='cosmos'] {
     background: color-mix(in oklab, var(--color-panel) 80%, transparent);
   }
 }
+
+/* "Đang online" under the chat. */
+@layer components {
+  /* A signal light: the accent, with a still halo (no animation). */
+  html[data-theme='cosmos'] .room-online-count {
+    font: 500 13px var(--font-display);
+    letter-spacing: 0.03em;
+  }
+  html[data-theme='cosmos'] .room-online-dot {
+    background: var(--color-amber);
+    box-shadow: 0 0 6px var(--color-amber);
+  }
+}

@@ -7,6 +7,7 @@ import { ListenAlong, useListening, useListenSession } from '@/components/player
 import { AddTrackPanel } from '@/components/room/AddTrackPanel';
 import { Banners } from '@/components/room/Banners';
 import { ChatOverlay, InlineChat, type InlineChatSkin } from '@/components/room/Chat';
+import { OnlineStrip } from '@/components/room/OnlineStrip';
 import { GuideSpotlight } from '@/components/room/GuideSpotlight';
 import { HeartCanvas, triggerReaction } from '@/components/room/HeartCanvas';
 import { MiniPlayerPortal } from '@/components/room/MiniPlayer';
@@ -152,6 +153,7 @@ export function RoomFrame({
               <InlineChat {...chat} />
             </div>
           )}
+          <OnlineStrip onOpen={() => setTab('people')} />
           <TabList
             variant="pill"
             idPrefix="room-side"
