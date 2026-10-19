@@ -66,7 +66,7 @@ export const vi = {
     backHome: 'Về trang chủ',
   },
 
-  tabs: { label: 'Điều hướng phòng', room: 'Phòng', add: 'Thêm bài', people: 'Mọi người' },
+  tabs: { label: 'Điều hướng phòng', room: 'Phòng', add: 'Thêm bài', people: 'Mọi người', settings: 'Cài đặt' },
 
   theme: {
     button: 'Giao diện',
@@ -936,6 +936,7 @@ export const vi = {
     orphanCreator: (code: string) =>
       `Phòng này chưa thuộc tài khoản nào nên sẽ tự xoá sau 30 ngày không ai dùng. Đăng nhập Google để giữ phòng, hoặc ghi lại mã phòng ${code} và mã PIN.`,
     later: 'Để sau',
+    keepLater: 'Bạn có thể xem lại tuỳ chọn này trong tab Cài đặt.',
     dismiss: 'Đóng',
     reconnecting: 'Đang kết nối lại…',
     waking: 'Đang kết nối tới máy chủ… Máy chủ miễn phí có thể cần khoảng 1 phút để khởi động.',

@@ -81,7 +81,7 @@ const GROUPS: { id: GroupId; items: Item[] }[] = [
       { id: 'members', selectors: [at('people')], tab: 'people' },
       { id: 'permissions', selectors: [at('people')], tab: 'people', need: 'admin' },
       { id: 'recap', selectors: [at('recap')], tab: 'people' },
-      { id: 'settings', selectors: [at('settings')], tab: 'people', need: 'admin' },
+      { id: 'settings', selectors: [at('settings')], tab: 'settings', need: 'admin' },
     ],
   },
   {

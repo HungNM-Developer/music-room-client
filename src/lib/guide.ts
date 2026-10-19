@@ -13,7 +13,7 @@ export interface GuideRequest {
 }
 
 /** Where a part of the page lives below 1024 px (the tab bar). */
-export type GuideTab = 'room' | 'add' | 'people';
+export type GuideTab = 'room' | 'add' | 'people' | 'settings';
 
 export interface GuideStep {
   title: string;
