@@ -3,6 +3,7 @@
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import { GoogleButton } from '@/components/account/GoogleButton';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { useToast } from '@/components/ui/Toast';
@@ -36,6 +37,7 @@ export function HomeForm() {
   const slow = useSlow(busy, 3000);
 
   const user = useRoom((s) => s.user);
+  const canSignIn = useRoom((s) => Boolean(s.health?.googleClientId));
   // Prefill after hydration: the server render has no localStorage. Signed in → Google name.
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setName((n) => n || lastName() || user?.name.slice(0, 30) || ''), [user]);
@@ -71,6 +73,14 @@ export function HomeForm() {
       return;
     }
     rememberName(name.trim(), r.data.code);
+    // Created without an account: the room page invites this person (only) to sign in and keep it.
+    if (mode === 'create' && !user) {
+      try {
+        sessionStorage.setItem(`room-created:${r.data.code}`, '1');
+      } catch {
+        // Private mode: the room page shows the general notice instead.
+      }
+    }
     if ('rightsReset' in r.data && r.data.rightsReset) toast(t.home.rightsReset, 'info');
     router.push(`/r/${r.data.code}`);
   }
@@ -101,6 +111,13 @@ export function HomeForm() {
         className="mt-6 space-y-4"
         noValidate
       >
+        {/* Signing in first makes the creator the room's owner and fills in the name. */}
+        {!user && canSignIn && (
+          <div className="space-y-2.5 rounded-box border border-line/70 p-3.5">
+            <p className="text-[13px] text-sage">{mode === 'create' ? t.home.signInToKeep : t.account.signInNote}</p>
+            <GoogleButton width={260} />
+          </div>
+        )}
         <div ref={nameBox}>
           <Field
             label={t.home.yourName}

@@ -29,6 +29,7 @@ export const en: Dict = {
     adminPinNote: 'Use it to get admin rights back when you need them. Keep it somewhere safe.',
     hintPin: 'The PIN is 4–8 digits',
     rejoinNote: 'Been here before? Use the same name to come back.',
+    signInToKeep: 'Sign in with Google to keep the room for good and open it on any device. Optional.',
     pinNeeded: 'This name belongs to the room admin. Enter the admin PIN to rejoin.',
     rightsReset: 'Welcome back. An admin needs to give you control, DJ and player rights again.',
     steps: [
@@ -898,6 +899,9 @@ export const en: Dict = {
       name ? `The room "${name}" was deleted by its owner.` : 'The room was deleted by its owner.',
     orphanNotice:
       "This room has no owner, so it will be deleted after 30 days without use. The room's creator can sign in with Google to keep it.",
+    orphanCreator: (code: string) =>
+      `This room isn't tied to an account, so it will be deleted after 30 days without use. Sign in with Google to keep it, or write down the room code ${code} and your PIN.`,
+    later: 'Later',
     dismiss: 'Dismiss',
     reconnecting: 'Reconnecting…',
     waking: 'Connecting to the server… The free server can take about a minute to start.',

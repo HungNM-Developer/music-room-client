@@ -29,6 +29,7 @@ export const vi = {
     adminPinNote: 'Dùng để lấy lại quyền quản trị khi cần. Hãy ghi nhớ mã này.',
     hintPin: 'Mã PIN gồm 4–8 chữ số',
     rejoinNote: 'Từng vào phòng này? Nhập đúng tên cũ để quay lại.',
+    signInToKeep: 'Đăng nhập Google để giữ phòng lâu dài và mở lại trên mọi máy. Không bắt buộc.',
     pinNeeded: 'Tên này thuộc quản trị viên của phòng. Nhập mã PIN quản trị để vào lại.',
     rightsReset:
       'Chào mừng quay lại. Quyền điều khiển, DJ và máy phát của bạn cần được quản trị viên cấp lại.',
@@ -922,6 +923,9 @@ export const vi = {
   banners: {
     roomDeleted: (name?: string | null) => (name ? `Phòng "${name}" đã bị chủ phòng xoá.` : 'Phòng đã bị chủ phòng xoá.'),
     orphanNotice: 'Phòng chưa có chủ nên sẽ tự xoá sau 30 ngày không ai dùng. Người tạo phòng đăng nhập Google để giữ phòng.',
+    orphanCreator: (code: string) =>
+      `Phòng này chưa thuộc tài khoản nào nên sẽ tự xoá sau 30 ngày không ai dùng. Đăng nhập Google để giữ phòng, hoặc ghi lại mã phòng ${code} và mã PIN.`,
+    later: 'Để sau',
     dismiss: 'Đóng',
     reconnecting: 'Đang kết nối lại…',
     waking: 'Đang kết nối tới máy chủ… Máy chủ miễn phí có thể cần khoảng 1 phút để khởi động.',
