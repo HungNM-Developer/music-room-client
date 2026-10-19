@@ -134,8 +134,9 @@ function ListenPlayer({ frameClass }: { frameClass?: string }) {
   const itemRef = useRef<string | null>(null);
   const npRef = useRef(np);
   const statusRef = useRef<string | null>(null);
-  // This song has really played here, and the listener then paused it with the video's own ⏸.
-  // Only that pause is left alone; anything else (autoplay blocked, not loaded yet) is retried.
+  // A song has really played here, and the listener then paused it with the video's own ⏸.
+  // Only that pause is left alone, the next songs too (each waits, cued, for their ▶) until they
+  // press ▶ or the room starts again; anything else (autoplay blocked, not loaded) is retried.
   const playedRef = useRef(false);
   const userPausedRef = useRef(false);
   // The room plays but this browser blocked the video (phones: only a tap on ▶ starts it).
@@ -175,12 +176,13 @@ function ListenPlayer({ frameClass }: { frameClass?: string }) {
     if (np.item.id !== itemRef.current) {
       itemRef.current = np.item.id;
       playedRef.current = false;
-      userPausedRef.current = false;
       cueRef.current?.stop();
       a.setVolume(volRef.current);
-      a.load(np.item.track.externalId, expected, np.status === 'PLAYING');
+      // Paused by the listener: the next song is only cued, never started on its own.
+      const play = np.status === 'PLAYING' && !userPausedRef.current;
+      a.load(np.item.track.externalId, expected, play);
       const speech = np.item.wishSpeech ?? legacySpeech(np.item.wishMessage);
-      cueRef.current?.begin(np.item.id, speech, np.status === 'PLAYING' && expected < 3);
+      cueRef.current?.begin(np.item.id, speech, play && expected < 3);
       return;
     }
     // Same song: its wish's Edge audio may have just arrived; paused meanwhile, it is dropped.
