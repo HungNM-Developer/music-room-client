@@ -214,7 +214,7 @@ html[data-theme] {
 
 .dial-needle,
 .dial-fill {
-  transition: transform 250ms linear;
+  transition: transform 1s linear;
   will-change: transform;
 }
 

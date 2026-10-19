@@ -166,9 +166,10 @@ html[data-theme='walnut'] {
     background: #a3262a;
     transform-origin: bottom center;
     transform: rotate(calc(-14deg + var(--p, 0) * 28deg));
+    /* Laid out: `left` steps once a second; the swing (composited) glides over it. */
     transition:
-      left 250ms linear,
-      transform 250ms linear;
+      left 0s linear,
+      transform 1s linear;
   }
   .wal-vu[data-mode='sweep'] .needle {
     transition-duration: 900ms;

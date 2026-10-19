@@ -12,8 +12,10 @@ const prefersReducedMotion = () =>
 
 /**
  * Drives any progress drawing from CSS: sets `--p` (0…1, position / length) on the
- * element given `ref` 4×/s without React renders, and writes the elapsed time into the
- * element given `timeRef`. On a new song the needle sweeps in from 0 once (`data-mode`:
+ * element given `ref` once a second (on the second, with the clock) without React renders,
+ * and writes the elapsed time into the element given `timeRef`. Once a second, not more:
+ * themes that draw the time with painted properties (an SVG arc, a clip, `left`) repaint on
+ * every change, and a needle moving a pixel or two a second needs nothing smoother. On a new song the needle sweeps in from 0 once (`data-mode`:
  * none → sweep → run). `info` is null when nothing is on air.
  */
 export function useLiveProgress() {
@@ -55,8 +57,18 @@ export function useLiveProgress() {
       }
     };
     tick();
-    const timer = np.status === 'PLAYING' ? setInterval(tick, 250) : undefined;
-    return () => clearInterval(timer);
+    if (np.status !== 'PLAYING') return;
+    let timer: ReturnType<typeof setTimeout>;
+    // Just after each whole second of the song, so the clock never skips one.
+    const next = () => {
+      const pos = estimatePosition({ ...np, durationSec: dur }, offset, Date.now());
+      timer = setTimeout(() => {
+        tick();
+        next();
+      }, 1000 - ((pos * 1000) % 1000) + 20);
+    };
+    next();
+    return () => clearTimeout(timer);
   }, [np, offset]);
 
   const dur = np?.item.track.durationSec;
