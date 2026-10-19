@@ -69,7 +69,12 @@ export function stepLine(t: Dict, s: DjStep): string {
   switch (s.reason) {
     case 'notFound':
       if (s.action === 'playlistPlay') return st.playlistEmpty(s.playlist?.name ?? '');
-      if (s.got !== undefined) return st.short(s.got, s.wanted ?? s.got);
+      if (s.got !== undefined) {
+        const short = s.from === 'saved' ? st.shortSaved : s.from === 'played' ? st.shortPlayed : st.short;
+        return short(s.got, s.wanted ?? s.got);
+      }
+      if (s.from === 'saved') return st.noneSaved;
+      if (s.from === 'played') return st.nonePlayed;
       return s.query ? st.notFound(s.query) : st.noneFound;
     case 'busy':
       return st.busy;
