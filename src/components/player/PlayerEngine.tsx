@@ -27,6 +27,8 @@ export interface PlayerAdapter {
   pause(): void;
   seek(sec: number): void;
   currentTime(): number;
+  /** Seconds; 0 while the video is not known yet. */
+  duration(): number;
   setVolume(v: number): void;
   setMuted(on: boolean): void;
   muted(): boolean;
@@ -37,6 +39,49 @@ export interface PlayerAdapter {
 export const DRIFT_SEC = 2.5;
 
 export const DUCK_VOLUME = 20; // R-34
+
+/** Seconds a song takes to fade in at its start and out at its end. */
+const FADE_IN_SEC = 2;
+const FADE_OUT_SEC = 5;
+
+/**
+ * Songs fade in over their first seconds and out over their last, so a song change is no
+ * longer an abrupt stop. Worked out from the video's position (a seek or joining mid-song is
+ * right at once). `base` is the volume without the fade (ducked or not); call the returned
+ * `apply` wherever that volume changes, instead of setting it on the player.
+ */
+export function useSongFade(adapterRef: React.RefObject<PlayerAdapter | null>, base: () => number): () => void {
+  const gain = useRef(1);
+  const set = useRef<number | null>(null);
+  const baseRef = useRef(base);
+  useEffect(() => {
+    baseRef.current = base;
+  }, [base]);
+  const apply = useCallback(() => {
+    const v = Math.round(baseRef.current() * gain.current);
+    if (v === set.current) return;
+    set.current = v;
+    adapterRef.current?.setVolume(v);
+  }, [adapterRef]);
+  useEffect(() => {
+    const t = setInterval(() => {
+      const a = adapterRef.current;
+      if (!a) return;
+      const s = a.state();
+      if (s !== 1 && s !== 3) return;
+      const at = a.currentTime();
+      const left = a.duration() > 0 ? a.duration() - at : Infinity;
+      gain.current = Math.max(0, Math.min(1, at / FADE_IN_SEC, left / FADE_OUT_SEC));
+      apply();
+    }, 100);
+    return () => clearInterval(t);
+  }, [adapterRef, apply]);
+  // A new player (or one the iframe rebuilt) starts at its own volume: set it again.
+  return useCallback(() => {
+    set.current = null;
+    apply();
+  }, [apply]);
+}
 
 export const DJ_FILES: Record<string, string> = {
   build: '/sounds/build.m4a',
@@ -103,6 +148,12 @@ export function PlayerEngine({ volume = 100, caption = false, frameClass }: { vo
   const reported = useRef({ started: false, ended: false });
   const playingRef = useRef(false);
   const volumeRef = useRef(volume);
+  // The wish / MC line is being read: the song is ducked under it.
+  const duckedRef = useRef(false);
+  const applyVolume = useSongFade(
+    adapterRef,
+    useCallback(() => (duckedRef.current ? DUCK_VOLUME : volumeRef.current), []),
+  );
   const cmdRef = useRef<PlayerCommand | null>(null);
   const claimedKey = useRef<string | null>(null);
   const offsetRef = useRef(offset);
@@ -110,13 +161,19 @@ export function PlayerEngine({ volume = 100, caption = false, frameClass }: { vo
   const cueRef = useRef<SpeechCue | null>(null);
   useEffect(() => {
     const cue = new SpeechCue({
-      duck: () => adapterRef.current?.setVolume(DUCK_VOLUME),
-      restore: () => adapterRef.current?.setVolume(volumeRef.current),
+      duck: () => {
+        duckedRef.current = true;
+        applyVolume();
+      },
+      restore: () => {
+        duckedRef.current = false;
+        applyVolume();
+      },
       volume: () => volumeRef.current,
     });
     cueRef.current = cue;
     return () => cue.stop();
-  }, []);
+  }, [applyVolume]);
 
   useEffect(() => {
     offsetRef.current = offset;
@@ -224,7 +281,8 @@ export function PlayerEngine({ volume = 100, caption = false, frameClass }: { vo
       reported.current = { started: false, ended: false };
       // Never carry a ducked volume over to the next track (review P2-7).
       cueRef.current?.stop();
-      a.setVolume(volumeRef.current);
+      duckedRef.current = false;
+      applyVolume();
       if (!playerCommand.videoId) {
         a.pause();
         return;
@@ -265,7 +323,7 @@ export function PlayerEngine({ volume = 100, caption = false, frameClass }: { vo
       if (Math.abs(a.currentTime() - expected) > DRIFT_SEC) a.seek(expected);
       a.play();
     }
-  }, [playerCommand, ready, started]);
+  }, [playerCommand, ready, started, applyVolume]);
 
   // ---------------------------------------------------------------- before starting
   // Until this device really plays it holds no lease (R-27: the room keeps its own clock and
@@ -313,8 +371,8 @@ export function PlayerEngine({ volume = 100, caption = false, frameClass }: { vo
 
   useEffect(() => {
     volumeRef.current = volume;
-    adapterRef.current?.setVolume(volume);
-  }, [volume]);
+    applyVolume();
+  }, [volume, applyVolume]);
 
   // ---------------------------------------------------------------- play / pause on the video
   // The iframe stays clickable (YouTube policy: no blocking its links or controls), so its own
@@ -437,7 +495,7 @@ export function PlayerEngine({ volume = 100, caption = false, frameClass }: { vo
       // After this event is handled: a tap on "Xem cách…" on the layer still reaches its button.
       window.setTimeout(() => setSoundAsked(true), 0);
       a.setMuted(false);
-      a.setVolume(volumeRef.current);
+      applyVolume();
       a.play();
       // Sound and still playing for a short while (a browser that refuses pauses the video at
       // once): this device is the speaker. Checked every 100 ms, given up after 1.5 s.
@@ -474,7 +532,7 @@ export function PlayerEngine({ volume = 100, caption = false, frameClass }: { vo
       window.removeEventListener('keydown', unmute, true);
       window.removeEventListener('blur', onBlur);
     };
-  }, [silent, started, start]);
+  }, [silent, started, start, applyVolume]);
 
   // ---------------------------------------------------------------- player events
   const onPlaying = useCallback(() => {
@@ -683,6 +741,7 @@ export function YouTubeAdapter({ adapterRef, onReady, onPlaying, onPaused, onEnd
           pause: safe(() => void p.pauseVideo(), undefined),
           seek: safe((s: number) => void p.seekTo(s, true), undefined),
           currentTime: safe(() => Number(p.getCurrentTime?.() ?? 0), 0),
+          duration: safe(() => Number(p.getDuration?.() ?? 0) || 0, 0),
           setVolume: safe((v: number) => void p.setVolume(v), undefined),
           setMuted: safe((on: boolean) => void (on ? p.mute() : p.unMute()), undefined),
           muted: safe(() => Boolean(p.isMuted?.()), false),

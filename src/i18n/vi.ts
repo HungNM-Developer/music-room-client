@@ -139,6 +139,7 @@ export const vi = {
     addResult: 'Thêm',
     adding: 'Đang thêm…',
     added: (title: string) => `Đã thêm "${title}" vào hàng chờ`,
+    upvoted: (title: string) => `"${title}" đã có trong hàng chờ — đã thả tim cho bài thay bạn`,
     noResults: 'Không tìm thấy bài nào. Thử từ khóa khác hoặc dán link YouTube.',
     searchOff: 'Máy chủ chưa bật tìm kiếm YouTube: chỉ tìm được các bài đã có trên máy chủ. Bài mới thì dán link YouTube (youtube.com/watch?v=… hoặc youtu.be/…).',
     fromLibrary: 'Bài đã có trên máy chủ (không tốn lượt tìm YouTube).',

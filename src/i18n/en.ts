@@ -137,6 +137,7 @@ export const en: Dict = {
     addResult: 'Add',
     adding: 'Adding…',
     added: (title: string) => `Added "${title}" to the queue`,
+    upvoted: (title: string) => `"${title}" is already queued, so you hearted it instead`,
     noResults: 'No songs found. Try other words or paste a YouTube link.',
     searchOff:
       'YouTube search is not turned on for this server: only songs already on the server can be found. For new songs, paste a YouTube link (youtube.com/watch?v=… or youtu.be/…).',

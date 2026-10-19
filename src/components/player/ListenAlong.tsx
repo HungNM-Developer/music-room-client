@@ -10,7 +10,7 @@ import { legacySpeech, SpeechCue } from '@/lib/speech';
 import { IdleCover } from './IdleCover';
 import { useMe, useRoom } from '@/state/hooks';
 import { room } from '@/state/room-store';
-import { DJ_FILES, DRIFT_SEC, DUCK_VOLUME, type PlayerAdapter, playDj, preloadDj, TapVideoHint, YouTubeAdapter } from './PlayerEngine';
+import { DJ_FILES, DRIFT_SEC, DUCK_VOLUME, type PlayerAdapter, playDj, preloadDj, TapVideoHint, useSongFade, YouTubeAdapter } from './PlayerEngine';
 
 // N1 "Nghe cùng": this device plays the room's song in sync, for itself only. It follows
 // the room snapshot (song, play / pause, position on the server clock) — the same clock
@@ -143,17 +143,29 @@ function ListenPlayer({ frameClass }: { frameClass?: string }) {
   const [needsTap, setNeedsTap] = useState(false);
   const offsetRef = useRef(offset);
   const volRef = useRef(vol);
+  // The wish is being read: the song is ducked under it.
+  const duckedRef = useRef(false);
+  const applyVolume = useSongFade(
+    adapterRef,
+    useCallback(() => (duckedRef.current ? Math.min(volRef.current, DUCK_VOLUME) : volRef.current), []),
+  );
   // The wish of the song now playing, read here too (the MC line only goes to the speaker).
   const cueRef = useRef<SpeechCue | null>(null);
   useEffect(() => {
     const cue = new SpeechCue({
-      duck: () => adapterRef.current?.setVolume(Math.min(volRef.current, DUCK_VOLUME)),
-      restore: () => adapterRef.current?.setVolume(volRef.current),
+      duck: () => {
+        duckedRef.current = true;
+        applyVolume();
+      },
+      restore: () => {
+        duckedRef.current = false;
+        applyVolume();
+      },
       volume: () => volRef.current,
     });
     cueRef.current = cue;
     return () => cue.stop();
-  }, []);
+  }, [applyVolume]);
   const [touch] = useState(() => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches);
 
   useEffect(() => {
@@ -177,7 +189,8 @@ function ListenPlayer({ frameClass }: { frameClass?: string }) {
       itemRef.current = np.item.id;
       playedRef.current = false;
       cueRef.current?.stop();
-      a.setVolume(volRef.current);
+      duckedRef.current = false;
+      applyVolume();
       // Paused by the listener: the next song is only cued, never started on its own.
       const play = np.status === 'PLAYING' && !userPausedRef.current;
       a.load(np.item.track.externalId, expected, play);
@@ -195,7 +208,7 @@ function ListenPlayer({ frameClass }: { frameClass?: string }) {
       if (Math.abs(a.currentTime() - expected) > DRIFT_SEC) a.seek(expected);
       a.play();
     }
-  }, [np, offset, ready]);
+  }, [np, offset, ready, applyVolume]);
 
   // Pausing the video here (the iframe must stay clickable, YouTube policy) is this listener's
   // own choice and is left alone. Whenever it plays — their ▶, or the room starting again —
@@ -240,8 +253,8 @@ function ListenPlayer({ frameClass }: { frameClass?: string }) {
 
   useEffect(() => {
     volRef.current = vol;
-    adapterRef.current?.setVolume(vol);
-  }, [vol]);
+    applyVolume();
+  }, [vol, applyVolume]);
 
   // DJ sounds, like in the office.
   useEffect(() => {

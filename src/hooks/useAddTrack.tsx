@@ -49,7 +49,7 @@ export function useAddTrack() {
         },
       );
       if (r) {
-        toast(t.add.added(r.title), 'success');
+        toast(r.upvoted ? t.add.upvoted(r.title) : t.add.added(r.title), 'success');
         return true;
       }
       setAdded((s) => {
