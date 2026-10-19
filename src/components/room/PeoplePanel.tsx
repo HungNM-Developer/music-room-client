@@ -1,8 +1,9 @@
 'use client';
 
-import { ChevronDown, KeyRound, MoreHorizontal } from 'lucide-react';
+import { Check, ChevronDown, KeyRound, MoreHorizontal } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
+import { SlackLogo } from '@/components/ui/SlackLogo';
 import { Button, IconButton } from '@/components/ui/Button';
 import { Dialog, SheetAction } from '@/components/ui/Dialog';
 import { PinField } from '@/components/ui/PinField';
@@ -23,6 +24,35 @@ function Badge({ children, tone }: { children: React.ReactNode; tone: 'amber' | 
     plain: 'border-line text-sage',
   };
   return <span className={`rounded-full border px-2 py-px text-[11px] font-medium ${tones[tone]}`}>{children}</span>;
+}
+
+/** The name as shown in the list: a Slack member's "(Slack)" (added when the name was taken) is the logo instead. */
+function shownName(m: MemberView, name: string): string {
+  return m.viaSlack ? name.replace(/\s*\(Slack\)$/, '') : name;
+}
+
+/** Signed in with Google: a verified mark (white tick on a round blue dot) after the name. */
+function VerifiedMark({ label }: { label: string }) {
+  return (
+    <span
+      role="img"
+      aria-label={label}
+      title={label}
+      className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full"
+      style={{ backgroundColor: '#1d9bf0' }}
+    >
+      <Check className="h-2.5 w-2.5 text-white" strokeWidth={4.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden />
+    </span>
+  );
+}
+
+/** Acting from Slack: the Slack logo in its own colours after the name. */
+function SlackMark({ label }: { label: string }) {
+  return (
+    <span role="img" aria-label={label} title={label} className="inline-flex shrink-0">
+      <SlackLogo className="h-4 w-4" />
+    </span>
+  );
 }
 
 export function PeoplePanel() {
@@ -57,10 +87,13 @@ export function PeoplePanel() {
 
   const row = (m: MemberView) => (
     <li key={m.id} className="flex items-center gap-3 py-2.5 pl-2.5 pr-1">
-      <Avatar name={memberName(m, t)} color={m.color} online={m.online} />
+      <Avatar name={memberName(m, t)} color={m.color} online={m.online} src={m.avatarUrl} />
       <div className="min-w-0 flex-1">
-        <p className={`truncate font-medium ${m.online ? '' : 'text-sage'}`}>
-          {memberName(m, t)} {m.id === me?.id && <span className="font-normal text-sage">{t.people.you}</span>}
+        <p className={`flex min-w-0 items-center gap-1.5 font-medium ${m.online ? '' : 'text-sage'}`}>
+          <span className="truncate">{shownName(m, memberName(m, t))}</span>
+          {m.verified && <VerifiedMark label={t.people.verified} />}
+          {m.viaSlack && <SlackMark label={t.people.viaSlack} />}
+          {m.id === me?.id && <span className="shrink-0 font-normal text-sage">{t.people.you}</span>}
           <span className="sr-only">{m.online ? ', online' : ', offline'}</span>
         </p>
         <div className="mt-1 flex flex-wrap gap-1 empty:hidden">

@@ -438,6 +438,8 @@ export const en: Dict = {
     online: (n: number) => `${n} online`,
     offline: (n: number) => `Offline (${n})`,
     you: '(you)',
+    verified: 'Signed in with Google',
+    viaSlack: 'Using it from Slack',
     badges: {
       admin: 'Admin',
       player: 'Player',

@@ -322,7 +322,7 @@ export function ListenersStrip({ size = 'sm' }: { size?: 'sm' | 'lg' }) {
       <span className="flex -space-x-2">
         {shown.map((m) => (
           <span key={m.id} className="rounded-full ring-2 ring-panel" title={m.displayName}>
-            <Avatar name={m.displayName} color={m.color} size={big ? 32 : 24} />
+            <Avatar name={m.displayName} color={m.color} size={big ? 32 : 24} src={m.avatarUrl} />
           </span>
         ))}
       </span>

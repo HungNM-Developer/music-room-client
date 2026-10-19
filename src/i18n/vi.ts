@@ -435,6 +435,8 @@ export const vi = {
     online: (n: number) => `${n} đang online`,
     offline: (n: number) => `Offline (${n})`,
     you: '(bạn)',
+    verified: 'Đã đăng nhập bằng Google',
+    viaSlack: 'Đang dùng từ Slack',
     badges: {
       admin: 'Quản trị',
       player: 'Máy phát',
