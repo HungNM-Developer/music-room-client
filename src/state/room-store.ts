@@ -77,6 +77,8 @@ export interface RoomState {
   chatPending: PendingChat[];
   /** Track ids this member saved in this room ("Lưu", A2), pushed by the server. */
   favoriteIds: string[];
+  /** L2: bumped when the server says one of the account's playlists changed (any tab, the DJ). */
+  playlistsChanged: { n: number; id: string | null };
   /** Video ids saved on this device in any room (local-favorites.ts). */
   localFavorites: string[];
   /** L1: the signed-in Google account, if any. */
@@ -101,6 +103,7 @@ export const INITIAL_STATE: RoomState = {
   pending: [],
   chatPending: [],
   favoriteIds: [],
+  playlistsChanged: { n: 0, id: null },
   localFavorites: [],
   user: null,
 };
@@ -118,6 +121,7 @@ const ROOM_RESET: Partial<RoomState> = {
   pending: [],
   chatPending: [],
   favoriteIds: [],
+  playlistsChanged: { n: 0, id: null },
 };
 
 class RoomStore {
@@ -203,6 +207,9 @@ class RoomStore {
     s.on('activity:new', (l: ActivityLogView) => this.set((st) => ({ logs: [l, ...st.logs].slice(0, 200) })));
     s.on('player:command', (c: PlayerCommand) => this.set({ playerCommand: c, playerRevoked: null }));
     s.on('favorite:ids', (d: { trackIds: string[] }) => this.set({ favoriteIds: d.trackIds }));
+    s.on('playlist:changed', (d: { playlistId: string | null }) =>
+      this.set({ playlistsChanged: { n: this.state.playlistsChanged.n + 1, id: d.playlistId } }),
+    );
     s.on('player:revoked', (d: { reason: PlayerRevokeReason }) =>
       this.set({ playerRevoked: d.reason, playerCommand: null }),
     );
