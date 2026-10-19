@@ -688,6 +688,21 @@ export interface AdapterProps {
   onError: (code: number) => void;
 }
 
+/**
+ * YouTube turns subtitles on by itself (the video's or the viewer's default). The embed has no
+ * "captions off" parameter (cc_load_policy only forces them on), so the captions module is
+ * unloaded each time it loads: on every new video it plays, and whenever the API changes.
+ */
+function captionsOff(p: YouTubePlayer): void {
+  const yt = p as unknown as { unloadModule?: (name: string) => void };
+  try {
+    // Only "captions": unloading "cc" as well blanks the picture (checked 2026-10-19).
+    yt.unloadModule?.('captions');
+  } catch {
+    // A player build without that module: nothing to turn off.
+  }
+}
+
 /** Visible YouTube iframe (≥ 200×200, never hidden — YouTube API policy, TC-131). */
 export function YouTubeAdapter({ adapterRef, onReady, onPlaying, onPaused, onEnded, onError, onAutoplayBlocked }: AdapterProps) {
   const ytRef = useRef<YouTubePlayer | null>(null);
@@ -723,7 +738,10 @@ export function YouTubeAdapter({ adapterRef, onReady, onPlaying, onPaused, onEnd
         const p = e.target;
         ytRef.current = p;
         // Not wrapped by react-youtube: listen on the YouTube player itself.
-        (p as unknown as { addEventListener?: (name: string, fn: () => void) => void }).addEventListener?.('onAutoplayBlocked', () => blockedRef.current?.());
+        const listen = (p as unknown as { addEventListener?: (name: string, fn: () => void) => void }).addEventListener?.bind(p);
+        listen?.('onAutoplayBlocked', () => blockedRef.current?.());
+        // The captions module announces itself here when a video brings subtitles.
+        listen?.('onApiChange', () => captionsOff(p));
         // The iframe can disappear under us (navigation, remount); never let that crash an effect.
         const safe = <A extends unknown[], R>(fn: (...a: A) => R, fallback: R) => (...a: A): R => {
           try {
@@ -750,7 +768,10 @@ export function YouTubeAdapter({ adapterRef, onReady, onPlaying, onPaused, onEnd
         onReady();
       }}
       onStateChange={(e: YouTubeEvent<number>) => {
-        if (e.data === 1) onPlaying();
+        if (e.data === 1) {
+          captionsOff(e.target);
+          onPlaying();
+        }
         if (e.data === 2) onPaused?.();
         if (e.data === 0) onEnded();
       }}
