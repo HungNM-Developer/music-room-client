@@ -166,8 +166,10 @@ html[data-theme='cassette'] .hc-jcard li,
 html[data-theme='cassette'] .hc-jcard .host-next-empty {
   overflow: hidden;
   font: 400 calc(var(--u) * 1.55) / 1.35 var(--font-patrick-hand);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* Up to two lines (a song's name, then its picker), not "…". */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 html[data-theme='cassette'] .hc-jcard li span {
   color: #7a5a43;
@@ -222,7 +224,7 @@ html[data-theme='cassette'] .host-cassette .hc-top {
 
 @media (min-width: 960px) and (min-height: 540px) {
   html[data-theme='cassette'] .host-cassette .host-grid {
-    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 72) calc(var(--u) * 2.2) minmax(0, 1fr) calc(var(--u) * 2);
+    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * var(--host-video-w)) calc(var(--u) * 2.2) minmax(0, 1fr) calc(var(--u) * 2);
     grid-template-rows: calc(var(--u) * 2) auto minmax(0, 1fr) calc(var(--u) * 1.2);
     grid-template-areas:
       '. . . . .'
@@ -252,7 +254,7 @@ html[data-theme='cassette'] .host-cassette .hc-top {
     margin: 0;
     font-size: calc(var(--u) * 1.2);
   }
-  /* Layout B: the video 72 % wide. Side A (label and tape window) on the left under it, three
+  /* Layout B: the video --host-video-w % wide. Side A (label and tape window) on the left under it, three
      lyric lines on the right; side B stacks the sticker, the Dymo code and the wish note. */
   html[data-theme='cassette'] .hc-now {
     grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
@@ -281,7 +283,7 @@ html[data-theme='cassette'] .host-cassette .hc-top {
   }
   html[data-theme='cassette'] .hc-label .host-title {
     grid-area: title;
-    -webkit-line-clamp: 1;
+    -webkit-line-clamp: 2;
   }
   html[data-theme='cassette'] .hc-label .host-meta {
     grid-area: meta;

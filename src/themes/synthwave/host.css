@@ -128,8 +128,9 @@ html[data-theme='synthwave'] .hy-next li b {
 }
 html[data-theme='synthwave'] .hy-next li span {
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 html[data-theme='synthwave'] .hy-next li .p {
   color: #c4a3e3;
@@ -162,7 +163,7 @@ html[data-theme='synthwave'] .hy-qr {
 
 @media (min-width: 960px) and (min-height: 540px) {
   html[data-theme='synthwave'] .host-synthwave .host-grid {
-    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 72) calc(var(--u) * 2.4) minmax(0, 1fr) calc(var(--u) * 2);
+    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * var(--host-video-w)) calc(var(--u) * 2.4) minmax(0, 1fr) calc(var(--u) * 2);
     grid-template-rows: calc(var(--u) * 2) auto minmax(0, 1fr) calc(var(--u) * 1.2);
     grid-template-areas:
       '. . . . .'
@@ -170,7 +171,7 @@ html[data-theme='synthwave'] .hy-qr {
       '. below . side .'
       '. . . . .';
   }
-  /* Layout B: the video 72 % wide. Under it, on the left the lamp beside the title, the
+  /* Layout B: the video --host-video-w % wide. Under it, on the left the lamp beside the title, the
      artist, the time line; on the right three lyric lines. The QR panel stacks in the narrow
      column. */
   html[data-theme='synthwave'] .hy-now {
@@ -180,7 +181,7 @@ html[data-theme='synthwave'] .hy-qr {
       'lamp title lyrics'
       'meta meta lyrics'
       'dial dial lyrics'
-      'wish wish lyrics';
+      'wish wish wish';
     align-items: center;
     column-gap: calc(var(--u) * 1.4);
     row-gap: calc(var(--u) * 0.35);
@@ -190,7 +191,7 @@ html[data-theme='synthwave'] .hy-qr {
   }
   html[data-theme='synthwave'] .hy-now > .host-title {
     grid-area: title;
-    -webkit-line-clamp: 1;
+    -webkit-line-clamp: 2;
   }
   html[data-theme='synthwave'] .hy-now > .host-meta {
     grid-area: meta;
@@ -238,7 +239,7 @@ html[data-theme='synthwave'] .hy-qr {
     font-size: calc(var(--u) * 1);
   }
   html[data-theme='synthwave'] .hy-people .host-chat li {
-    -webkit-line-clamp: 1;
+    -webkit-line-clamp: 2;
   }
   /* The sun behind the narrow column, sinking into the horizon grid. */
   html[data-theme='synthwave'] .host-synthwave .host-frame::before,

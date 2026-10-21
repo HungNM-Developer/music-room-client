@@ -172,8 +172,9 @@ html[data-theme='cosmos'] .hc2-orbits li .p {
   overflow: hidden;
   color: #9aa3c6;
   font-size: calc(var(--u) * 1.1);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 html[data-theme='cosmos'] .hc2-orbits .host-next-empty {
   color: #9aa3c6;
@@ -205,7 +206,7 @@ html[data-theme='cosmos'] .hc2-qr {
 
 @media (min-width: 960px) and (min-height: 540px) {
   html[data-theme='cosmos'] .host-cosmos .host-grid {
-    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 72) calc(var(--u) * 2.2) minmax(0, 1fr) calc(var(--u) * 2);
+    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * var(--host-video-w)) calc(var(--u) * 2.2) minmax(0, 1fr) calc(var(--u) * 2);
     grid-template-rows: calc(var(--u) * 1.6) auto minmax(0, 1fr) calc(var(--u) * 1);
     grid-template-areas:
       '. . . . .'
@@ -213,22 +214,37 @@ html[data-theme='cosmos'] .hc2-qr {
       '. below . side .'
       '. . . . .';
   }
-  /* Layout B: the porthole 72 % wide. Under it, on the left a smaller planet beside the lamp
+  /* Layout B: the porthole --host-video-w % wide. Under it, on the left a smaller planet beside the lamp
      and title, artist and time; on the right three lyric lines. The QR panel stacks in the
      narrow column. */
   html[data-theme='cosmos'] .hc2-now {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-areas:
       'song lyrics'
-      'wish lyrics';
+      'wish wish';
     align-content: start;
     column-gap: calc(var(--u) * 2.4);
     row-gap: calc(var(--u) * 0.4);
     padding-top: calc(var(--u) * 0.7);
   }
+  /* A song without synced lyrics: the song and wish take the whole width. */
+  html[data-theme='cosmos'] .hc2-now:not(:has(> .lyrics-inline)) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'song'
+      'wish';
+  }
   html[data-theme='cosmos'] .hc2-song {
     grid-area: song;
     min-width: 0;
+  }
+  /* The title beside the planet is narrow: up to four lines. */
+  html[data-theme='cosmos'] .host-root[data-layout='canvas'] .hc2-info .host-title {
+    -webkit-line-clamp: 4;
+  }
+  /* Three narrow orbits: a song's name up to four lines. */
+  html[data-theme='cosmos'] .host-root[data-layout='canvas'] .hc2-orbits li span {
+    -webkit-line-clamp: 4;
   }
   html[data-theme='cosmos'] .hc2-now > .lyrics-inline {
     grid-area: lyrics;
@@ -247,8 +263,8 @@ html[data-theme='cosmos'] .hc2-qr {
   }
   html[data-theme='cosmos'] .hc2-info .host-title {
     grid-column: 2 / -1;
-    font-size: calc(var(--u) * 2.3);
-    -webkit-line-clamp: 1;
+    font-size: calc(var(--u) * 2);
+    -webkit-line-clamp: 2;
   }
   html[data-theme='cosmos'] .hc2-info .host-meta {
     grid-column: 1 / 3;

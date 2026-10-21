@@ -168,8 +168,9 @@ html[data-theme='hifi82'] .hh-keys li .p {
   overflow: hidden;
   color: #5f5a52;
   font-size: calc(var(--u) * 1.1);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 html[data-theme='hifi82'] .hh-keys .host-next-empty {
   color: #5f5a52;
@@ -182,7 +183,7 @@ html[data-theme='hifi82'] .hh-people {
   background: #f3f1ec;
 }
 html[data-theme='hifi82'] .hh-people .host-chat li {
-  -webkit-line-clamp: 1;
+  -webkit-line-clamp: 2;
 }
 html[data-theme='hifi82'] .hh-people .host-faces i {
   box-shadow: 0 0 0 calc(var(--u) * 0.18) #f3f1ec;
@@ -201,9 +202,9 @@ html[data-theme='hifi82'] .hh-bottom {
 }
 
 @media (min-width: 960px) and (min-height: 540px) {
-  /* Layout B: the video 72 % wide, the LCD under it; the deck's controls in the narrow column. */
+  /* Layout B: the video --host-video-w % wide, the LCD under it; the deck's controls in the narrow column. */
   html[data-theme='hifi82'] .host-hifi82 .host-grid {
-    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 72) calc(var(--u) * 2.2) minmax(0, 1fr) calc(var(--u) * 2);
+    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * var(--host-video-w)) calc(var(--u) * 2.2) minmax(0, 1fr) calc(var(--u) * 2);
     grid-template-rows: calc(var(--u) * 1.8) auto minmax(0, 1fr) calc(var(--u) * 1.2);
     grid-template-areas:
       '. . . . .'
@@ -219,7 +220,7 @@ html[data-theme='hifi82'] .hh-bottom {
     padding: calc(var(--u) * 0.7) calc(var(--u) * 1.4);
   }
   html[data-theme='hifi82'] .hh-lcd .host-title {
-    -webkit-line-clamp: 1;
+    -webkit-line-clamp: 2;
   }
   html[data-theme='hifi82'] .hh-lcd .hifi-lcd {
     margin-top: 0;
@@ -269,7 +270,7 @@ html[data-theme='hifi82'] .hh-bottom {
     grid-row: span 2;
   }
   html[data-theme='hifi82'] .hh-keys li .t {
-    -webkit-line-clamp: 1;
+    -webkit-line-clamp: 2;
   }
   html[data-theme='hifi82'] .hh-keys li .p {
     font-size: calc(var(--u) * 1);

@@ -94,8 +94,9 @@ html[data-theme='station'] .hs-wish blockquote {
   overflow: hidden;
   font-size: calc(var(--u) * 1.25);
   font-style: italic;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 html[data-theme='station'] .hs-wish blockquote::before {
   content: '“';
@@ -214,8 +215,9 @@ html[data-theme='station'] .hs-board li b {
 }
 html[data-theme='station'] .hs-board li span {
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 html[data-theme='station'] .hs-board li .p {
   color: #b9c4bd;
@@ -326,7 +328,7 @@ html[data-theme='station'] .host-station .hs-ticket {
 
 @media (min-width: 960px) and (min-height: 540px) {
   html[data-theme='station'] .host-station .host-grid {
-    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 72) calc(var(--u) * 2.2) minmax(0, 1fr) calc(var(--u) * 2);
+    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * var(--host-video-w)) calc(var(--u) * 2.2) minmax(0, 1fr) calc(var(--u) * 2);
     grid-template-rows: calc(var(--u) * 3.4) calc(var(--u) * 0.6) auto minmax(0, 1fr) calc(var(--u) * 0.3) calc(var(--u) * 2.6);
     grid-template-areas:
       'header header header header header'
@@ -350,7 +352,7 @@ html[data-theme='station'] .host-station .hs-ticket {
   html[data-theme='station'] .host-station .host-side {
     overflow: hidden;
   }
-  /* Layout B: the video 72 % wide between a slimmer board header and announcement strip.
+  /* Layout B: the video --host-video-w % wide between a slimmer board header and announcement strip.
      Under the video, on the left the lamp beside the title, the artist and wish, the platform
      line; on the right three lyric lines. The boarding pass stacks in the narrow column. */
   html[data-theme='station'] .hs-head .st-flaps i {
@@ -384,6 +386,14 @@ html[data-theme='station'] .host-station .hs-ticket {
     row-gap: calc(var(--u) * 0.4);
     padding-top: calc(var(--u) * 0.6);
   }
+  /* A song without synced lyrics: the title, artist and wish take the whole width. */
+  html[data-theme='station'] .hs-now:not(:has(> .lyrics-inline)) {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'row title'
+      'meta meta'
+      'track track';
+  }
   html[data-theme='station'] .hs-row {
     grid-area: row;
   }
@@ -392,7 +402,7 @@ html[data-theme='station'] .host-station .hs-ticket {
   }
   html[data-theme='station'] .hs-now > .host-title {
     grid-area: title;
-    -webkit-line-clamp: 1;
+    -webkit-line-clamp: 2;
   }
   html[data-theme='station'] .hs-meta-row {
     grid-area: meta;

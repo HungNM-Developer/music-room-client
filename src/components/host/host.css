@@ -70,7 +70,7 @@
 }
 [data-layout='canvas'] .host-wish-1 blockquote {
   min-width: 0;
-  -webkit-line-clamp: 1;
+  -webkit-line-clamp: 2;
 }
 [data-layout='canvas'] .host-wish-1 figcaption {
   flex: none;
@@ -168,6 +168,14 @@
 [data-layout='canvas'] .lyrics-inline p[data-current] {
   font-size: calc(var(--u) * 2);
 }
+/* Every line is read whole: up to two lines instead of "…" (the one being sung too). */
+[data-layout='canvas'] .lyrics-inline p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  text-wrap: balance;
+}
 [data-layout='canvas'] .lyrics-inline .lyrics-source {
   padding-top: 0;
   font-size: calc(var(--u) * 0.85);
@@ -197,6 +205,9 @@
     container-type: size;
   }
   [data-layout='canvas'] .host-grid {
+    /* The video's width in --u (canvas %), shared by every theme's grid: big enough to lead
+       the screen, small enough that the song, lyrics, wish, queue and chat are read whole. */
+    --host-video-w: 64;
     position: absolute;
     inset: 0;
     display: grid;
@@ -208,6 +219,43 @@
   }
   [data-layout='canvas'] .host-grid > * {
     min-height: 0;
+  }
+  /* The words around the video a little smaller than the grid's unit (the video keeps its
+     size): every theme's song, lyrics, wish, queue and chat shrink alike and fit whole. */
+  [data-layout='canvas'] .host-grid > :not(.host-video) {
+    --u: 0.88cqw;
+  }
+  /* Read whole, not cut with "…": the song's name up to three lines, a wish (200 characters
+     at most) up to six, its sender's name wraps, a queue song up to three lines, the artist
+     and picker up to two. */
+  .host-root[data-layout='canvas'] .host-grid .host-title {
+    -webkit-line-clamp: 3;
+  }
+  .host-root[data-layout='canvas'] .host-grid .host-wish blockquote {
+    -webkit-line-clamp: 6;
+  }
+  .host-root[data-layout='canvas'] .host-grid .host-wish-from {
+    max-width: none;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
+  /* A wish stacks (who it is from, then the message across the whole width) rather than
+     sharing its line with the sender, so a long one keeps its words in fewer lines. */
+  .host-root[data-layout='canvas'] .host-grid .host-wish {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: calc(var(--u) * 0.2);
+  }
+  .host-root[data-layout='canvas'] .host-grid ol li span {
+    -webkit-line-clamp: 3;
+  }
+  .host-root[data-layout='canvas'] .host-grid .host-meta {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    white-space: normal;
   }
   /* The video takes most of the screen: under it, three lyric lines (the one being sung in the
      middle) beside the song, without the source note. */
@@ -412,8 +460,9 @@ html[data-theme='pixel'] .host-lamp.bg-onair-deep > span {
 }
 .host-default .hd-q span {
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 .host-default .hd-q .t {
   font-size: calc(var(--u) * 1.25);
@@ -430,10 +479,10 @@ html[data-theme='pixel'] .host-lamp.bg-onair-deep > span {
 }
 
 @media (min-width: 960px) and (min-height: 540px) {
-  /* Layout B: the video 72 % of the screen's width; the song on one line under it, the
+  /* Layout B: the video --host-video-w % of the screen's width; the song under it, the
      room (QR, next songs, chat) in a narrow column beside it. */
   .host-default .host-grid {
-    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 72) calc(var(--u) * 2) minmax(0, 1fr) calc(var(--u) * 2);
+    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * var(--host-video-w)) calc(var(--u) * 2) minmax(0, 1fr) calc(var(--u) * 2);
     grid-template-rows: calc(var(--u) * 2) auto minmax(0, 1fr) calc(var(--u) * 1.2);
     grid-template-areas:
       '. . . . .'
@@ -449,7 +498,7 @@ html[data-theme='pixel'] .host-lamp.bg-onair-deep > span {
       'song song'
       'dial lyrics'
       'controls lyrics'
-      '. wish';
+      'wish wish';
     align-items: center;
     column-gap: calc(var(--u) * 2.4);
     row-gap: calc(var(--u) * 0.45);
@@ -468,7 +517,7 @@ html[data-theme='pixel'] .host-lamp.bg-onair-deep > span {
   .host-default .hd-song > .host-title {
     min-width: 0;
     font-size: calc(var(--u) * 2.3);
-    -webkit-line-clamp: 1;
+    -webkit-line-clamp: 2;
   }
   .host-default .hd-song > .host-meta {
     flex: 0 1 auto;

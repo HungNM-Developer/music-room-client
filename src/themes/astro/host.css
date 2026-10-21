@@ -138,8 +138,9 @@ html[data-theme='astro'] .ha-next li svg {
 }
 html[data-theme='astro'] .ha-next li span {
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 html[data-theme='astro'] .ha-next li .p {
   color: #a6a8cf;
@@ -168,7 +169,7 @@ html[data-theme='astro'] .ha-top {
 
 @media (min-width: 960px) and (min-height: 540px) {
   html[data-theme='astro'] .host-astro .host-grid {
-    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 72) calc(var(--u) * 2.2) minmax(0, 1fr) calc(var(--u) * 2);
+    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * var(--host-video-w)) calc(var(--u) * 2.2) minmax(0, 1fr) calc(var(--u) * 2);
     grid-template-rows: calc(var(--u) * 2) auto minmax(0, 1fr) calc(var(--u) * 1.2);
     grid-template-areas:
       '. . . . .'
@@ -176,14 +177,14 @@ html[data-theme='astro'] .ha-top {
       '. below . side .'
       '. . . . .';
   }
-  /* Layout B: the video 72 % wide; under it the song on the left, three lyric lines on the
+  /* Layout B: the video --host-video-w % wide; under it the song on the left, three lyric lines on the
      right; the wheel and the QR stacked in the narrow column beside it. */
   html[data-theme='astro'] .ha-now {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-areas:
       'row lyrics'
       'title lyrics'
-      'wish lyrics';
+      'wish wish';
     align-content: start;
     column-gap: calc(var(--u) * 2.4);
     row-gap: calc(var(--u) * 0.3);
@@ -244,6 +245,6 @@ html[data-theme='astro'] .ha-top {
     font-size: calc(var(--u) * 1);
   }
   html[data-theme='astro'] .ha-people .host-chat li {
-    -webkit-line-clamp: 1;
+    -webkit-line-clamp: 2;
   }
 }

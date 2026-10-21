@@ -146,8 +146,9 @@ html[data-theme='pixel'] .hp-next li b {
 }
 html[data-theme='pixel'] .hp-next li span {
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 html[data-theme='pixel'] .hp-next li .p {
   color: #b2afdc;
@@ -191,7 +192,7 @@ html[data-theme='pixel'] .hp-hud {
 
 @media (min-width: 960px) and (min-height: 540px) {
   html[data-theme='pixel'] .host-pixel .host-grid {
-    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 72) calc(var(--u) * 2.4) minmax(0, 1fr) calc(var(--u) * 2);
+    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * var(--host-video-w)) calc(var(--u) * 2.4) minmax(0, 1fr) calc(var(--u) * 2);
     grid-template-rows: calc(var(--u) * 1.1) calc(var(--u) * 3.1) calc(var(--u) * 1.3) auto minmax(0, 1fr) calc(var(--u) * 1);
     grid-template-areas:
       '. . . . .'
@@ -205,7 +206,7 @@ html[data-theme='pixel'] .hp-hud {
   html[data-theme='pixel'] .hp-hud {
     flex-wrap: nowrap;
   }
-  /* Layout B: the video 72 % wide under a slimmer HUD. Under the video the title, lamp and
+  /* Layout B: the video --host-video-w % wide under a slimmer HUD. Under the video the title, lamp and
      artist on the left, three lyric lines on the right; the dialog boxes stack in the narrow
      column. */
   html[data-theme='pixel'] .hp-hud {
@@ -232,7 +233,7 @@ html[data-theme='pixel'] .hp-hud {
   }
   html[data-theme='pixel'] .hp-now > .host-title {
     grid-area: title;
-    -webkit-line-clamp: 1;
+    -webkit-line-clamp: 2;
   }
   html[data-theme='pixel'] .hp-row {
     grid-area: row;
@@ -276,7 +277,7 @@ html[data-theme='pixel'] .hp-hud {
     font-size: calc(var(--u) * 1);
   }
   html[data-theme='pixel'] .hp-talk .host-chat li {
-    -webkit-line-clamp: 1;
+    -webkit-line-clamp: 2;
   }
   html[data-theme='pixel'] .hp-foot {
     gap: calc(var(--u) * 0.6) calc(var(--u) * 1);
