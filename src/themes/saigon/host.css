@@ -125,8 +125,10 @@ html[data-theme='saigon'] .hg-chalk .host-next-empty {
   overflow: hidden;
   font-size: calc(var(--u) * 1.55);
   line-height: 1.3;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* Up to two lines (a song's name, then its picker), not "…". */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 html[data-theme='saigon'] .hg-chalk li span {
   color: #e8c547;
@@ -176,7 +178,7 @@ html[data-theme='saigon'] .hg-sign {
   html[data-theme='saigon'] .host-saigon .host-grid {
     inset: calc(var(--u) * 1.4);
     background: #f3ead6;
-    grid-template-columns: calc(var(--u) * 1.8) calc(var(--u) * 70) calc(var(--u) * 2.4) minmax(0, 1fr) calc(var(--u) * 1.8);
+    grid-template-columns: calc(var(--u) * 1.8) calc(var(--u) * (var(--host-video-w) - 2)) calc(var(--u) * 2.4) minmax(0, 1fr) calc(var(--u) * 1.8);
     grid-template-rows: calc(var(--u) * 0.8) calc(var(--u) * 2.8) calc(var(--u) * 1.3) auto minmax(0, 1fr) calc(var(--u) * 0.6);
     grid-template-areas:
       '. . . . .'
@@ -213,7 +215,7 @@ html[data-theme='saigon'] .hg-sign {
   html[data-theme='saigon'] .hg-now > .host-title {
     grid-area: title;
     font-size: calc(var(--u) * 2.1);
-    -webkit-line-clamp: 1;
+    -webkit-line-clamp: 2;
   }
   html[data-theme='saigon'] .hg-now > .host-meta {
     grid-area: meta;
@@ -260,6 +262,6 @@ html[data-theme='saigon'] .hg-sign {
     -webkit-line-clamp: 2;
   }
   html[data-theme='saigon'] .hg-people .host-chat li {
-    -webkit-line-clamp: 1;
+    -webkit-line-clamp: 2;
   }
 }

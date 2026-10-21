@@ -140,8 +140,9 @@ html[data-theme='listening'] .hl-menu li {
 }
 html[data-theme='listening'] .hl-menu li span {
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 html[data-theme='listening'] .hl-menu li .t {
   flex: 0 1 auto;
@@ -179,7 +180,7 @@ html[data-theme='listening'] .hl-qr {
 
 @media (min-width: 960px) and (min-height: 540px) {
   html[data-theme='listening'] .host-listening .host-grid {
-    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * 72) calc(var(--u) * 2.2) minmax(0, 1fr) calc(var(--u) * 2);
+    grid-template-columns: calc(var(--u) * 2) calc(var(--u) * var(--host-video-w)) calc(var(--u) * 2.2) minmax(0, 1fr) calc(var(--u) * 2);
     grid-template-rows: calc(var(--u) * 2) auto minmax(0, 1fr) calc(var(--u) * 1.2);
     grid-template-areas:
       '. . . . .'
@@ -187,7 +188,7 @@ html[data-theme='listening'] .hl-qr {
       '. below . side .'
       '. . . . .';
   }
-  /* Layout B: the video 72 % wide. Under it the sleeve, title and dial on the left, three lyric
+  /* Layout B: the video --host-video-w % wide. Under it the sleeve, title and dial on the left, three lyric
      lines on the right; the coaster stacks above its code in the narrow column. */
   html[data-theme='listening'] .hl-now {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -210,7 +211,7 @@ html[data-theme='listening'] .hl-qr {
   }
   html[data-theme='listening'] .hl-info .host-title {
     font-size: calc(var(--u) * 2.4);
-    -webkit-line-clamp: 1;
+    -webkit-line-clamp: 2;
   }
   html[data-theme='listening'] .hl-now > .dial {
     grid-area: dial;
@@ -257,6 +258,6 @@ html[data-theme='listening'] .hl-qr {
     font-size: calc(var(--u) * 1.2);
   }
   html[data-theme='listening'] .hl-people .host-chat li {
-    -webkit-line-clamp: 1;
+    -webkit-line-clamp: 2;
   }
 }
